@@ -22,7 +22,6 @@ import multiprocessing
 import queue
 import time
 import traceback
-import argparse
 import ast
 import sys
 import os
@@ -33,53 +32,18 @@ import distinctipy
 from typing import *
 from typing_extensions import *
 
-#####################################################################################################################################################
-##################################################################### ARGUMENTS #####################################################################
-#####################################################################################################################################################
-
-# Initialize parser
-parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-list_type = lambda x: ast.literal_eval(x) if isinstance(ast.literal_eval(x), list) else exec("raise argparse.ArgumentTypeError(\"Should be a valid interval [2, ...]\")")
-
-# Arguments
-parser.add_argument("--random_seed",         type=int,                                                   default=None,         help="Global random seed for all elements")
-parser.add_argument("--random_seed_maze",    type=int,                                                   default=None,         help="Random seed for the maze generation")
-parser.add_argument("--random_seed_cheese",  type=int,                                                   default=None,         help="Random seed for the pieces of cheese distribution")
-parser.add_argument("--random_seed_players", type=int,                                                   default=None,         help="Random seed for the initial location of players")
-parser.add_argument("--maze_width",          type=int,                                                   default=15,           help="Width of the maze in number of cells")
-parser.add_argument("--maze_height",         type=int,                                                   default=13,           help="Height of the maze in number of cells")
-parser.add_argument("--cell_percentage",     type=float,                                                 default=80.0,         help="Percentage of cells that can be accessed in the maze, 0%% being a useless maze, and 100%% being a full rectangular maze")
-parser.add_argument("--wall_percentage",     type=float,                                                 default=60.0,         help="Percentage of walls in the maze, 0%% being an empty maze, and 100%% being the maximum number of walls that keep the maze connected")
-parser.add_argument("--mud_percentage",      type=float,                                                 default=20.0,         help="Percentage of pairs of adjacent cells that are separated by mud in the maze")
-parser.add_argument("--mud_range",           type=list_type,                                             default=[4, 9],       help="Interval of turns needed to cross mud")
-parser.add_argument("--maze_representation", type=str, choices=["dictionary", "matrix"],                 default="dictionary", help="Representation of the maze in memory as given to players")
-parser.add_argument("--fixed_maze",          type=str,                                                   default=None,         help="Fixed maze in any PyRat accepted representation (takes priority over any maze description and will automatically set maze_height and maze_width)")
-parser.add_argument("--nb_cheese",           type=int,                                                   default=21,           help="Number of pieces of cheese in the maze")
-parser.add_argument("--fixed_cheese",        type=str,                                                   default=None,         help="Fixed list of cheese (takes priority over random number of cheese)")
-parser.add_argument("--save_path",           type=str,                                                   default=".",          help="Path where games are saved")
-parser.add_argument("--save_game",           action="store_true",                                        default=False,        help="Indicates if the game should be saved")
-parser.add_argument("--preprocessing_time",  type=float,                                                 default=3.0,          help="Time given to the players before the game starts")
-parser.add_argument("--turn_time",           type=float,                                                 default=0.1,          help="Time after which players will miss a turn")
-parser.add_argument("--synchronous",         action="store_true",                                        default=False,        help="If set, waits for all players to return an action before moving, even if turn_time is exceeded",)
-parser.add_argument("--continue_on_error",   action="store_true",                                        default=False,        help="If a player crashes, continues the game anyway")
-parser.add_argument("--render_mode",         type=str, choices=["ascii", "ansi", "gui", "no_rendering"], default="gui",        help="Method to display the game, or no_rendering to play without rendering")
-parser.add_argument("--render_simplified",   action="store_true",                                        default=False,        help="If the maze is rendered, hides some elements that are not essential")
-parser.add_argument("--gui_speed",           type=float,                                                 default=1.0,          help="When rendering as GUI, controls the speed of the game")
-parser.add_argument("--fullscreen",          action="store_true",                                        default=False,        help="Renders the game in fullscreen mode (GUI rendering only)")
-parser.add_argument("--trace_length",        type=int,                                                   default=0,            help="Maximum length of the trace to display when players are moving (GUI rendering only)")
-
-# Parse the arguments into a global variable
-args, unknown_args = parser.parse_known_args()
+# Internal imports
+from Maze import Maze
+from RandomMaze import RandomMaze
 
 #####################################################################################################################################################
 ################################################################## GAME DEFINITION ##################################################################
 #####################################################################################################################################################
 
-class PyRat ():
+class Game ():
 
     """
-        This is the main class of the PyRat environment.
-        Check the example programs for more details on how to start a game.
+        
     """
 
     #############################################################################################################################################
@@ -87,54 +51,50 @@ class PyRat ():
     #############################################################################################################################################
 
     def __init__ ( self:                Self,
-                   players:             List[Dict[str, Any]],
-                   random_seed:         Union[None, int] = args.random_seed,
-                   random_seed_maze:    Union[None, int] = args.random_seed_maze,
-                   random_seed_cheese:  Union[None, int] = args.random_seed_cheese,
-                   random_seed_players: Union[None, int] = args.random_seed_players,
-                   maze_width:          int = args.maze_width,
-                   maze_height:         int = args.maze_height,
-                   cell_percentage:     float = args.cell_percentage,
-                   wall_percentage:     float = args.wall_percentage,
-                   mud_percentage:      float = args.mud_percentage,
-                   mud_range:           List[int] = args.mud_range,
-                   maze_representation: str = args.maze_representation,
-                   fixed_maze:          Union[None, str, numpy.ndarray, Dict[int, Dict[int, int]]] = args.fixed_maze,
-                   nb_cheese:           int = args.nb_cheese,
-                   fixed_cheese:        Union[None, str, List[int]] = args.fixed_cheese,
-                   render_mode:         str = args.render_mode,
-                   render_simplified:   bool = args.render_simplified,
-                   gui_speed:           float = args.gui_speed,
-                   trace_length:        int = args.trace_length,
-                   fullscreen:          bool = args.fullscreen,
-                   save_path:           str = args.save_path,
-                   save_game:           bool = args.save_game,
-                   preprocessing_time:  float = args.preprocessing_time,
-                   turn_time:           float = args.turn_time,
-                   synchronous:         bool = args.synchronous,
-                   continue_on_error:   bool = args.continue_on_error
+                   random_seed:         Union[None, int] = None,
+                   random_seed_maze:    Union[None, int] = None,
+                   random_seed_cheese:  Union[None, int] = None,
+                   random_seed_players: Union[None, int] = None,
+                   maze_width:          int = 15,
+                   maze_height:         int = 13,
+                   cell_percentage:     float = 80.0,
+                   wall_percentage:     float = 60.0,
+                   mud_percentage:      float = 20.0,
+                   mud_range:           Tuple[int, int] = (4, 9),
+                   fixed_maze:          Union[None, str, Maze, Dict[int, Dict[int, int]], numpy.ndarray] = None,
+                   nb_cheese:           int = 21,
+                   fixed_cheese:        Union[None, str, List[int]] = None,
+                   render_mode:         str = "gui",
+                   render_simplified:   bool = False,
+                   gui_speed:           float = 1.0,
+                   trace_length:        int = 0,
+                   fullscreen:          bool = False,
+                   save_path:           str = ".",
+                   save_game:           bool = False,
+                   preprocessing_time:  float = 3.0,
+                   turn_time:           float = 0.1,
+                   synchronous:         bool = False,
+                   continue_on_error:   bool = False
                  ) ->                   Self:
 
         """
             This function is the constructor of the class.
             In:
                 * self:                Reference to the current object.
-                * players:             List of players to register to the game, given as dictionaries with keys as defined in _register_player.
-                * random_seed:         Global random seed for all elements.
-                * random_seed_maze:    Random seed for the maze generation.
-                * random_seed_cheese:  Random seed for the pieces of cheese distribution.
-                * random_seed_players: Random seed for the initial location of players.
+                * random_seed:         Global random seed for all elements, set to None for a random value.
+                * random_seed_maze:    Random seed for the maze generation, set to None for a random value.
+                * random_seed_cheese:  Random seed for the pieces of cheese distribution, set to None for a random value.
+                * random_seed_players: Random seed for the initial location of players, set to None for a random value.
                 * maze_width:          Width of the maze in number of cells.
                 * maze_height:         Height of the maze in number of cells.
                 * cell_percentage:     Percentage of cells that can be accessed in the maze, 0%% being a useless maze, and 100%% being a full rectangular maze.
                 * wall_percentage:     Percentage of walls in the maze, 0%% being an empty maze, and 100%% being the maximum number of walls that keep the maze connected.
                 * mud_percentage:      Percentage of pairs of adjacent cells that are separated by mud in the maze.
                 * mud_range:           Interval of turns needed to cross mud.
-                * maze_representation: Representation of the maze in memory as given to players.
                 * fixed_maze:          Fixed maze in any PyRat accepted representation (takes priority over any maze description and will automatically set maze_height and maze_width).
                 * nb_cheese:           Number of pieces of cheese in the maze.
-                * fixed_cheese:        Fixed list of cheese (takes priority over random number of cheese).
-                * render_mode:         Method to display the game, or no_rendering to play without rendering.
+                * fixed_cheese:        Fixed list of cheese (takes priority over number of cheese).
+                * render_mode:         Method to display the game (avaible modes are "gui", "ansi", "ascii", and "no_rendering").
                 * render_simplified:   If the maze is rendered, hides some elements that are not essential.
                 * gui_speed:           When rendering as GUI, controls the speed of the game.
                 * trace_length:        Maximum length of the trace to display when players are moving (GUI rendering only).
@@ -151,29 +111,20 @@ class PyRat ():
         """
 
         # Inherit from parent class
-        super(PyRat, self).__init__()
+        super(Game, self).__init__()
         
         # Check arguments are correct
-        assert 0 < maze_width
-        assert 0 < maze_height
-        assert 0.0 <= cell_percentage <= 100.0
-        assert 0.0 <= wall_percentage <= 100.0
-        assert 0.0 <= mud_percentage <= 100.0
-        assert 1 < mud_range[0] <= mud_range[1]
-        assert 0 < nb_cheese
-        assert 0.0 <= preprocessing_time
-        assert 0.0 <= turn_time
-        assert 0 < len(players)
+        #assert 0 < maze_width
+        #assert 0 < maze_height
+        #assert 0.0 <= cell_percentage <= 100.0
+        #assert 0.0 <= wall_percentage <= 100.0
+        #assert 0.0 <= mud_percentage <= 100.0
+        #assert 1 < mud_range[0] <= mud_range[1]
+        #assert 0 < nb_cheese
+        #assert 0.0 <= preprocessing_time
+        #assert 0.0 <= turn_time
         
-        # Store arguments (some might be overwritten later)
-        self.maze_width = maze_width
-        self.maze_height = maze_height
-        self.cell_percentage = cell_percentage
-        self.wall_percentage = wall_percentage
-        self.mud_percentage = mud_percentage
-        self.mud_range = mud_range
-        self.maze_representation = maze_representation
-        self.fixed_maze = fixed_maze
+        # Attributes
         self.nb_cheese = nb_cheese
         self.fixed_cheese = fixed_cheese
         self.render_mode = render_mode
@@ -205,13 +156,16 @@ class PyRat ():
         self.actions_history = {}
         self.gui_process = None
         self.gui_process_queue = None
+        self.cheese = None
+        self.initial_cheese = None
 
-        # Initialize game elements
-        self.maze, self.maze_public, self.maze_width, self.maze_height = self._create_maze()
-        for player in players:
-            self._register_player(**player)
-        self.cheese = self._distribute_cheese()
-        self.initial_cheese = self.cheese.copy()
+        # Initialize the maze
+        if fixed_maze is not None:
+            self.maze = RandomMaze(maze_width, maze_height, cell_percentage, wall_percentage, mud_percentage, mud_range, random_seed_maze)
+        else:
+            self.maze = FixedMaze(fixed_maze)
+        self.maze = self._create_maze()
+
 
     #############################################################################################################################################
     #                                                               STATIC METHODS                                                              #
@@ -251,6 +205,10 @@ class PyRat ():
         # We catch exceptions that may happen during the game
         try:
             
+            # Add cheese to the maze
+            self._distribute_cheese()
+            self.initial_cheese = self.cheese.copy()
+
             # Start the game
             turn = 0
             done = False
@@ -534,47 +492,6 @@ class PyRat ():
     #                                                          (GAME ELEMENTS CREATION)                                                         #
     #############################################################################################################################################
     
-    def _create_maze ( self: Self
-                     ) ->    Tuple[Dict[int, Dict[int, int]], Union[numpy.ndarray, Dict[int, Dict[int, int]]], int, int]:
-        
-        """
-            Creates a maze, according to the provided criteria.
-            If a fixed maze is provided, it is used.
-            Otherwise, a random maze is created.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * maze:        Created maze as internal representation.
-                * maze_public: Created maze as a representation for the players.
-                * maze_width:  Width of the maze effectively created.
-                * maze_height: Height of the maze effectively created.
-        """
-        
-        # Set random seed
-        nprandom.seed(self.random_seed_maze)
-
-        # Call the correct function depending on the type of maze
-        if self.fixed_maze is not None:
-            maze, maze_width, maze_height = self._create_maze_fixed()
-        else:
-            maze, maze_width, maze_height = self._create_maze_random()
-
-        # We convert the maze to the asked format to provide to players
-        if self.maze_representation == "dictionary":
-            maze_public = maze.copy()
-        elif self.maze_representation == "matrix":
-            maze_public = numpy.zeros((maze_width * maze_height, maze_width * maze_height))
-            for vertex in maze:
-                for neighbor in maze[vertex]:
-                    maze_public[vertex, neighbor] = maze[vertex][neighbor]
-        else:
-            raise Exception("Invalid public representation of the maze %s" % self.maze_representation)
-
-        # Done
-        return maze, maze_public, maze_width, maze_height
-        
-    #############################################################################################################################################
-
     def _create_maze_fixed ( self: Self
                            ) ->    Tuple[Dict[int, Dict[int, int]], int, int]:
         
@@ -629,68 +546,6 @@ class PyRat ():
         
         # Return the maze and dimensions
         return maze, maze_width, maze_height
-
-    #############################################################################################################################################
-    
-    def _create_maze_random ( self: Self
-                            ) ->    Tuple[Dict[int, Dict[int, int]], int, int]:
-        
-        """
-            Creates a maze from the provided random description.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * maze:        Created maze as internal representation.
-                * maze_width:  Width of the maze effectively created.
-                * maze_height: Height of the maze effectively created.
-        """
-    
-        # Initialize an empty maze, and add cells until it reaches the asked density
-        maze_sparse = sparse.lil_matrix((self.maze_width * self.maze_height, self.maze_width * self.maze_height), dtype=int)
-        cells = [(self.maze_height // 2, self.maze_width // 2)]
-        while len(cells) / maze_sparse.shape[0] * 100 < self.cell_percentage:
-            row, col = cells[nprandom.randint(len(cells))]
-            neighbor_row, neighbor_col = [(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)][nprandom.randint(4)]
-            if 0 <= neighbor_row < self.maze_height and 0 <= neighbor_col < self.maze_width:
-                maze_sparse[self._rc_to_i(row, col, self.maze_width), self._rc_to_i(neighbor_row, neighbor_col, self.maze_width)] = 1
-                maze_sparse[self._rc_to_i(neighbor_row, neighbor_col, self.maze_width), self._rc_to_i(row, col, self.maze_width)] = 1
-                for next_neighbor_row, next_neighbor_col in [(neighbor_row - 1, neighbor_col), (neighbor_row + 1, neighbor_col), (neighbor_row, neighbor_col - 1), (neighbor_row, neighbor_col + 1)]:
-                    if (next_neighbor_row, next_neighbor_col) in cells:
-                        maze_sparse[self._rc_to_i(next_neighbor_row, next_neighbor_col, self.maze_width), self._rc_to_i(neighbor_row, neighbor_col, self.maze_width)] = 1
-                        maze_sparse[self._rc_to_i(neighbor_row, neighbor_col, self.maze_width), self._rc_to_i(next_neighbor_row, next_neighbor_col, self.maze_width)] = 1
-                if (neighbor_row, neighbor_col) not in cells:
-                    cells.append((neighbor_row, neighbor_col))
-        
-        # Add walls
-        maze_full = csgraph.minimum_spanning_tree(maze_sparse)
-        maze_full += maze_full.transpose()
-        walls = sparse.triu(maze_sparse - maze_full).nonzero()
-        walls = [(walls[0][i], walls[1][i]) for i in range(walls[0].shape[0])]
-        nprandom.shuffle(walls)
-        for i in range(int(numpy.ceil(self.wall_percentage / 100.0 * len(walls)))):
-            maze_sparse[walls[i][0], walls[i][1]] = 0
-            maze_sparse[walls[i][1], walls[i][0]] = 0
-
-        # Add mud
-        paths = sparse.triu(maze_sparse).nonzero()
-        paths = [(paths[0][i], paths[1][i]) for i in range(paths[0].shape[0])]
-        nprandom.shuffle(paths)
-        for i in range(int(numpy.ceil(self.mud_percentage / 100.0 * len(paths)))):
-            mud_weight = nprandom.choice(range(self.mud_range[0], self.mud_range[1] + 1))
-            maze_sparse[paths[i][0], paths[i][1]] = mud_weight
-            maze_sparse[paths[i][1], paths[i][0]] = mud_weight
-
-        # Convert to dictionary
-        maze = {}
-        for vertex in range(maze_sparse.shape[0]):
-            neighbors = maze_sparse[vertex].rows[0]
-            if len(neighbors) > 0:
-                maze[vertex] = {}
-                for neighbor in neighbors:
-                    maze[vertex][neighbor] = maze_sparse[vertex, neighbor]
-        
-        # Return the maze and dimensions
-        return maze, self.maze_width, self.maze_height
 
     #############################################################################################################################################
 
