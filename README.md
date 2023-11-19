@@ -29,7 +29,7 @@ Installation of the PyRat software can be done directly using `pip`. Do not clon
 
 3) Then, run the following command to create a PyRat workspace:<br />`python -c "import pyrat2024; pyrat2024.PyRat.setup_workspace()"`
 
-4) Check your installation by navigating to `pyrat_workspace/scripts` and running the following command:<br />`python catch_1_cheese_unweighted.py`
+4) Check your installation by navigating to `pyrat_workspace/games` and running the following command:<br />`python catch_1_cheese_unweighted.py`
 
 <!-- ##################################################################################################################################################### -->
 <!-- ##################################################################################################################################################### -->

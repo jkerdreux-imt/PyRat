@@ -3,7 +3,8 @@
 #####################################################################################################################################################
 
 """
-    TODO
+    This file contains useful elements to define a player.
+    It is meant to be used as a library, and not to be executed directly.
 """
 
 #####################################################################################################################################################
@@ -16,17 +17,20 @@ from typing_extensions import *
 import abc
 
 # Internal imports
-from Maze import Maze
+from pyrat2024.src.Maze import Maze
+from pyrat2024.src.GameState import GameState
 
 #####################################################################################################################################################
-################################################################## CLASS DEFINITION #################################################################
+###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
 class Player (metaclass=abc.ABCMeta):
 
     """
         This class is abstract and cannot be instantiated.
-        It represents a player in the game.
+        You should use one of the subclasses to create a maze, or create your own subclass.
+
+        A player is an agent that can play a PyRat game.
         The preprocessing method is called once at the beginning of the game.
         The turn method is called at each turn of the game.
         The postprocessing method is called once at the end of the game.
@@ -51,13 +55,10 @@ class Player (metaclass=abc.ABCMeta):
                 * name: Name of the player.
                 * skin: Skin of the player.
             Out:
-                * self: Reference to the current object.
+                * A new instance of the class.
         """
 
-        # Inherit from parent class
-        super(Player, self).__init__()
-        
-        # Attributes
+        # Save arguments as attributes
         self.name = name
         self.skin = skin
 
@@ -65,24 +66,20 @@ class Player (metaclass=abc.ABCMeta):
     #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
-    @abc.abstractmethod
-    def preprocessing ( maze:             Maze,
-                        teams:            Dict[str, List[str]],
-                        player_locations: Dict[str, int],
-                        cheese:           List[int],
+    def preprocessing ( self:             Self,
+                        maze:             Maze,
+                        game_state:       GameState,
                         possible_actions: List[str],
                       ) ->                None:
         
         """
-            This method is abstract and can optionally be implemented in the child classes.
+            This method can optionally be implemented in the child classes.
             It is called once at the beginning of the game.
             It is typically given more time than the turn function, to perform complex computations.
             In:
+                * self:             Reference to the current object.
                 * maze:             An object representing the maze in which the player plays.
-                * name:             Name of the player controlled by this function.
-                * teams:            Recap of the teams of players.
-                * player_locations: Locations for all players in the game.
-                * cheese:           List of available pieces of cheese in the maze.
+                * game_state:       An object representing the state of the game.
                 * possible_actions: List of possible actions.
             Out:
                 * None.
@@ -94,27 +91,20 @@ class Player (metaclass=abc.ABCMeta):
     #############################################################################################################################################
 
     @abc.abstractmethod
-    def turn ( maze:             Maze,
-               teams:            Dict[str, List[str]],
-               player_locations: Dict[str, int],
-               player_scores:    Dict[str, float],
-               player_muds:      Dict[str, Dict[str, Union[None, int]]],
-               cheese:           List[int],
+    def turn ( self:             Self,
+               maze:             Maze,
+               game_state:       GameState,
                possible_actions: List[str]
              ) ->                str:
 
         """
             This method is abstract and must be implemented in the child classes.
-            It is called at every turn of the game and should return an action within the set of possible actions.
-            You can access the memory you stored during the preprocessing function by doing memory.my_key.
-            You can also update the existing memory with new information, or create new entries as memory.my_key = my_value.
+            It is called at each turn of the game.
+            It returns an action to perform among the possible actions.
             In:
+                * self:             Reference to the current object.
                 * maze:             An object representing the maze in which the player plays.
-                * teams:            Recap of the teams of players.
-                * player_locations: Locations for all players in the game.
-                * player_scores:    Scores for all players in the game.
-                * player_muds:      Indicates which player is currently crossing mud.
-                * cheese:           List of available pieces of cheese in the maze.
+                * game_state:       An object representing the state of the game.
                 * possible_actions: List of possible actions.
             Out:
                 * action: One of the possible actions, as given in possible_actions.
@@ -126,28 +116,21 @@ class Player (metaclass=abc.ABCMeta):
 
 #############################################################################################################################################
 
-    @abc.abstractmethod
-    def postprocessing ( maze:             Maze,
-                         teams:            Dict[str, List[str]],
-                         player_locations: Dict[str, int],
-                         player_scores:    Dict[str, float],
-                         player_muds:      Dict[str, Dict[str, Union[None, int]]],
-                         cheese:           List[int],
+    def postprocessing ( self:             Self,
+                         maze:             Maze,
+                         game_state:       GameState,
                          possible_actions: List[str],
                          stats:            Dict[str, Any],
                        ) ->                None:
 
         """
-            This method is abstract and can optionally be implemented in the child classes.
+            This method can optionally be implemented in the child classes.
             It is called once at the end of the game.
             It is not timed, and can be used to make some cleanup, analyses of the completed game, model training, etc.
             In:
+                * self:             Reference to the current object.
                 * maze:             An object representing the maze in which the player plays.
-                * teams:            Recap of the teams of players.
-                * player_locations: Locations for all players in the game.
-                * player_scores:    Scores for all players in the game.
-                * player_muds:      Indicates which player is currently crossing mud.
-                * cheese:           List of available pieces of cheese in the maze.
+                * game_state:       An object representing the state of the game.
                 * possible_actions: List of possible actions.
                 * stats:            Statistics about the game.
             Out:

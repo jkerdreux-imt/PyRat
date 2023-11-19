@@ -3,7 +3,8 @@
 #####################################################################################################################################################
 
 """
-    TODO
+    This file contains useful elements to define a graph.
+    It is meant to be used as a library, and not to be executed directly.
 """
 
 #####################################################################################################################################################
@@ -15,19 +16,20 @@ from typing import *
 from typing_extensions import *
 
 #####################################################################################################################################################
-################################################################## CLASS DEFINITION #################################################################
+###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
 class Graph ():
 
     """
-        This class represents a graph.
+        A graph is a mathematical structure that models pairwise relations between objects.
+        It consists of a set of vertices and a set of edges.
         It is implemented using an adjacency dictionary.
         The keys of the dictionary are the vertices of the graph.
         The values of the dictionary are dictionaries themselves.
         The keys of these dictionaries are the neighbors of the corresponding vertex.
         The values of these dictionaries are the weights of the corresponding edges.
-        It should be manipulated using the methods defined below.
+        It should be manipulated using the methods defined below and not directly.
     """
 
     #############################################################################################################################################
@@ -42,17 +44,32 @@ class Graph ():
             In:
                 * self: Reference to the current object.
             Out:
-                * self: Reference to the current object.
+                * A new instance of the class.
         """
 
-        # Inherit from parent class
-        super(Graph, self).__init__()
-        
-        # Attributes
+        # Initialize graph attributes
         self.adjacency = {}
 
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
+    #############################################################################################################################################
+
+    def copy ( self: Self
+             ) ->    Self:
+        
+        """
+            Creates a copy of the graph.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * graph_copy: Copy of the graph.
+        """
+
+        # Create the copy
+        graph_copy = Graph()
+        graph_copy.adjacency = self.adjacency.copy()
+        return graph_copy
+
     #############################################################################################################################################
 
     def add_vertex ( self:   Self,
