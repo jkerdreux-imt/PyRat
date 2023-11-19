@@ -3,8 +3,7 @@
 #####################################################################################################################################################
 
 """
-    This file is a template to save a PyRat game.
-    It contains a few tags that will be replaced by the PyRat game when needed.
+    This file is a replay of a game that has already been played.
     Players will reproduce their actions in the same order as in the original game.
     Computations will not be made again.
 """
@@ -14,10 +13,7 @@
 #####################################################################################################################################################
 
 # Internal imports
-from pyrat2024.src.Player import Player
-from pyrat2024.src.Maze import Maze
-from pyrat2024.src.GameState import GameState
-from pyrat2024.src.FixedPlayer import FixedPlayer
+from pyrat2024 import FixedPlayer, Game
 
 #####################################################################################################################################################
 ######################################################################## GO! ########################################################################
