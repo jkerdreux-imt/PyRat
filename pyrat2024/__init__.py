@@ -12,12 +12,13 @@
 
 # Internal imports
 from .src.AsciiRenderingEngine import AsciiRenderingEngine
-from .src.FixedMaze import FixedMaze
 from .src.FixedPlayer import FixedPlayer
 from .src.Game import Game
 from .src.GameState import GameState
 from .src.Graph import Graph
 from .src.Maze import Maze
+from .src.MazeFromDict import MazeFromDict
+from .src.MazeFromMatrix import MazeFromMatrix
 from .src.Player import Player
 from .src.PygameRenderingEngine import PygameRenderingEngine
 from .src.RandomMaze import RandomMaze

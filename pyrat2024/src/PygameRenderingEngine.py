@@ -11,9 +11,13 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External imports
+# External typing imports
 from typing import *
 from typing_extensions import *
+from numbers import *
+
+# Other external imports
+import copy
 import numpy
 import multiprocessing
 import os
@@ -50,13 +54,14 @@ class PygameRenderingEngine (RenderingEngine):
 
     def __init__ ( self:              Self,
                    fullscreen:        bool = False,
-                   trace_length:      int = 0,
-                   gui_speed:         float = 1.0,
+                   trace_length:      Integral = 0,
+                   gui_speed:         Number = 1.0,
                    render_simplified: bool = False
                  ) ->                 Self:
 
         """
             This function is the constructor of the class.
+            We do not duplicate asserts already made in the parent method.
             In:
                 * self:              Reference to the current object.
                 * fullscreen:        Indicates if the GUI should be fullscreen.
@@ -70,14 +75,19 @@ class PygameRenderingEngine (RenderingEngine):
         # Inherit from parent class
         super().__init__(render_simplified)
 
-        # Save arguments as attributes
-        self.fullscreen = fullscreen
-        self.trace_length = trace_length
-        self.gui_speed = gui_speed
-        
-        # Create attributes for handling the GUI process
-        self.gui_process = None
-        self.gui_process_queue = None
+        # Debug
+        assert isinstance(fullscreen, bool) # Type check for fullscreen
+        assert isinstance(trace_length, Integral) # Type check for trace_length
+        assert isinstance(gui_speed, Number) # Type check for gui_speed
+        assert trace_length >= 0 # trace_length must be positive
+        assert gui_speed > 0 # gui_speed must be positive
+
+        # Private attributes
+        self.__fullscreen = fullscreen
+        self.__trace_length = trace_length
+        self.__gui_speed = gui_speed
+        self.__gui_process = None
+        self.__gui_queue = None
 
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
@@ -102,19 +112,25 @@ class PygameRenderingEngine (RenderingEngine):
                 * None.
         """
 
+        # Debug
+        assert isinstance(players, list) # Type check for players
+        assert all(isinstance(player, Player) for player in players) # Type check for players
+        assert isinstance(maze, Maze) # Type check for maze
+        assert isinstance(game_state, GameState) # Type check for game_state
+
         # Initialize the GUI in a different process at turn 0
         if game_state.turn == 0:
 
             # Initialize the GUI process
             gui_initialized_synchronizer = multiprocessing.Manager().Barrier(2)
-            self.gui_process_queue = multiprocessing.Manager().Queue()
-            self.gui_process = multiprocessing.Process(target=_gui_process_function, args=(gui_initialized_synchronizer, self.gui_process_queue, maze, game_state, players, self.fullscreen, self.render_simplified, self.trace_length, self.gui_speed))
-            self.gui_process.start()
+            self.__gui_queue = multiprocessing.Manager().Queue()
+            self.__gui_process = multiprocessing.Process(target=_gui_process_function, args=(gui_initialized_synchronizer, self.__gui_queue, maze, game_state, players, self.__fullscreen, self._render_simplified, self.__trace_length, self.__gui_speed))
+            self.__gui_process.start()
             gui_initialized_synchronizer.wait()
         
         # At each turn, send current info to the process
         else:
-            self.gui_process_queue.put(game_state)
+            self.__gui_queue.put(game_state)
         
     #############################################################################################################################################
 
@@ -131,8 +147,8 @@ class PygameRenderingEngine (RenderingEngine):
         """
 
         # Wait for GUI to be exited to quit if there is one
-        if self.gui_process is not None:
-            self.gui_process.join()
+        if self.__gui_process is not None:
+            self.__gui_process.join()
 
 #####################################################################################################################################################
 ##################################################################### FUNCTIONS #####################################################################
@@ -145,9 +161,9 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
                             players:                      List[Player],
                             fullscreen:                   bool,
                             render_simplified:            bool,
-                            trace_length:                 int,
-                            gui_speed:                    float
-                          ):
+                            trace_length:                 Integral,
+                            gui_speed:                    Number
+                          ) ->                            None:
     
     """
         This function is executed in a separate process for the GUI.
@@ -166,6 +182,20 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
         Out:
             * None.
     """
+
+    # Debug
+    assert isinstance(gui_initialized_synchronizer, multiprocessing.managers.BarrierProxy) # Type check for gui_initialized_synchronizer
+    assert isinstance(gui_queue, multiprocessing.managers.BaseProxy) # Type check for gui_queue
+    assert isinstance(maze, Maze) # Type check for maze
+    assert isinstance(initial_game_state, GameState) # Type check for initial_game_state
+    assert isinstance(players, list) # Type check for players
+    assert all(isinstance(player, Player) for player in players) # Type check for players
+    assert isinstance(fullscreen, bool) # Type check for fullscreen
+    assert isinstance(render_simplified, bool) # Type check for render_simplified
+    assert isinstance(trace_length, Integral) # Type check for trace_length
+    assert isinstance(gui_speed, Number) # Type check for gui_speed
+    assert trace_length >= 0 # trace_length must be positive
+    assert gui_speed > 0 # gui_speed must be positive
 
     # We catch exceptions that may happen during the game
     try:
@@ -618,7 +648,7 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
         gui_screen.blit(preprocessing_image, (main_image_x, main_image_y))
         
         # Prepare useful variables
-        current_state = initial_game_state.copy()
+        current_state = copy.deepcopy(initial_game_state)
         mud_being_crossed = {player.name: 0 for player in players}
         traces = {player.name: [(player_elements[player.name][0] + player_elements[player.name][2].get_width() / 2, player_elements[player.name][1] + player_elements[player.name][2].get_height() / 2)] for player in players}
         trace_colors = {player.name: ___get_main_color(player_elements[player.name][2]) for player in players}
@@ -734,7 +764,7 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
                 
                 # Update score
                 ___show_avatars()
-                new_scores = current_state.get_score_per_team()
+                new_scores = new_state.get_score_per_team()
                 ___show_scores(new_scores)
                 current_state = new_state
                 

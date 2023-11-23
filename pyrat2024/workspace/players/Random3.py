@@ -11,9 +11,12 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External imports
+# External typing imports
 from typing import *
 from typing_extensions import *
+from numbers import *
+
+# Other external imports
 import random
 
 # Internal imports
@@ -63,11 +66,10 @@ class Random3 (Player):
     #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
-    def turn ( self:             Self,
-               maze:             Maze,
-               game_state:       GameState,
-               possible_actions: List[str]
-             ) ->                str:
+    def turn ( self:       Self,
+               maze:       Maze,
+               game_state: GameState,
+             ) ->          str:
 
         """
             This method redefines the abstract method of the parent class.
@@ -75,12 +77,11 @@ class Random3 (Player):
             It returns an action that explores a random unvisited cell if possible.
             If no such action exists, it returns a random action that does not lead to a wall.
             In:
-                * self:             Reference to the current object.
-                * maze:             An object representing the maze in which the player plays.
-                * game_state:       An object representing the state of the game.
-                * possible_actions: List of possible actions.
+                * self:       Reference to the current object.
+                * maze:       An object representing the maze in which the player plays.
+                * game_state: An object representing the state of the game.
             Out:
-                * action: One of the possible actions, as given in possible_actions.
+                * action: One of the possible actions
         """
 
         # Mark current cell as visited

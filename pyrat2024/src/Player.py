@@ -11,9 +11,12 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External imports
+# External typing imports
 from typing import *
 from typing_extensions import *
+from numbers import *
+
+# Other external imports
 import abc
 
 # Internal imports
@@ -24,7 +27,7 @@ from pyrat2024.src.GameState import GameState
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class Player (metaclass=abc.ABCMeta):
+class Player (abc.ABC):
 
     """
         This class is abstract and cannot be instantiated.
@@ -58,32 +61,72 @@ class Player (metaclass=abc.ABCMeta):
                 * A new instance of the class.
         """
 
-        # Save arguments as attributes
-        self.name = name
-        self.skin = skin
+        # Debug
+        assert isinstance(name, str) # Type check for the name
+        assert isinstance(skin, str) # Type check for the skin
+
+        # Private attributes
+        self.__name = name
+        self.__skin = skin
 
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
-    def preprocessing ( self:             Self,
-                        maze:             Maze,
-                        game_state:       GameState,
-                        possible_actions: List[str],
-                      ) ->                None:
+    @property
+    def name ( self: Self
+             ) ->    str:
+        
+        """
+            This function allows to make the __name attribute public and read-only.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * self.__name: The corresponding attribute.
+        """
+
+        # Return the attribute
+        return self.__name
+
+    #############################################################################################################################################
+    
+    @property
+    def skin ( self: Self
+             ) ->    str:
+        
+        """
+            This function allows to make the __skin attribute public and read-only.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * self.__skin: The corresponding attribute.
+        """
+
+        # Return the attribute
+        return self.__skin
+
+    #############################################################################################################################################
+    
+    def preprocessing ( self:       Self,
+                        maze:       Maze,
+                        game_state: GameState
+                      ) ->          None:
         
         """
             This method can optionally be implemented in the child classes.
             It is called once at the beginning of the game.
             It is typically given more time than the turn function, to perform complex computations.
             In:
-                * self:             Reference to the current object.
-                * maze:             An object representing the maze in which the player plays.
-                * game_state:       An object representing the state of the game.
-                * possible_actions: List of possible actions.
+                * self:       Reference to the current object.
+                * maze:       An object representing the maze in which the player plays.
+                * game_state: An object representing the state of the game.
             Out:
                 * None.
         """
+
+        # Debug
+        assert isinstance(maze, Maze) # Type check for the maze
+        assert isinstance(game_state, GameState) # Type check for the game state
 
         # By default, this method does nothing unless implemented in the child classes
         pass
@@ -91,24 +134,27 @@ class Player (metaclass=abc.ABCMeta):
     #############################################################################################################################################
 
     @abc.abstractmethod
-    def turn ( self:             Self,
-               maze:             Maze,
-               game_state:       GameState,
-               possible_actions: List[str]
-             ) ->                str:
+    def turn ( self:       Self,
+               maze:       Maze,
+               game_state: GameState
+             ) ->          str:
 
         """
             This method is abstract and must be implemented in the child classes.
             It is called at each turn of the game.
-            It returns an action to perform among the possible actions.
+            It returns an action to perform among the possible actions, defined as a static attribute of class Maze.
+            These can be accessed using Maze.possible_actions.
             In:
-                * self:             Reference to the current object.
-                * maze:             An object representing the maze in which the player plays.
-                * game_state:       An object representing the state of the game.
-                * possible_actions: List of possible actions.
+                * self:       Reference to the current object.
+                * maze:       An object representing the maze in which the player plays.
+                * game_state: An object representing the state of the game.
             Out:
-                * action: One of the possible actions, as given in possible_actions.
+                * action: One of the possible actions.
         """
+
+        # Debug
+        assert isinstance(maze, Maze) # Type check for the maze
+        assert isinstance(game_state, GameState) # Type check for the game state
 
         # This method must be implemented in the child classes
         # By default we raise an error
@@ -116,26 +162,30 @@ class Player (metaclass=abc.ABCMeta):
 
 #############################################################################################################################################
 
-    def postprocessing ( self:             Self,
-                         maze:             Maze,
-                         game_state:       GameState,
-                         possible_actions: List[str],
-                         stats:            Dict[str, Any],
-                       ) ->                None:
+    def postprocessing ( self:       Self,
+                         maze:       Maze,
+                         game_state: GameState,
+                         stats:      Dict[str, Any],
+                       ) ->          None:
 
         """
             This method can optionally be implemented in the child classes.
             It is called once at the end of the game.
             It is not timed, and can be used to make some cleanup, analyses of the completed game, model training, etc.
             In:
-                * self:             Reference to the current object.
-                * maze:             An object representing the maze in which the player plays.
-                * game_state:       An object representing the state of the game.
-                * possible_actions: List of possible actions.
-                * stats:            Statistics about the game.
+                * self:       Reference to the current object.
+                * maze:       An object representing the maze in which the player plays.
+                * game_state: An object representing the state of the game.
+                * stats:      Statistics about the game.
             Out:
                 * None.
         """
+
+        # Debug
+        assert isinstance(maze, Maze) # Type check for the maze
+        assert isinstance(game_state, GameState) # Type check for the game state
+        assert isinstance(stats, dict) # Type check for the stats
+        assert all(isinstance(key, str) for key in stats.keys()) # Type check for the keys of the stats
 
         # By default, this method does nothing unless implemented in the child classes
         pass

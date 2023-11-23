@@ -11,9 +11,10 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External imports
+# External typing imports
 from typing import *
 from typing_extensions import *
+from numbers import *
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
@@ -42,7 +43,7 @@ class GameState ():
                 * A new instance of the class.
         """
 
-        # Initialize state attributes
+        # Public attributes
         self.player_locations = {}
         self.score_per_player = {}
         self.muds = {}
@@ -52,29 +53,6 @@ class GameState ():
 
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
-    #############################################################################################################################################
-
-    def copy ( self: Self
-             ) ->    Self:
-        
-        """
-            Creates a copy of the game state.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * game_state_copy: Copy of the game state.
-        """
-
-        # Create the copy
-        game_state_copy = GameState()
-        game_state_copy.player_locations = self.player_locations.copy()
-        game_state_copy.score_per_player = self.score_per_player.copy()
-        game_state_copy.muds = self.muds.copy()
-        game_state_copy.teams = self.teams.copy()
-        game_state_copy.cheese = self.cheese.copy()
-        game_state_copy.turn = self.turn
-        return game_state_copy
-
     #############################################################################################################################################
     
     def is_in_mud ( self: Self,
@@ -90,6 +68,10 @@ class GameState ():
                 * in_mud: Whether the player is currently crossing mud.
         """
 
+        # Debug
+        assert isinstance(name, str) # Type check for the name
+        assert name in self.muds # Check that the player exists
+
         # Get whether the player is currently crossing mud
         in_mud = self.muds[name]["target"] is not None
         return in_mud
@@ -97,7 +79,7 @@ class GameState ():
     #############################################################################################################################################
 
     def get_score_per_team ( self: Self
-                           ) ->    Dict[str, float]:
+                           ) ->    Dict[str, Number]:
         
         """
             Returns the score per team.

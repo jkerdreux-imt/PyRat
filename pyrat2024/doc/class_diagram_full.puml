@@ -1,0 +1,248 @@
+' #####################################################################################################################################################
+' ######################################################################## INFO #######################################################################
+' #####################################################################################################################################################
+
+' This file is a UML diagram of the PyRat project.
+' It is written in PlantUML, a language that allows to write UML diagrams in a simple text format.
+' The diagram is generated using the PlantUML extension for Visual Studio Code or using the following command:
+' The diagram is generated using the following command: plantuml -tsvg -o ../doc/uml/uml.svg uml.puml
+
+' #####################################################################################################################################################
+' ###################################################################### DIAGRAM ######################################################################
+' #####################################################################################################################################################
+
+@startuml PyRat
+left to right direction
+
+' #####################################################################################################################################################
+' ###################################################################### PACKAGES #####################################################################
+' #####################################################################################################################################################
+
+package "PyRat" #DDDDFF
+{
+
+    class Graph
+    {
+        {field} + vertices : List[Any] {readOnly}
+        {field} - __adjacency : Dict[int, Dict[int, float]]
+        {field} - __vertices : List[Any]
+        {method} + add_vertex (vertex : Any)
+        {method} + add_edge (vertex_1 : Any, vertex_2 : Any, weight : float, symmetric : bool)
+        {method} + get_neighbors (vertex : Any) : List[Any]
+        {method} + get_weight (vertex_1 : Any, vertex_2 : Any) : float
+        {method} + as_dict () : Dict[Any, Dict[Any, real]]
+    }
+
+    abstract class Maze
+    {
+        {field} + width : int {readOnly}
+        {field} + height : int {readOnly}
+        {field} + possible_actions : List[str] {readOnly}
+        {field} - __width : int
+        {field} - __height : int
+        {field} - __possible_actions : List[str]
+        {method} + i_to_rc (i : int) : Tuple[int, int]
+        {method} + rc_to_i (row : int, col : int) : int
+        {method} + rc_exists (row : int, col : int) : bool
+        {method} + coords_difference (vertex_1 : int, vertex_2 : int) : Tuple[int, int]
+        {abstract} # _create_maze ()
+        {method} # _infer_dimensions ()
+    }
+
+    class MazeFromDict
+    {
+        {field} - __description : Dict[int, Dict[int, int]]
+        {method} # _create_maze ()
+        {method} - __valid_description () : bool
+    }
+
+    class RandomMaze
+    {
+        {field} - __cell_percentage : float
+        {field} - __wall_percentage : float
+        {field} - __mud_percentage : float
+        {field} - __mud_range : Tuple[int, int]
+        {field} - __random_seed : Optional[int]
+        {method} # _create_maze ()
+    }
+
+    class RenderingEngine
+    {
+        {field} - __render_simplified : bool
+        {method} + render (players : List[Player], maze : Maze, game_state : GameState)
+        {method} + end ()
+    }
+
+    class AsciiRenderingEngine
+    {
+        {field} - __use_colors : bool
+        {method} + render (players : List[Player], maze : Maze, game_state : GameState)
+        {method} - __colorize (text : str, colorization : str, alternate_text : Optional[str]) : str
+        {method} - __colored_len (text : str) : int
+    }
+
+    class PygameRenderingEngine
+    {
+        {field} - __fullscreen : bool
+        {field} - __trace_length : int
+        {field} - __gui_speed : float
+        {field} - __gui_process : multiprocessing.Process
+        {field} - __gui_queue : multiprocessing.Queue
+        {method} + render (players : List[Player], maze : Maze, game_state : GameState)
+        {method} + end ()
+    }
+
+    abstract class Player
+    {
+        {field} + name : str {readOnly}
+        {field} + skin : str {readOnly}
+        {field} - __name : str
+        {field} - __skin : str
+        {method} + preprocessing (maze : Maze, game_state : GameState)
+        {abstract} + turn (maze : Maze, game_state : GameState) : str
+        {method} + postprocessing (maze : Maze, game_state : GameState, stats : Dict[str, Any])
+    }
+
+    class FixedPlayer
+    {
+        {field} - __actions : List[str]
+        {method} + turn (maze : Maze, game_state : GameState) : str
+    }
+
+    class Game
+    {
+        {field} - __random_seed : Optional[int]
+        {field} - __random_seed_maze : Optional[int]
+        {field} - __random_seed_cheese : Optional[int]
+        {field} - __random_seed_players : Optional[int]
+        {field} - __maze_width : int
+        {field} - __maze_height : int
+        {field} - __cell_percentage : float
+        {field} - __wall_percentage : float
+        {field} - __mud_percentage : float
+        {field} - __mud_range : Tuple[int, int]
+        {field} - __fixed_maze : Optional[Union[str, Maze, Dict[int, Dict[int, int]], numpy.ndarray]]
+        {field} - __nb_cheese : int
+        {field} - __fixed_cheese : Optional[Union[str, List[int]]]
+        {field} - __render_mode : str
+        {field} - __render_simplified : bool
+        {field} - __gui_speed : float
+        {field} - __trace_length : int
+        {field} - __fullscreen : bool
+        {field} - __save_path : str
+        {field} - __save_game : bool
+        {field} - __preprocessing_time : float
+        {field} - __turn_time : float
+        {field} - __synchronous : bool
+        {field} - __continue_on_error : bool
+        {field} - __game_random_seed_maze : int
+        {field} - __game_random_seed_cheese : int
+        {field} - __game_random_seed_players : int
+        {field} - __players : List[Player]
+        {field} - __initial_game_state : GameState
+        {field} - __player_traces : Dict[str, List[int]]
+        {field} - __actions_history : List[str]
+        {field} - __rendering_engine : RenderingEngine
+        {field} - __maze : Maze
+        {method} + reset ()
+        {method} + add_player (player : Player, team : str, location : int)
+        {method} + start () : Dict[str, Any]
+        {method} - __end (game_crashed : bool)
+        {method} - __determine_new_game_state (game_state : GameState, actions : Dict[str, str]) : GameState
+        {method} - __distribute_cheese ()
+    }
+
+    class GameState
+    {
+        {field} + player_locations : Dict[str, int]
+        {field} + score_per_player : Dict[str, float]
+        {field} + muds : Dict[str, Dict[str, Optional[int]]]
+        {field} + teams : Dict[str, List[str]]
+        {field} + cheese : List[int]
+        {field} + turn : int
+        {method} + is_in_mud (name : str) : bool
+        {method} + get_score_per_team () : Dict[str, float]
+        {method} + game_over () : bool
+    }
+
+}
+
+' #####################################################################################################################################################
+
+package "Workspace.players" #FFDDDD
+{
+
+    class Random1
+    {
+        {method} + turn (maze : Maze, game_state : GameState) : str
+    }
+
+    class Random2
+    {
+        {method} + turn (maze : Maze, game_state : GameState) : str
+    }
+
+    class Random3
+    {
+        {field} + visited_cells : List[int]
+        {method} + turn (maze : Maze, game_state : GameState) : str
+    }
+
+    class Random4
+    {
+        {field} + visited_cells : List[int]
+        {field} + trajectory : List[int]
+        {method} + preprocessing (maze : Maze, game_state : GameState)
+        {method} + turn (maze : Maze, game_state : GameState) : str
+    }
+
+}
+
+' #####################################################################################################################################################
+
+package "Workspace.games" #FFDDDD
+{
+
+    class example {}
+    hide example circle
+    hide example fields
+    hide example methods
+
+}
+
+' #####################################################################################################################################################
+' ##################################################################### RELATIONS #####################################################################
+' #####################################################################################################################################################
+
+' Inheritance
+Graph <|-- Maze
+Maze <|-- FixedMaze
+Maze <|-- RandomMaze
+RenderingEngine <|-- AsciiRenderingEngine
+RenderingEngine <|-- PygameRenderingEngine
+Player <|-- FixedPlayer
+Player <|-- Random1
+Player <|-- Random2
+Player <|-- Random3
+Player <|-- Random4
+
+' Composition
+Game *--> " 1 \n __initial_game_state" GameState
+Game *--> " 1 \n __rendering_engine" RenderingEngine
+Game *--> " 1 \n __maze" Maze
+
+' Aggregation
+Game o--> " * \n __players" Player
+
+' Usage
+example ..> Random1 : "<< Uses >>"
+example ..> Random2 : "<< Uses >>"
+example ..> Random3 : "<< Uses >>"
+example ..> Random4 : "<< Uses >>"
+example ..> Game : "<< Uses >>"
+
+' #####################################################################################################################################################
+' #####################################################################################################################################################
+
+' Done
+@enduml

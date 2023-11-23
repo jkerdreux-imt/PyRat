@@ -11,12 +11,9 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External typing imports
+# External imports
 from typing import *
 from typing_extensions import *
-from numbers import *
-
-# Other external imports
 import random
 
 # Internal imports
@@ -27,12 +24,16 @@ from utils import locations_to_action
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class Random2 (Player):
+class Random4 (Player):
 
     """
-        This player is an improvement of the Random1 player.
-        Contrary to that previous version, here we take into account the maze structure.
-        More precisely, we select at each turn a random move among those that don't hit a wall.
+        This player is an improvement of the Random3 player.
+        A limitation of Random3 is that when a cell has no unvisited neighbor, then we may move randomly for a long time before reaching an unvisited cell.
+        To correct this issue, we keep track of our trajectory.
+        This way, if we are stuck, we can backtrack until we reach an already visited cell with an unvisited neighbor.
+        This strategy is pretty close to a depth-first seach.
+        Note that in this file, we redefine the "preprocessing" function of the parent class, that is executed once at the beginning of the game.
+        Here, this function is used to store the initial location of the player.
     """
 
     #############################################################################################################################################
@@ -40,7 +41,7 @@ class Random2 (Player):
     #############################################################################################################################################
 
     def __init__ ( self: Self,
-                   name: str = "Random 2",
+                   name: str = "Random 4",
                    skin: str = "default"
                  ) ->    Self:
 
@@ -56,31 +57,76 @@ class Random2 (Player):
 
         # Inherit from parent class
         super().__init__(name, skin)
+
+        # We create an attribute to keep track of visited cells
+        self.visited_cells = []
+
+        # We create an attribute to keep track of the trajectory
+        self.trajectory = []
        
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
-    def turn ( self:       Self,
-               maze:       Maze,
-               game_state: GameState,
-             ) ->       str:
+    def preprocessing ( self:             Self,
+                        maze:             Maze,
+                        game_state:       GameState,
+                        possible_actions: List[str],
+                      ) ->                None:
+        
+        """
+            This method redefines the method of the parent class.
+            It is called once at the beginning of the game.
+            Here, we initialize the trajectory with the initial location of the player.
+            In:
+                * self:             Reference to the current object.
+                * maze:             An object representing the maze in which the player plays.
+                * game_state:       An object representing the state of the game.
+                * possible_actions: List of possible actions.
+            Out:
+                * None.
+        """
+
+        # Store location to initialize trajectory
+        self.trajectory.append(game_state.player_locations[self.name])
+
+    #############################################################################################################################################
+
+    def turn ( self:             Self,
+               maze:             Maze,
+               game_state:       GameState,
+               possible_actions: List[str]
+             ) ->                str:
 
         """
             This method redefines the abstract method of the parent class.
             It is called at each turn of the game.
-            It returns a random action that does not lead to a wall.
+            It returns an action that explores a random unvisited cell if possible.
+            If no such action exists, it returns an action that allows to go back on our trajectory.
             In:
-                * self:       Reference to the current object.
-                * maze:       An object representing the maze in which the player plays.
-                * game_state: An object representing the state of the game.
+                * self:             Reference to the current object.
+                * maze:             An object representing the maze in which the player plays.
+                * game_state:       An object representing the state of the game.
+                * possible_actions: List of possible actions.
             Out:
-                * action: One of the possible actions
+                * action: One of the possible actions, as given in possible_actions.
         """
 
-        # Choose a random neighbor
+        # Mark current cell as visited and add it to the trajectory
+        if game_state.player_locations[self.name] not in self.visited_cells:
+            self.visited_cells.append(game_state.player_locations[self.name])
+        self.trajectory.append(game_state.player_locations[self.name])
+
+        # Go to an unvisited neighbor in priority
         neighbors = maze.get_neighbors(game_state.player_locations[self.name])
-        neighbor = random.choice(neighbors)
+        unvisited_neighbors = [neighbor for neighbor in neighbors if neighbor not in self.visited_cells]
+        if len(unvisited_neighbors) > 0:
+            neighbor = random.choice(unvisited_neighbors)
+            
+        # If there is no unvisited neighbor, backtrack the trajectory
+        else:
+            _ = self.trajectory.pop(-1)
+            neighbor = self.trajectory.pop(-1)
         
         # Retrieve the corresponding action
         action = locations_to_action(maze, game_state.player_locations[self.name], neighbor)

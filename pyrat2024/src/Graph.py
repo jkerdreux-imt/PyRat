@@ -11,9 +11,10 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External imports
+# External typing imports
 from typing import *
 from typing_extensions import *
+from numbers import *
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
@@ -47,28 +48,28 @@ class Graph ():
                 * A new instance of the class.
         """
 
-        # Initialize graph attributes
-        self.adjacency = {}
+        # Private attributes
+        self.__vertices = []
+        self.__adjacency = {}
 
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
-    def copy ( self: Self
-             ) ->    Self:
+    @property
+    def vertices ( self: Self
+                 ) ->    List[Any]:
         
         """
-            Creates a copy of the graph.
+            This function allows to make the __vertices attribute public and read-only.
             In:
                 * self: Reference to the current object.
             Out:
-                * graph_copy: Copy of the graph.
+                * self.__vertices: The corresponding attribute.
         """
 
-        # Create the copy
-        graph_copy = Graph()
-        graph_copy.adjacency = self.adjacency.copy()
-        return graph_copy
+        # Return the attribute
+        return self.__vertices
 
     #############################################################################################################################################
 
@@ -85,19 +86,19 @@ class Graph ():
                 * None.
         """
         
-        # Check that vertex is not already in the graph
-        if vertex in self.adjacency:
-            raise ValueError("Vertex", vertex, "already in the graph.")
+        # Debug
+        assert vertex not in self.vertices # Vertex is not already in the graph
 
-        # Add vertex to the adjacency dictionary
-        self.adjacency[vertex] = {}
+        # Add vertex to the list of vertices and create an entry in the adjacency matrix
+        self.__vertices.append(vertex)
+        self.__adjacency[len(self.vertices) - 1] = {}
         
     #############################################################################################################################################
 
     def add_edge ( self:      Self,
                    vertex_1:  Any,
                    vertex_2:  Any,
-                   weight:    float = 1.0,
+                   weight:    Number = 1,
                    symmetric: bool = False
                  ) ->         None:
 
@@ -115,40 +116,19 @@ class Graph ():
                 * None.
         """
         
-        # Check that vertices are in the graph
-        if vertex_1 not in self.adjacency:
-            raise ValueError("Vertex", vertex_1, "not in the graph.")
-        if vertex_2 not in self.adjacency:
-            raise ValueError("Vertex", vertex_2, "not in the graph.")
-
-        # Check that the edge is not already in the graph
-        if vertex_2 in self.adjacency[vertex_1]:
-            raise ValueError("Edge", vertex_1, "-", vertex_2, "already in the graph.")
-        if symmetric and vertex_1 in self.adjacency[vertex_2]:
-            raise ValueError("Edge", vertex_2, "-", vertex_1, "already in the graph.")
+        # Debug
+        assert isinstance(weight, Number) # Type check for weight
+        assert isinstance(symmetric, bool) # Type check for symmetric
+        assert vertex_1 in self.vertices # Vertex 1 is in the graph
+        assert vertex_2 in self.vertices # Vertex 2 is in the graph
+        assert vertex_2 not in self.get_neighbors(vertex_1) # Edge does not already exist
+        assert not (symmetric and vertex_1 in self.get_neighbors(vertex_2)) # Symmetric edge does not already exist if asked
 
         # Add edge to the adjacency dictionary
-        self.adjacency[vertex_1][vertex_2] = weight
+        self.__adjacency[self.vertices.index(vertex_1)][self.vertices.index(vertex_2)] = weight
         if symmetric:
-            self.adjacency[vertex_2][vertex_1] = weight
+            self.__adjacency[self.vertices.index(vertex_2)][self.vertices.index(vertex_1)] = weight
     
-    #############################################################################################################################################
-
-    def get_vertices ( self: Self
-                     ) ->    List[Any]:
-
-        """
-            Returns the list of vertices in the graph.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * vertices: List of vertices in the graph.
-        """
-        
-        # Get vertices
-        vertices = list(self.adjacency.keys())
-        return vertices
-        
     #############################################################################################################################################
 
     def get_neighbors ( self:   Self,
@@ -164,12 +144,11 @@ class Graph ():
                 * neighbors: List of neighbors of the vertex.
         """
         
-        # Check that vertex is in the graph
-        if vertex not in self.adjacency:
-            raise ValueError("Vertex", vertex, "not in the graph.")
+        # Debug
+        assert vertex in self.vertices # Vertex is in the graph
 
         # Get neighbors
-        neighbors = list(self.adjacency[vertex].keys())
+        neighbors = [self.vertices[i] for i in self.__adjacency[self.vertices.index(vertex)]]
         return neighbors
 
     #############################################################################################################################################
@@ -177,7 +156,7 @@ class Graph ():
     def get_weight ( self:     Self,
                      vertex_1: Any,
                      vertex_2: Any
-                   ) ->        List[Any]:
+                   ) ->        Number:
 
         """
             Returns the weight of an edge.
@@ -189,15 +168,58 @@ class Graph ():
                 * weight: Weight of the edge.
         """
         
-        # Check that vertices are in the graph
-        if vertex_1 not in self.adjacency:
-            raise ValueError("Vertex", vertex_1, "not in the graph.")
-        if vertex_2 not in self.adjacency:
-            raise ValueError("Vertex", vertex_2, "not in the graph.")
+        # Debug
+        assert vertex_1 in self.vertices # Vertex 1 is in the graph
+        assert vertex_2 in self.vertices # Vertex 2 is in the graph
+        assert vertex_2 in self.get_neighbors(vertex_1) # Edge exists
 
         # Get weight
-        weight = self.adjacency[vertex_1][vertex_2]
+        weight = self.__adjacency[self.vertices.index(vertex_1)][self.vertices.index(vertex_2)]
         return weight
 
+    #############################################################################################################################################
+
+    def add_vertex ( self:   Self,
+                     vertex: Any
+                   ) ->      None:
+
+        """
+            Adds a vertex to the graph.
+            In:
+                * self:   Reference to the current object.
+                * vertex: Vertex to add.
+            Out:
+                * None.
+        """
+        
+        # Debug
+        assert vertex not in self.vertices # Vertex is not already in the graph
+
+        # Add vertex to the list of vertices and create an entry in the adjacency matrix
+        self.__vertices.append(vertex)
+        self.__adjacency[len(self.vertices) - 1] = {}
+        
+    #############################################################################################################################################
+
+    def as_dict ( self: Self,
+                ) ->    Dict[Any, Dict[Any, Number]]:
+
+        """
+            Returns a dictionary representing the adjacency matrix.
+            Useful for exporting the maze when saving the game.
+            The vertices must be hashable objects.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * adjacency_dict: Dictionary representing the adjacency matrix.
+        """
+        
+        # Debug
+        assert all([isinstance(vertex, Hashable) for vertex in self.vertices]) # Vertices are hashable
+
+        # Transform in a dictionary
+        adjacency_dict = {vertex : {neighbor : self.get_weight(vertex, neighbor) for neighbor in self.get_neighbors(vertex)} for vertex in self.vertices}
+        return adjacency_dict
+        
 #####################################################################################################################################################
 #####################################################################################################################################################

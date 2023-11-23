@@ -11,9 +11,12 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External imports
+# External typing imports
 from typing import *
 from typing_extensions import *
+from numbers import *
+
+# Other external imports
 import scipy.sparse as sparse
 import scipy.sparse.csgraph as csgraph
 import numpy
@@ -42,17 +45,18 @@ class RandomMaze (Maze):
     #############################################################################################################################################
 
     def __init__ ( self:            Self,
-                   width:           int,
-                   height:          int,
-                   cell_percentage: float,
-                   wall_percentage: float,
-                   mud_percentage:  float,
-                   mud_range:       Tuple[int, int],
-                   random_seed:     int = None,
+                   width:           Integral,
+                   height:          Integral,
+                   cell_percentage: Number,
+                   wall_percentage: Number,
+                   mud_percentage:  Number,
+                   mud_range:       Tuple[Integral, Integral],
+                   random_seed:     Optional[Integral] = None
                  ) ->               Self:
 
         """
             This function is the constructor of the class.
+            We do not duplicate asserts already made in the parent method.
             In:
                 * self:            Reference to the current object.
                 * width:           Width of the maze.
@@ -69,42 +73,54 @@ class RandomMaze (Maze):
         # Inherit from parent class
         super().__init__(width, height)
         
+        # Debug
+        assert isinstance(cell_percentage, Number) # Type check for cell_percentage
+        assert isinstance(wall_percentage, Number) # Type check for wall_percentage
+        assert isinstance(mud_percentage, Number) # Type check for mud_percentage
+        assert isinstance(mud_range, (tuple, list)) # Type check for mud_range
+        assert isinstance(random_seed, Integral) # Type check for random_seed
+        assert len(mud_range) == 2 # Mud range is an interval of 2 elements
+        assert isinstance(mud_range[0], Integral) # Type check for mud_range[0]
+        assert isinstance(mud_range[1], Integral) # Type check for mud_range[1]
+        assert 0.0 <= cell_percentage <= 100.0 # cell_percentage is a percentage
+        assert 0.0 <= wall_percentage <= 100.0 # wall_percentage is a percentage
+        assert 0.0 <= mud_percentage <= 100.0 # mud_percentage is a percentage
+        assert 1 < mud_range[0] <= mud_range[1] # mud_range is a valid interval with minimum value 1
+
+        # Private attributes
+        self.__cell_percentage = cell_percentage
+        self.__wall_percentage = wall_percentage
+        self.__mud_percentage = mud_percentage
+        self.__mud_range = mud_range
+        self.__random_seed = random_seed
+
         # Generate the maze
-        self._create_maze(cell_percentage, wall_percentage, mud_percentage, mud_range, random_seed)
+        self._create_maze()
 
     #############################################################################################################################################
-    #                                                              PRIVATE METHODS                                                              #
+    #                                                             PROTECTED METHODS                                                             #
     #############################################################################################################################################
 
     def _create_maze ( self: Self,
-                       cell_percentage: float,
-                       wall_percentage: float,
-                       mud_percentage:  float,
-                       mud_range:       Tuple[int, int],
-                       random_seed:     int = None,
-                     ) ->               None:
+                     ) ->    None:
 
         """
-            This function creates a random maze using the parameters given at initialization.
+            This method redefines the abstract method of the parent class.
+            It creates a random maze using the parameters given at initialization.
             In:
                 * self: Reference to the current object.
-                * cell_percentage: Percentage of cells to be reachable.
-                * wall_percentage: Percentage of walls to be present.
-                * mud_percentage:  Percentage of mud to be present.
-                * mud_range:       Range of the mud values.
-                * random_seed:     Random seed for the maze generation, set to None for a random value.
             Out:
                 * None.
         """
 
         # Set random seed
-        if random_seed is not None:
-            nprandom.seed(random_seed)
+        if self.__random_seed is not None:
+            nprandom.seed(self.__random_seed)
 
         # Initialize an empty maze, and add cells until it reaches the asked density
         maze_sparse = sparse.lil_matrix((self.width * self.height, self.width * self.height), dtype=int)
         cells = [(self.height // 2, self.width // 2)]
-        while len(cells) / maze_sparse.shape[0] * 100 < cell_percentage:
+        while len(cells) / maze_sparse.shape[0] * 100 < self.__cell_percentage:
             row, col = cells[nprandom.randint(len(cells))]
             neighbor_row, neighbor_col = [(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)][nprandom.randint(4)]
             if 0 <= neighbor_row < self.height and 0 <= neighbor_col < self.width:
@@ -123,7 +139,7 @@ class RandomMaze (Maze):
         walls = sparse.triu(maze_sparse - maze_full).nonzero()
         walls = [(walls[0][i], walls[1][i]) for i in range(walls[0].shape[0])]
         nprandom.shuffle(walls)
-        for i in range(int(numpy.ceil(wall_percentage / 100.0 * len(walls)))):
+        for i in range(int(numpy.ceil(self.__wall_percentage / 100.0 * len(walls)))):
             maze_sparse[walls[i][0], walls[i][1]] = 0
             maze_sparse[walls[i][1], walls[i][0]] = 0
 
@@ -131,8 +147,8 @@ class RandomMaze (Maze):
         paths = sparse.triu(maze_sparse).nonzero()
         paths = [(paths[0][i], paths[1][i]) for i in range(paths[0].shape[0])]
         nprandom.shuffle(paths)
-        for i in range(int(numpy.ceil(mud_percentage / 100.0 * len(paths)))):
-            mud_weight = nprandom.choice(range(mud_range[0], mud_range[1] + 1))
+        for i in range(int(numpy.ceil(self.__mud_percentage / 100.0 * len(paths)))):
+            mud_weight = nprandom.choice(range(self.__mud_range[0], self.__mud_range[1] + 1))
             maze_sparse[paths[i][0], paths[i][1]] = mud_weight
             maze_sparse[paths[i][1], paths[i][0]] = mud_weight
         

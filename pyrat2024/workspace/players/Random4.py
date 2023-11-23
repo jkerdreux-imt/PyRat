@@ -11,9 +11,12 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External imports
+# External typing imports
 from typing import *
 from typing_extensions import *
+from numbers import *
+
+# Other external imports
 import random
 
 # Internal imports
@@ -68,21 +71,19 @@ class Random4 (Player):
     #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
-    def preprocessing ( self:             Self,
-                        maze:             Maze,
-                        game_state:       GameState,
-                        possible_actions: List[str],
-                      ) ->                None:
+    def preprocessing ( self:       Self,
+                        maze:       Maze,
+                        game_state: GameState,
+                      ) ->          None:
         
         """
             This method redefines the method of the parent class.
             It is called once at the beginning of the game.
             Here, we initialize the trajectory with the initial location of the player.
             In:
-                * self:             Reference to the current object.
-                * maze:             An object representing the maze in which the player plays.
-                * game_state:       An object representing the state of the game.
-                * possible_actions: List of possible actions.
+                * self:       Reference to the current object.
+                * maze:       An object representing the maze in which the player plays.
+                * game_state: An object representing the state of the game.
             Out:
                 * None.
         """
@@ -92,11 +93,10 @@ class Random4 (Player):
 
     #############################################################################################################################################
 
-    def turn ( self:             Self,
-               maze:             Maze,
-               game_state:       GameState,
-               possible_actions: List[str]
-             ) ->                str:
+    def turn ( self:       Self,
+               maze:       Maze,
+               game_state: GameState,
+             ) ->          str:
 
         """
             This method redefines the abstract method of the parent class.
@@ -104,12 +104,11 @@ class Random4 (Player):
             It returns an action that explores a random unvisited cell if possible.
             If no such action exists, it returns an action that allows to go back on our trajectory.
             In:
-                * self:             Reference to the current object.
-                * maze:             An object representing the maze in which the player plays.
-                * game_state:       An object representing the state of the game.
-                * possible_actions: List of possible actions.
+                * self:       Reference to the current object.
+                * maze:       An object representing the maze in which the player plays.
+                * game_state: An object representing the state of the game.
             Out:
-                * action: One of the possible actions, as given in possible_actions.
+                * action: One of the possible actions
         """
 
         # Mark current cell as visited and add it to the trajectory

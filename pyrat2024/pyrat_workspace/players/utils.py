@@ -3,40 +3,60 @@
 #####################################################################################################################################################
 
 """
-    This file contains a few functions that can be useful in general.
+    This file contains a few functions that can be useful to multiple players, while not making sense to define as methods of the classes.
+    It is meant to be used as a library, and not to be executed directly.
+    Do not hesitate to add your own functions here if you think they can be useful to other players.
 """
 
 #####################################################################################################################################################
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External typing imports
+# External imports
 from typing import *
 from typing_extensions import *
-from numbers import *
 
-# Other external imports
-import os
-import shutil
+# Internal imports
+from pyrat2024 import Maze
 
 #####################################################################################################################################################
 ##################################################################### FUNCTIONS #####################################################################
 #####################################################################################################################################################
 
-def create_workspace () -> None:
+def locations_to_action ( maze:   Maze,
+                          source: int,
+                          target: int
+                        ) ->      str: 
 
     """
-        Creates all the directories for a clean student workspace.
-        Also creates a few default programs to start with.
+        Function to transform two locations into an action to reach the target from the source.
         In:
-            * None.
+            * source:     Vertex on which the player is.
+            * target:     Vertex where the character wants to go.
+            * maze_width: Width of the maze in number of cells.
         Out:
-            * None.
+            * action: Name of the action to go from the source to the target.
     """
 
-    # Copy the template workspace into the current directory if not already exixting
-    source_workspace = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "workspace")
-    shutil.copytree(source_workspace, "pyrat_workspace", ignore=shutil.ignore_patterns('__pycache__'))
+    # Get the coordinates difference
+    difference = maze.coords_difference(source, target)
+
+    # Translate in a move
+    if difference == (0, 0):
+        action = "nothing"
+    elif difference == (0, -1):
+        action = "west"
+    elif difference == (0, 1):
+        action = "east"
+    elif difference == (1, 0):
+        action = "south"
+    elif difference == (-1, 0):
+        action = "north"
+    
+    # Raise an error if the move is impossible
+    else:
+        raise Exception("Impossible move from", source, "to", target)
+    return action
 
 #####################################################################################################################################################
 #####################################################################################################################################################

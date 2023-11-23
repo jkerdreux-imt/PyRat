@@ -11,9 +11,10 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External imports
+# External typing imports
 from typing import *
 from typing_extensions import *
+from numbers import *
 
 # Internal imports
 from pyrat2024.src.Player import Player
@@ -49,8 +50,11 @@ class RenderingEngine ():
                 * A new instance of the class.
         """
 
-        # Save arguments as attributes
-        self.render_simplified = render_simplified
+        # Debug
+        assert isinstance(render_simplified, bool) # Type check for render_simplified
+
+        # Protected attributes
+        self._render_simplified = render_simplified
         
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
@@ -73,6 +77,12 @@ class RenderingEngine ():
             Out:
                 * None.
         """
+
+        # Debug
+        assert isinstance(players, list) # Type check for players
+        assert all(isinstance(player, Player) for player in players)
+        assert isinstance(maze, Maze)
+        assert isinstance(game_state, GameState)
 
         # Nothing to do
         pass
