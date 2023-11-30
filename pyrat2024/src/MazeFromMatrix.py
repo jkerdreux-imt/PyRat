@@ -58,13 +58,13 @@ class MazeFromMatrix (Maze):
 
         # Inherit from parent class
         super().__init__()
-        
+
         # Debug
-        assert isinstance(description, numpy.ndarray) # Type check for the description
+        assert isinstance(description, numpy.ndarray) # Type check for description
         assert len(description.shape) == 2 # Check that the description is a matrix
         assert description.shape[0] == description.shape[1] # Check that the matrix is square
         assert description.shape[0] > 1 # The maze has at least two vertices
-        assert all(isinstance(weight, Integral) for weight in description.flatten()) # Type check for the weights
+        assert all(isinstance(weight, Integral) for weight in description.flatten()) # Weights are integers
         assert description == description.T # Check that the matrix is symmetric
         assert all(weight >= 0 for weight in description.flatten()) # Check that the weights are non-negative
         assert any(weight > 0 for weight in description.flatten()) # Check that the maze has at least one edge
@@ -73,18 +73,17 @@ class MazeFromMatrix (Maze):
         self.__description = description
 
         # Generate the maze
-        self._create_maze()
+        self.__create_maze()
 
     #############################################################################################################################################
-    #                                                             PROTECTED METHODS                                                             #
+    #                                                              PRIVATE METHODS                                                              #
     #############################################################################################################################################
 
-    def _create_maze ( self: Self,
-                     ) ->    None:
+    def __create_maze ( self: Self,
+                      ) ->    None:
 
         """
-            This method redefines the abstract method of the parent class.
-            It creates a maze from the description provided at initialization.
+            Creates a maze from the description provided at initialization.
             In:
                 * self: Reference to the current object.
             Out:
@@ -92,16 +91,16 @@ class MazeFromMatrix (Maze):
         """
 
         # Add vertices
-        for vertex in range(self.description.shape[0]):
-            neighbors = self.description[vertex].nonzero()[0].tolist()
+        for vertex in range(self.__description.shape[0]):
+            neighbors = self.__description[vertex].nonzero()[0].tolist()
             if len(neighbors) > 0:
                 self.add_vertex(vertex)
         
         # Add edges
-        for vertex in range(self.description.shape[0]):
-            neighbors = self.description[vertex].nonzero()[0].tolist()
+        for vertex in range(self.__description.shape[0]):
+            neighbors = self.__description[vertex].nonzero()[0].tolist()
             for neighbor in neighbors:
-                self.add_edge(vertex, neighbor, self.description[vertex, neighbor])
+                self.add_edge(vertex, neighbor, self.__description[vertex, neighbor])
 
         # Infer dimensions
         self._infer_dimensions()

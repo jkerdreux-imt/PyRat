@@ -57,12 +57,12 @@ class MazeFromDict (Maze):
 
         # Inherit from parent class
         super().__init__()
-        
+
         # Debug
-        assert isinstance(description, dict) # Type check for the description
-        assert all(isinstance(vertex, Integral) for vertex in description) # Type check for the vertices
-        assert all(isinstance(neighbor, Integral) for vertex in description for neighbor in description[vertex]) # Type check for the neighbors
-        assert all(isinstance(weight, Number) for vertex in description for neighbor in description[vertex] for weight in description[vertex][neighbor]) # Type check for the weights
+        assert isinstance(description, dict) # Type check for description
+        assert all(isinstance(vertex, Integral) for vertex in description) # Type check for description
+        assert all(isinstance(neighbor, Integral) for vertex in description for neighbor in description[vertex]) # Type check for description
+        assert all(isinstance(weight, Number) for vertex in description for neighbor in description[vertex] for weight in description[vertex][neighbor]) # Type check for description
         assert len(description) > 1 # The maze has at least two vertices
         assert all(len(description[vertex]) > 0 for vertex in description) # All vertices are connected to at least one neighbor
         assert all(vertex in description[neighbor] for vertex in description for neighbor in description[vertex]) # The graph is symmetric
@@ -73,33 +73,32 @@ class MazeFromDict (Maze):
         self.__description = description
 
         # Generate the maze
-        self._create_maze()
+        self.__create_maze()
 
     #############################################################################################################################################
-    #                                                             PROTECTED METHODS                                                             #
+    #                                                              PRIVATE METHODS                                                              #
     #############################################################################################################################################
 
-    def _create_maze ( self: Self,
-                     ) ->    None:
+    def __create_maze ( self: Self,
+                      ) ->    None:
 
         """
-            This method redefines the abstract method of the parent class.
-            It creates a maze from the description provided at initialization.
+            Creates a maze from the description provided at initialization.
             In:
                 * self: Reference to the current object.
             Out:
                 * None.
         """
-
+        
         # Add vertices
-        for vertex in self.description:
+        for vertex in self.__description:
             self.add_vertex(vertex)
         
         # Add edges
-        for vertex in self.description:
-            neighbors = self.description[vertex]
+        for vertex in self.__description:
+            neighbors = self.__description[vertex]
             for neighbor in neighbors:
-                self.add_edge(vertex, neighbor, self.description[vertex][neighbor])
+                self.add_edge(vertex, neighbor, self.__description[vertex][neighbor])
 
         # Infer dimensions
         self._infer_dimensions()

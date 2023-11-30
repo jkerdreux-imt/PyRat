@@ -41,7 +41,7 @@ if __name__ == "__main__":
               "mud_range": (2, 7),
               "wall_percentage": 60.0,
               "cell_percentage": 90.0,
-              "nb_cheese": 41}
+              "nb_cheese": 1}
     
     # Instanciate the game with the chosen configuration
     game = Game(**config)

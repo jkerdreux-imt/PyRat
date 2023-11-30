@@ -59,34 +59,35 @@ class Game ():
     #############################################################################################################################################
 
     def __init__ ( self:                Self,
-                   random_seed:         Optional[int] = None,
-                   random_seed_maze:    Optional[int] = None,
-                   random_seed_cheese:  Optional[int] = None,
-                   random_seed_players: Optional[int] = None,
-                   maze_width:          int = 15,
-                   maze_height:         int = 13,
-                   cell_percentage:     float = 80.0,
-                   wall_percentage:     float = 60.0,
-                   mud_percentage:      float = 20.0,
-                   mud_range:           Tuple[int, int] = (4, 9),
-                   fixed_maze:          Optional[Union[Dict[int, Dict[int, int]], numpy.ndarray]] = None,
-                   nb_cheese:           int = 21,
-                   fixed_cheese:        Optional[Union[str, List[int]]] = None,
+                   random_seed:         Optional[Integral] = None,
+                   random_seed_maze:    Optional[Integral] = None,
+                   random_seed_cheese:  Optional[Integral] = None,
+                   random_seed_players: Optional[Integral] = None,
+                   maze_width:          Integral = 15,
+                   maze_height:         Integral = 13,
+                   cell_percentage:     Number = 80.0,
+                   wall_percentage:     Number = 60.0,
+                   mud_percentage:      Number = 20.0,
+                   mud_range:           Tuple[Integral, Integral] = (4, 9),
+                   fixed_maze:          Optional[Union[Dict[Integral, Integral], numpy.ndarray]] = None,
+                   nb_cheese:           Integral = 21,
+                   fixed_cheese:        Optional[List[Integral]] = None,
                    render_mode:         str = "gui",
                    render_simplified:   bool = False,
-                   gui_speed:           float = 1.0,
-                   trace_length:        int = 0,
+                   gui_speed:           Number = 1.0,
+                   trace_length:        Integral = 0,
                    fullscreen:          bool = False,
                    save_path:           str = ".",
                    save_game:           bool = False,
-                   preprocessing_time:  float = 3.0,
-                   turn_time:           float = 0.1,
+                   preprocessing_time:  Number = 3.0,
+                   turn_time:           Number = 0.1,
                    synchronous:         bool = False,
                    continue_on_error:   bool = False
                  ) ->                   Self:
 
         """
             This function is the constructor of the class.
+            Assertions checked in the objects manipulated by the game are not checked again.
             In:
                 * self:                Reference to the current object.
                 * random_seed:         Global random seed for all elements, set to None for a random value.
@@ -104,7 +105,7 @@ class Game ():
                 * fixed_cheese:        Fixed list of cheese (takes priority over number of cheese).
                 * render_mode:         Method to display the game (avaible modes are "gui", "ansi", "ascii", and "no_rendering").
                 * render_simplified:   If the maze is rendered, hides some elements that are not essential.
-                * gui_speed:           When rendering as GUI, controls the speed of the game.
+                * gui_speed:           When rendering as GUI, controls the speed of the game (GUI rendering only).
                 * trace_length:        Maximum length of the trace to display when players are moving (GUI rendering only).
                 * fullscreen:          Renders the game in fullscreen mode (GUI rendering only).
                 * save_path:           Path where games are saved.
@@ -117,17 +118,21 @@ class Game ():
                 * A new instance of the class.
         """
 
-        # Check arguments are correct
-        #assert 0 < maze_width
-        #assert 0 < maze_height
-        #assert 0.0 <= cell_percentage <= 100.0
-        #assert 0.0 <= wall_percentage <= 100.0
-        #assert 0.0 <= mud_percentage <= 100.0
-        #assert 1 < mud_range[0] <= mud_range[1]
-        #assert 0 < nb_cheese
-        #assert 0.0 <= preprocessing_time
-        #assert 0.0 <= turn_time
-        
+        # Debug
+        assert isinstance(random_seed, (Integral, type(None))) # Type check for random_seed
+        assert isinstance(random_seed_maze, (Integral, type(None))) # Type check for random_seed_maze
+        assert isinstance(random_seed_cheese, (Integral, type(None))) # Type check for random_seed_cheese
+        assert isinstance(random_seed_players, (Integral, type(None))) # Type check for random_seed_players
+        assert random_seed is None or (random_seed is not None and random_seed_maze is None and random_seed_cheese is None and random_seed_players is None) # If random_seed is set, other random seeds should not be set
+        assert isinstance(render_mode, str) # Type check for render_mode
+        assert render_mode in ["gui", "ansi", "ascii", "no_rendering"] # Type check for render_mode
+        assert isinstance(turn_time, Number) # Type check for render_simplified
+        assert turn_time >= 0 # Turn time should be non-negative
+        assert isinstance(preprocessing_time, Number) # Type check for preprocessing_time
+        assert preprocessing_time >= 0 # Preprocessing time should be non-negative
+        assert isinstance(synchronous, bool) # Type check for synchronous
+        assert isinstance(continue_on_error, bool) # Type check for continue_on_error
+
         # Private attributes
         self.__random_seed = random_seed
         self.__random_seed_maze = random_seed_maze
@@ -156,7 +161,8 @@ class Game ():
         self.__game_random_seed_maze = None
         self.__game_random_seed_cheese = None
         self.__game_random_seed_players = None
-        self.__players = None
+        self.__players_asked_location = []
+        self.__players = []
         self.__initial_game_state = None
         self.__player_traces = None
         self.__actions_history = None
@@ -164,59 +170,16 @@ class Game ():
         self.__maze = None
 
         # Initialize the game
-        self.reset()
+        self.__reset()
 
     #############################################################################################################################################
     #                                                              PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
-    def reset ( self: Self
-              ) ->    None:
-        
-        """
-            Resets the game to its initial state, without any player, cheese, etc.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * None.
-        """
-        
-        # Set random seeds for the game
-        self.__game_random_seed_maze = self.__random_seed if self.__random_seed is not None else self.__random_seed_maze if self.__random_seed_maze is not None else nprandom.randint(numpy.iinfo(numpy.int32).max)
-        self.__game_random_seed_cheese = self.__random_seed if self.__random_seed is not None else self.__random_seed_cheese if self.__random_seed_cheese is not None else nprandom.randint(numpy.iinfo(numpy.int32).max)
-        self.__game_random_seed_players = self.__random_seed if self.__random_seed is not None else self.__random_seed_players if self.__random_seed_players is not None else nprandom.randint(numpy.iinfo(numpy.int32).max)
-        
-        # Initialize game elements
-        self.__players = []
-        self.__initial_game_state = GameState()
-
-        # Initialize game analysis elements
-        self.__player_traces = {}
-        self.__actions_history = {}
-
-        # Initialize the maze
-        if self.__fixed_maze is None:
-            self.__maze = RandomMaze(self.__maze_width, self.__maze_height, self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze)
-        elif isinstance(self.__fixed_maze, dict):
-            self.__maze = MazeFromDict(self.__fixed_maze)
-        else:
-            self.__maze = MazeFromMatrix(self.__fixed_maze)
-        
-        # Initialize the rendering engine
-        if self.__render_mode in ["ascii", "ansi"]:
-            use_colors = self.__render_mode == "ansi"
-            self.__rendering_engine = AsciiRenderingEngine(use_colors, self.__render_simplified)
-        elif self.__render_mode == "gui":
-            self.__rendering_engine = PygameRenderingEngine(self.__fullscreen, self.__trace_length, self.__gui_speed, self.__render_simplified)
-        elif self.__render_mode == "no_rendering":
-            self.__rendering_engine = RenderingEngine(self.__render_simplified)
-        
-    #############################################################################################################################################
-    
     def add_player ( self:     Self,
                      player:   Player,
                      team:     str = "",
-                     location: str = "center"
+                     location: Union[str, Integral] = "center"
                    ) ->        None:
         
         """
@@ -230,39 +193,36 @@ class Game ():
                 * None.
         """
 
+        # Debug
+        assert isinstance(player, Player) # Type check for player
+        assert isinstance(team, str) # Type check for team
+        assert isinstance(location, (str, Integral)) # Type check for location
+        assert location in ["random", "same", "center"] or (isinstance(location, Integral) and 0 <= location < self.__maze.height * self.__maze.width) # Type check for location
+        assert player.name not in self.__player_traces # Player name should be unique
+
         # Set random seed
         nprandom.seed(self.__game_random_seed_players + len(self.__players))
         
-        # Check if the name is unique
-        if player.name in self.__player_traces:
-            raise Exception("Player name", player.name, "already exists")
-
-        # Set random initial location
+        # Set initial location
+        # If random, we choose a random location
+        # If same, we choose the same location as the previous player
+        # If center, we choose the center of the maze
+        # If a fixed index, we choose the closest cell to the index
+        self.__players_asked_location.append(location)
         if location == "random":
             self.__initial_game_state.player_locations[player.name] = nprandom.choice(list(self.__maze.vertices))
-        
-        # Or same initial location as previous player
         elif location == "same" and len(self.__players) > 0:
             self.__initial_game_state.player_locations[player.name] = list(self.__initial_game_state.player_locations.values())[-1]
-
-        # Or initial location in the center
         elif location == "center":
             self.__initial_game_state.player_locations[player.name] = self.__maze.rc_to_i(self.__maze.height // 2, self.__maze.width // 2)
-        
-        # Or fixed index initial location
-        elif isinstance(location, Integral) and 0 <= location < self.__maze.height * self.__maze.width:
-            if location in self.__maze.vertices:
-               self.__initial_game_state.player_locations[player.name] = location
-            else:
-                print("Warning: Player %s cannot start at unreachable location %d, starting at closest cell (using Euclidean distance)" % (player.name, location), file=sys.stderr)
-                location_rc = numpy.array(self.__maze.i_to_rc(location))
-                valid_cells = self.__maze.vertices
-                distances = [numpy.linalg.norm(location_rc - numpy.array(self.__maze.i_to_rc(cell))) for cell in valid_cells]
-                self.__initial_game_state.player_locations[player.name] = valid_cells[numpy.argmin(distances)]
-        
-        # Or invalid initial location
+        elif isinstance(location, Integral) and self.__maze.i_exists(location):
+            self.__initial_game_state.player_locations[player.name] = location
         else:
-            raise Exception("Invalid initial location provided for player", player.name)
+            print("Warning: Player %s cannot start at unreachable location %d, starting at closest cell (using Euclidean distance)" % (player.name, location), file=sys.stderr)
+            location_rc = numpy.array(self.__maze.i_to_rc(location))
+            valid_cells = self.__maze.vertices
+            distances = [numpy.linalg.norm(location_rc - numpy.array(self.__maze.i_to_rc(cell))) for cell in valid_cells]
+            self.__initial_game_state.player_locations[player.name] = valid_cells[numpy.argmin(distances)]
         
         # Append to team
         if team not in self.__initial_game_state.teams:
@@ -291,12 +251,16 @@ class Game ():
                 * stats: Game statistics computed during the game.
         """
         
+        # Debug
+        assert len(self.__players) > 0 # At least 1 player
+
         # We catch exceptions that may happen during the game
         try:
             
-            # Start the game
-            self.__distribute_cheese()
-            game_state = copy.deepcopy(self.__initial_game_state)
+            # Reset the game
+            if self.__initial_game_state.turn is not None:
+                self.__reset()
+            self.__initial_game_state.turn = 0
 
             # Initialize stats
             stats = {"players": {}, "turns": -1}
@@ -321,9 +285,10 @@ class Game ():
                     waiter_processes[player.name]["process"].start()
 
             # Initial rendering of the maze
-            self.__rendering_engine.render(self.__players, self.__maze, game_state)
+            self.__rendering_engine.render(self.__players, self.__maze, self.__initial_game_state)
             
             # We play until the game is over
+            game_state = copy.deepcopy(self.__initial_game_state)
             players_ready = [player.name for player in self.__players]
             players_running = {player.name: True for player in self.__players}
             while any(players_running.values()):
@@ -421,6 +386,61 @@ class Game ():
     #                                                              PRIVATE METHODS                                                              #
     #############################################################################################################################################
 
+    def __reset ( self: Self
+                ) ->    None:
+        
+        """
+            Resets the game to its initial state.
+            It will keep players and will insert them as they were added.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * None.
+        """
+        
+        # Set random seeds for the game
+        self.__game_random_seed_maze = self.__random_seed if self.__random_seed is not None else self.__random_seed_maze if self.__random_seed_maze is not None else nprandom.randint(numpy.iinfo(numpy.int32).max)
+        self.__game_random_seed_cheese = self.__random_seed if self.__random_seed is not None else self.__random_seed_cheese if self.__random_seed_cheese is not None else nprandom.randint(numpy.iinfo(numpy.int32).max)
+        self.__game_random_seed_players = self.__random_seed if self.__random_seed is not None else self.__random_seed_players if self.__random_seed_players is not None else nprandom.randint(numpy.iinfo(numpy.int32).max)
+        
+        # Reset game analysis elements
+        self.__player_traces = {}
+        self.__actions_history = {}
+        
+        # Initialize the maze
+        if self.__fixed_maze is None:
+            self.__maze = RandomMaze(self.__maze_width, self.__maze_height, self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze)
+        elif isinstance(self.__fixed_maze, dict):
+            self.__maze = MazeFromDict(self.__fixed_maze)
+        else:
+            self.__maze = MazeFromMatrix(self.__fixed_maze)
+
+        # Initialize the rendering engine
+        if self.__render_mode in ["ascii", "ansi"]:
+            use_colors = self.__render_mode == "ansi"
+            self.__rendering_engine = AsciiRenderingEngine(use_colors, self.__render_simplified)
+        elif self.__render_mode == "gui":
+            self.__rendering_engine = PygameRenderingEngine(self.__fullscreen, self.__trace_length, self.__gui_speed, self.__render_simplified)
+        elif self.__render_mode == "no_rendering":
+            self.__rendering_engine = RenderingEngine(self.__render_simplified)
+        
+        # Initialize the game state
+        previous_initial_state = copy.deepcopy(self.__initial_game_state)
+        self.__initial_game_state = GameState()
+
+        # Add players as they were added
+        for i in range(len(self.__players)):
+            player = self.__players.pop(0)
+            player_asked_location = self.__players_asked_location.pop(0)
+            player_team = [team for team in previous_initial_state.teams if player.name in previous_initial_state.teams[team]][0]
+            self.add_player(player, player_team, player_asked_location)
+
+        # Add cheese
+        available_cells = [i for i in self.__maze.vertices if i not in self.__initial_game_state.player_locations.values()]
+        self.__initial_game_state.cheese.extend(self.__distribute_cheese(available_cells))
+        
+    #############################################################################################################################################
+    
     def __end ( self:         Self,
                 game_crashed: bool,
               ) ->            None:
@@ -433,6 +453,11 @@ class Game ():
             Out:
                 * None.
         """
+
+        # Debug
+        assert isinstance(game_crashed, bool) # Type check for game_crashed
+        assert isinstance(self.__save_game, bool) # Type check for self.__save_game
+        assert isinstance(self.__save_path, str) # Type check for self.__save_path
 
         # We save the game if asked
         if self.__save_game and not game_crashed:
@@ -484,32 +509,35 @@ class Game ():
                 * new_game_state: New game state after the turn.
         """
 
+        # Debug
+        assert isinstance(game_state, GameState) # Type check for game_state
+        assert isinstance(actions, dict) # Type check for actions
+        assert all(player_name in [player.name for player in self.__players] for player_name in actions) # Type check for actions
+        assert all(action in Maze.possible_actions for action in actions.values()) # All actions are valid
+
         # Initialize new game state
         new_game_state = copy.deepcopy(game_state)
         new_game_state.turn += 1
 
         # Move all players accordingly
         for player in self.__players:
-            try:
-                row, col = self.__maze.i_to_rc(game_state.player_locations[player.name])
-                target = None
-                if actions[player.name] == "north" and row > 0:
-                    target = self.__maze.rc_to_i(row - 1, col)
-                elif actions[player.name] == "south" and row < self.__maze.height - 1:
-                    target = self.__maze.rc_to_i(row + 1, col)
-                elif actions[player.name] == "west" and col > 0:
-                    target = self.__maze.rc_to_i(row, col - 1)
-                elif actions[player.name] == "east" and col < self.__maze.width - 1:
-                    target = self.__maze.rc_to_i(row, col + 1)
-                if target is not None and target in self.__maze.get_neighbors(game_state.player_locations[player.name]):
-                    weight = self.__maze.get_weight(game_state.player_locations[player.name], target)
-                    if weight == 1:
-                        new_game_state.player_locations[player.name] = target
-                    elif weight > 1:
-                        new_game_state.muds[player.name]["target"] = target
-                        new_game_state.muds[player.name]["count"] = weight
-            except:
-                print("Warning: Invalid action %s for player %s" % (str(actions[player.name]), player.name), file=sys.stderr)
+            row, col = self.__maze.i_to_rc(game_state.player_locations[player.name])
+            target = None
+            if actions[player.name] == "north" and row > 0:
+                target = self.__maze.rc_to_i(row - 1, col)
+            elif actions[player.name] == "south" and row < self.__maze.height - 1:
+                target = self.__maze.rc_to_i(row + 1, col)
+            elif actions[player.name] == "west" and col > 0:
+                target = self.__maze.rc_to_i(row, col - 1)
+            elif actions[player.name] == "east" and col < self.__maze.width - 1:
+                target = self.__maze.rc_to_i(row, col + 1)
+            if target is not None and target in self.__maze.get_neighbors(game_state.player_locations[player.name]):
+                weight = self.__maze.get_weight(game_state.player_locations[player.name], target)
+                if weight == 1:
+                    new_game_state.player_locations[player.name] = target
+                elif weight > 1:
+                    new_game_state.muds[player.name]["target"] = target
+                    new_game_state.muds[player.name]["count"] = weight
 
         # All players in mud advance a bit
         for player in self.__players:
@@ -537,55 +565,57 @@ class Game ():
         
     #############################################################################################################################################
 
-    def __distribute_cheese ( self: Self,
-                            ) ->    None:
+    def __distribute_cheese ( self:            Self,
+                              available_cells: List[Integral],
+                            ) ->               List[Integral]:
         
         """
             Distributes pieces of cheese in the maze, according to the provided criteria.
             If a fixed list of cheese was provided, it is used.
             Otherwise, the cheese is distributed randomly.
             In:
-                * self: Reference to the current object.
+                * self:            Reference to the current object.
+                * available_cells: List of indices of cells that can be used to place cheese.
             Out:
-                * None.
+                * cheese: List of indices of cells containing cheese.
         """
         
-        # Find usable cells
-        available_cells = [i for i in self.__maze.vertices if i not in self.__initial_game_state.player_locations.values()]
+        # Debug
+        assert isinstance(available_cells, list) # Type check for available_cells
+        assert all([isinstance(cell, Integral) for cell in available_cells]) # Type check for available_cells
+        assert all([self.__maze.i_exists(cell) for cell in available_cells]) # Type check for available_cells
 
         # If we ask for a fixed list of cheese, we use it
         if self.__fixed_cheese is not None:
             
-            # Convert string to list if needed
-            self.__initial_game_state.cheese = ast.literal_eval(self.__fixed_cheese) if isinstance(self.__fixed_cheese, str) else self.__fixed_cheese
-            if not isinstance(self.__initial_game_state.cheese, list):
-                raise Exception("Unhandled type", type(self.__initial_game_state.cheese), "when loading fixed cheese, should be a list")
-            
-            # Check if there are duplicates
-            if len(self.__initial_game_state.cheese) != len(set(self.__initial_game_state.cheese)):
-                raise Exception("Duplicates in fixed cheese")
-            
-            # Check if there is enough space
-            if len(available_cells) < len(self.__initial_game_state.cheese):
-                raise Exception("Not enough space for asked number of cheese")
-            
-            # Check if all locations are valid
-            if len(set(self.__initial_game_state.cheese) & set(available_cells)) != len(self.__initial_game_state.cheese):
-                raise Exception("Some cheese cannot be placed")
-            
+            # Debug
+            assert isinstance(self.__fixed_cheese, list) # Type check for fixed_cheese
+            assert all([isinstance(cell, Integral) for cell in self.__fixed_cheese]) # Type check for fixed_cheese
+            assert len(set(self.__fixed_cheese)) == len(self.__fixed_cheese) # Only distinct cheese
+            assert len(available_cells) >= len(self.__fixed_cheese) # Enough space for cheese
+            assert all([self.__maze.i_exists(cell) for cell in self.__fixed_cheese]) # Only on existing cells
+            assert all([cell in available_cells for cell in self.__fixed_cheese]) # Only on available cells
+
+            # Place the cheese
+            cheese = copy.deepcopy(self.__fixed_cheese)
+
         # Otherwise, we place the cheese randomly
         else:
             
+            # Debug
+            assert isinstance(self.__nb_cheese, Integral) # Type check for nb_cheese
+            assert self.__nb_cheese > 0 # At least one cheese
+            assert len(available_cells) >= self.__nb_cheese # Enough space for cheese
+
             # Set random seed
             nprandom.seed(self.__game_random_seed_cheese)
 
-            # Check if there is enough space
-            if len(available_cells) < self.__nb_cheese:
-                raise Exception("Not enough space for asked number of cheese")
-
-            # We place the cheese randomly
+            # Place the cheese randomly
             nprandom.shuffle(available_cells)
-            self.__initial_game_state.cheese = available_cells[:self.__nb_cheese]
+            cheese = available_cells[:self.__nb_cheese]
+
+        # Return the cheese
+        return cheese
 
 #####################################################################################################################################################
 ##################################################################### FUNCTIONS #####################################################################
@@ -615,7 +645,16 @@ def _player_process_function ( player:                  Player,
         Out:
             * None.
     """
-
+    
+    # Debug
+    assert isinstance(player, Player) # Type check for player
+    assert isinstance(maze, Maze) # Type check for maze
+    assert isinstance(input_queue, multiprocessing.managers.BaseProxy) # Type check for input_queue
+    assert isinstance(output_queue, multiprocessing.managers.BaseProxy) # Type check for output_queue
+    assert isinstance(turn_start_synchronizer, multiprocessing.managers.BarrierProxy) # Type check for turn_start_synchronizer
+    assert isinstance(turn_timeout_lock, multiprocessing.managers.AcquirerProxy) # Type check for turn_timeout_lock
+    assert isinstance(turn_end_synchronizer, multiprocessing.managers.BarrierProxy) # Type check for turn_end_synchronizer
+    
     # We catch exceptions that may happen during the game
     try:
 

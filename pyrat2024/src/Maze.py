@@ -78,13 +78,16 @@ class Maze (Graph, abc.ABC):
         # Debug
         assert isinstance(width, (Integral, type(None))) # Type check for width
         assert isinstance(height, (Integral, type(None))) # Type check for height
+        assert width is None or width > 0 # Width is positive
+        assert height is None or height > 0 # Height is positive
+        assert (width is None and height is None) or width * height >= 2 # The maze has at least two vertices
 
         # Private attributes
         self.__width = width
         self.__height = height
 
     #############################################################################################################################################
-    #                                                               PUBLIC METHODS                                                              #
+    #                                                                  GETTERS                                                                  #
     #############################################################################################################################################
 
     @property
@@ -92,15 +95,15 @@ class Maze (Graph, abc.ABC):
               ) ->    Integral:
         
         """
-            This function allows to make the __width attribute public and read-only.
+            Getter for __width.
             In:
                 * self: Reference to the current object.
             Out:
-                * self.__width: The corresponding attribute.
+                * self.__width: The __width attribute.
         """
 
         # Debug
-        assert isinstance(self.__width, Integral) # Width has been set or inferred
+        assert isinstance(self.__width, Integral) # Width has been set or inferred previously
 
         # Return the attribute
         return self.__width
@@ -112,19 +115,21 @@ class Maze (Graph, abc.ABC):
                ) ->    Integral:
         
         """
-            This function allows to make the __height attribute public and read-only.
+            Getter for __height.
             In:
                 * self: Reference to the current object.
             Out:
-                * self.__height: The corresponding attribute.
+                * self.__height: The __height attribute.
         """
 
         # Debug
-        assert isinstance(self.__height, Integral) # Height has been set or inferred
+        assert isinstance(self.__height, Integral) # Height has been set or inferred previously
 
         # Return the attribute
         return self.__height
 
+    #############################################################################################################################################
+    #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
     def i_to_rc ( self:  Self,
@@ -133,6 +138,7 @@ class Maze (Graph, abc.ABC):
         
         """
             Transforms a maze index in a pair (row, col).
+            Does not check if the cell exists.
             In:
                 * self:  Reference to the current object.
                 * index: Index of the cell.
@@ -143,7 +149,6 @@ class Maze (Graph, abc.ABC):
         
         # Debug
         assert isinstance(index, Integral) # Type check for index
-        assert 0 <= index < self.width * self.height  # Index is in the maze
 
         # Conversion
         row = index // self.width
@@ -159,6 +164,7 @@ class Maze (Graph, abc.ABC):
         
         """
             Transforms a (row, col) pair of maze coordiates (lexicographic order) in a maze index.
+            Does not check if the cell exists.
             In:
                 * self: Reference to the current object.
                 * row:  Row of the cell.
@@ -170,8 +176,6 @@ class Maze (Graph, abc.ABC):
         # Debug
         assert isinstance(row, Integral) # Type check for row
         assert isinstance(col, Integral) # Type check for col
-        assert 0 <= row < self.height # Row is in the maze
-        assert 0 <= col < self.width # Col is in the maze
 
         # Conversion
         index = row * self.width + col
@@ -203,6 +207,28 @@ class Maze (Graph, abc.ABC):
         return exists
     
     #############################################################################################################################################
+    
+    def i_exists ( self:  Self,
+                   index: Integral
+                 ) ->     bool:
+        
+        """
+            Checks if a given index pair is a valid cell in the maze.
+            In:
+                * self:  Reference to the current object.
+                * index: Index of the cell.
+            Out:
+                * exists: True if the cell exists, False otherwise.
+        """
+        
+        # Debug
+        assert isinstance(index, Integral) # Type check for index
+
+        # Check if the cell exists
+        exists = index in self.vertices
+        return exists
+    
+    #############################################################################################################################################
 
     def coords_difference ( self:     Self,
                             vertex_1: Integral,
@@ -223,8 +249,8 @@ class Maze (Graph, abc.ABC):
         # Debug
         assert isinstance(vertex_1, Integral) # Type check for vertex_1
         assert isinstance(vertex_2, Integral) # Type check for vertex_2
-        assert vertex_1 in self.vertices # Vertex 1 is in the maze
-        assert vertex_2 in self.vertices # Vertex 2 is in the maze
+        assert self.i_exists(vertex_1) # Vertex 1 is in the maze
+        assert self.i_exists(vertex_2) # Vertex 2 is in the maze
 
         # Get coordinates
         row_1, col_1 = self.i_to_rc(vertex_1)
@@ -286,6 +312,8 @@ class Maze (Graph, abc.ABC):
         assert isinstance(vertex_1, Integral) # Type check for vertex_1
         assert isinstance(vertex_2, Integral) # Type check for vertex_2
         assert isinstance(weight, Integral) # Type check for weight
+        assert self.i_exists(vertex_1) # Vertex 1 is in the maze
+        assert self.i_exists(vertex_2) # Vertex 2 is in the maze
         assert self.coords_difference(vertex_1, vertex_2) in [(0, 1), (0, -1), (1, 0), (-1, 0)] # Vertices are adjacent on the grid
 
         # If the symmetric edge already exists, we do not add it
@@ -297,25 +325,6 @@ class Maze (Graph, abc.ABC):
     
     #############################################################################################################################################
     #                                                             PROTECTED METHODS                                                             #
-    #############################################################################################################################################
-
-    @abc.abstractmethod
-    def _create_maze ( self: Self,
-                     ) ->    None:
-
-        """
-            This method is abstract and must be implemented in the child classes.
-            It should be called in the constructor of the child classes.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * None.
-        """
-
-        # This method must be implemented in the child classes
-        # By default we raise an error
-        raise NotImplementedError("This method must be implemented in the child classes.")
-
     #############################################################################################################################################
 
     def _infer_dimensions ( self: Self

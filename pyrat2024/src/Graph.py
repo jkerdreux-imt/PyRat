@@ -53,7 +53,7 @@ class Graph ():
         self.__adjacency = {}
 
     #############################################################################################################################################
-    #                                                               PUBLIC METHODS                                                              #
+    #                                                                  GETTERS                                                                  #
     #############################################################################################################################################
 
     @property
@@ -61,16 +61,20 @@ class Graph ():
                  ) ->    List[Any]:
         
         """
-            This function allows to make the __vertices attribute public and read-only.
+            Getter for __vertices.
+            It returns a copy of the attribute to avoid unwanted modifications.
             In:
                 * self: Reference to the current object.
             Out:
-                * self.__vertices: The corresponding attribute.
+                * vertices_copy: A copy of __vertices.
         """
 
-        # Return the attribute
-        return self.__vertices
+        # Return a copy of the attribute
+        vertices_copy = self.__vertices.copy()
+        return vertices_copy
 
+    #############################################################################################################################################
+    #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
     def add_vertex ( self:   Self,

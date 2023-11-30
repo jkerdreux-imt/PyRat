@@ -65,48 +65,14 @@ class Player (abc.ABC):
         assert isinstance(name, str) # Type check for the name
         assert isinstance(skin, str) # Type check for the skin
 
-        # Private attributes
-        self.__name = name
-        self.__skin = skin
+        # Public attributes
+        self.name = name
+        self.skin = skin
 
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
-    @property
-    def name ( self: Self
-             ) ->    str:
-        
-        """
-            This function allows to make the __name attribute public and read-only.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * self.__name: The corresponding attribute.
-        """
-
-        # Return the attribute
-        return self.__name
-
-    #############################################################################################################################################
-    
-    @property
-    def skin ( self: Self
-             ) ->    str:
-        
-        """
-            This function allows to make the __skin attribute public and read-only.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * self.__skin: The corresponding attribute.
-        """
-
-        # Return the attribute
-        return self.__skin
-
-    #############################################################################################################################################
-    
     def preprocessing ( self:       Self,
                         maze:       Maze,
                         game_state: GameState

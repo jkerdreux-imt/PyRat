@@ -195,7 +195,7 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
     assert isinstance(trace_length, Integral) # Type check for trace_length
     assert isinstance(gui_speed, Number) # Type check for gui_speed
     assert trace_length >= 0 # trace_length must be positive
-    assert gui_speed > 0 # gui_speed must be positive
+    assert gui_speed > 0.0 # gui_speed must be positive
 
     # We catch exceptions that may happen during the game
     try:

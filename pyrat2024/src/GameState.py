@@ -16,6 +16,12 @@ from typing import *
 from typing_extensions import *
 from numbers import *
 
+# Other external imports
+import os
+
+# Internal imports
+from pyrat2024.src.utils import caller_file
+
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
@@ -43,13 +49,156 @@ class GameState ():
                 * A new instance of the class.
         """
 
-        # Public attributes
-        self.player_locations = {}
-        self.score_per_player = {}
-        self.muds = {}
-        self.teams = {}
-        self.cheese = []
-        self.turn = 0
+        # Private attributes
+        self.__player_locations = {}
+        self.__score_per_player = {}
+        self.__muds = {}
+        self.__teams = {}
+        self.__cheese = []
+        self.__turn = None
+
+    #############################################################################################################################################
+    #                                                                  GETTERS                                                                  #
+    #############################################################################################################################################
+
+    @property
+    def player_locations ( self: Self
+                         ) ->    Dict[str, Integral]:
+        
+        """
+            Getter for __player_locations.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * self.__player_locations: The __player_locations attribute.
+        """
+
+        # Debug
+        assert self.__turn is not None or caller_file() == os.path.join(os.path.dirname(os.path.realpath(__file__)), "Game.py") # The object has been initialized by the game engine, or the method is called by the engine
+
+        # Return the attribute
+        return self.__player_locations
+
+    #############################################################################################################################################
+
+    @property
+    def score_per_player ( self: Self
+                         ) ->    Dict[str, Number]:
+        
+        """
+            Getter for __score_per_player.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * self.__score_per_player: The __score_per_player attribute.
+        """
+
+        # Debug
+        assert self.__turn is not None or caller_file() == os.path.join(os.path.dirname(os.path.realpath(__file__)), "Game.py") # The object has been initialized by the game engine, or the method is called by the engine
+
+        # Return the attribute
+        return self.__score_per_player
+
+    #############################################################################################################################################
+
+    @property
+    def muds ( self: Self
+             ) ->    Dict[str, Dict[str, Optional[Integral]]]:
+        
+        """
+            Getter for __muds.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * self.__muds: The __muds attribute.
+        """
+
+        # Debug
+        assert self.__turn is not None or caller_file() == os.path.join(os.path.dirname(os.path.realpath(__file__)), "Game.py") # The object has been initialized by the game engine, or the method is called by the engine
+
+        # Return the attribute
+        return self.__muds
+
+    #############################################################################################################################################
+
+    @property
+    def teams ( self: Self
+              ) ->    Dict[str, List[str]]:
+        
+        """
+            Getter for __teams.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * self.__teams: The __teams attribute.
+        """
+
+        # Debug
+        assert self.__turn is not None or caller_file() == os.path.join(os.path.dirname(os.path.realpath(__file__)), "Game.py") # The object has been initialized by the game engine, or the method is called by the engine
+
+        # Return the attribute
+        return self.__teams
+
+    #############################################################################################################################################
+
+    @property
+    def cheese ( self: Self
+               ) ->    List[Integral]:
+        
+        """
+            Getter for __cheese.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * self.__cheese: The __cheese attribute.
+        """
+
+        # Debug
+        assert self.__turn is not None or caller_file() == os.path.join(os.path.dirname(os.path.realpath(__file__)), "Game.py") # The object has been initialized by the game engine, or the method is called by the engine
+
+        # Return the attribute
+        return self.__cheese
+
+    #############################################################################################################################################
+
+    @property
+    def turn ( self: Self
+             ) ->    Integral:
+        
+        """
+            Getter for __turn.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * self.__turn: The __turn attribute.
+        """
+
+        # Debug
+        assert self.__turn is not None or caller_file() == os.path.join(os.path.dirname(os.path.realpath(__file__)), "Game.py") # The object has been initialized by the game engine, or the method is called by the engine
+
+        # Return the attribute
+        return self.__turn
+
+    #############################################################################################################################################
+    #                                                                  SETTERS                                                                  #
+    #############################################################################################################################################
+
+    @turn.setter
+    def turn ( self:  Self,
+               value: Integral
+             ) ->     Integral:
+        
+        """
+            Setter for __turn.
+            In:
+                * self:  Reference to the current object.
+                * value: New value for the __turn attribute.
+            Out:
+                * None.
+        """
+
+        # Set the attribute
+        self.__turn = value
 
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #

@@ -58,7 +58,7 @@ class FixedPlayer (Player):
         super().__init__(name, skin)
 
         # Debug
-        assert isinstance(actions, list) # Type check for the actions
+        assert isinstance(actions, list) # Type check for actions
         assert all(action in Maze.possible_actions for action in actions) # Check that all actions are valid
 
         # Private attributes
