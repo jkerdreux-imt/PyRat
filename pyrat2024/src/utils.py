@@ -19,6 +19,8 @@ from numbers import *
 import os
 import shutil
 import inspect
+import cProfile
+import pyprof2calltree
 
 #####################################################################################################################################################
 ##################################################################### FUNCTIONS #####################################################################
@@ -54,6 +56,41 @@ def caller_file () -> str:
     # Check stack to get the name
     caller = inspect.currentframe().f_back.f_back.f_code.co_filename
     return caller
+
+#####################################################################################################################################################
+
+def start_profiling () -> None:
+
+    """
+        Function to start profiling the code.
+        In:
+            * None.
+        Out:
+            * None.
+    """
+    
+    # Create global object
+    global profiler
+    profiler = cProfile.Profile()
+    profiler.enable()
+
+#####################################################################################################################################################
+
+def stop_profiling () -> None:
+
+    """
+        Function to call after the code blocks to profile.
+        It will open a window with the profiling results.
+        In:
+            * None.
+        Out:
+            * None.
+    """
+    
+    # Get stats and visualize
+    global profiler
+    profiler.create_stats()
+    pyprof2calltree.visualize(profiler.getstats())
 
 #####################################################################################################################################################
 #####################################################################################################################################################
