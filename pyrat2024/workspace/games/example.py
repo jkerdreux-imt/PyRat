@@ -3,11 +3,14 @@
 #####################################################################################################################################################
 
 """
-    This file defines a game in which 3 teams of players compete in a maze with mud.
+    This file defines a game in which 4 teams of players compete in a maze with mud.
+    Objective of the game is to catch more cheese than the other teams.
+
     When running this file, it will create a PyRat game, add players to it, and start the game.
     This is an example, made to illustrate the use of the PyRat library.
     You can use it as a template to develop your own game.
     You can customize the game elements (maze size, number of cheese, etc.) in the "config" dictionary.
+    Also, you can add as many teams as you want, and as many players per team as you want.
 """
 
 #####################################################################################################################################################
@@ -41,7 +44,7 @@ if __name__ == "__main__":
               "mud_range": (2, 7),
               "wall_percentage": 60.0,
               "cell_percentage": 90.0,
-              "nb_cheese": 1}
+              "nb_cheese": 20}
     
     # Instanciate the game with the chosen configuration
     game = Game(**config)

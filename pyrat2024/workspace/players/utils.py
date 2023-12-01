@@ -5,7 +5,7 @@
 """
     This file contains a few functions that can be useful to multiple players, while not making sense to define as methods of the classes.
     It is meant to be used as a library, and not to be executed directly.
-    Do not hesitate to add your own functions here if you think they can be useful to other players.
+    Do not hesitate to add your own functions here if you think they can be useful to multiple players.
 """
 
 #####################################################################################################################################################
