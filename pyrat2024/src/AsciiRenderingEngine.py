@@ -113,10 +113,10 @@ class AsciiRenderingEngine (RenderingEngine):
         cheese = self.__colorize("▲", colored.bg("grey_23") + colored.fg("yellow_1"))
         mud_horizontal = self.__colorize("ⴾ", colored.bg("grey_23") + colored.fg("orange_4b"))
         mud_vertical = self.__colorize("ⵘ", colored.bg("grey_23") + colored.fg("orange_4b"))
-        mud_value = lambda number: self.__colorize(number, colored.bg("grey_23") + colored.fg("orange_4b"))
+        mud_value = lambda number: self.__colorize(str(number), colored.bg("grey_23") + colored.fg("orange_4b"))
         path_horizontal = self.__colorize("⋅", colored.bg("grey_23") + colored.fg("orange_4b"))
         path_vertical = self.__colorize("ⵗ", colored.bg("grey_23") + colored.fg("orange_4b"))
-        cell_number = lambda number: self.__colorize(number, colored.bg("grey_23") + colored.fg("magenta"))
+        cell_number = lambda number: self.__colorize(str(number), colored.bg("grey_23") + colored.fg("magenta"))
         score_cheese = self.__colorize("▲ ", colored.fg("yellow_1"))
         score_half_cheese = self.__colorize("△ ", colored.fg("yellow_1"))
         

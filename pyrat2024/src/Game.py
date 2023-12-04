@@ -21,6 +21,7 @@ import copy
 import numpy
 import numpy.random as nprandom
 import multiprocessing
+import multiprocessing.managers as mpmanagers
 import time
 import traceback
 import sys
@@ -132,8 +133,8 @@ class Game ():
         assert isinstance(game_mode, str) # Type check for game_mode
         assert game_mode in ["standard", "synchronous", "sequential"] # Type check for game_mode
         assert isinstance(continue_on_error, bool) # Type check for continue_on_error
-        assert not(game_mode == "sequential" and "render_mode" == "gui") # Sequential mode is not compatible with GUI rendering
-
+        assert not(game_mode == "sequential" and render_mode == "gui") # Sequential mode is not compatible with GUI rendering
+        
         # Private attributes
         self.__random_seed = random_seed
         self.__random_seed_maze = random_seed_maze
@@ -294,19 +295,19 @@ class Game ():
             
             # We play until the game is over
             game_state = copy.deepcopy(self.__initial_game_state)
-            players_ready = [player.name for player in self.__players]
+            players_ready = [player for player in self.__players]
             players_running = {player.name: True for player in self.__players}
             while any(players_running.values()):
 
                 # We communicate the state of the game to the players not in mud
-                actions_as_text = {player.name: "postprocessing" for player in self.__players}
+                actions_as_text = {player.name: "miss" for player in self.__players}
                 durations = {player.name: None for player in self.__players}
                 for ready_player in players_ready:
-                    final_stats = copy.deepcopy(stats) if game_state.game_over() else None
+                    final_stats = copy.deepcopy(stats) if game_state.game_over() else {}
                     if self.__game_mode != "sequential":
-                        player_processes[ready_player]["input_queue"].put((copy.deepcopy(game_state), final_stats))
+                        player_processes[ready_player.name]["input_queue"].put((copy.deepcopy(game_state), final_stats))
                     else:
-                        actions_as_text[player.name], durations[player.name] = _player_process_function(player, maze_per_player[player.name], None, None, None, None, None, copy.deepcopy(game_state), final_stats)
+                        actions_as_text[ready_player.name], durations[ready_player.name] = _player_process_function(ready_player, maze_per_player[ready_player.name], None, None, None, None, None, copy.deepcopy(game_state), final_stats)
                 
                 # In multiprocessing mode, we for everybody to receive data to start
                 # In sequential mode, decisions are already received at this point
@@ -339,9 +340,7 @@ class Game ():
                                 if not player_processes[player.name]["output_queue"].empty():
                                     player_processes[player.name]["turn_end_synchronizer"].wait()
                                     actions_as_text[player.name], durations[player.name] = player_processes[player.name]["output_queue"].get()
-                                else:
-                                    actions_as_text[player.name] = "miss"
-                
+
                 # Check which players are ready to continue
                 players_ready = []
                 for player in self.__players:
@@ -350,7 +349,7 @@ class Game ():
                     if self.__game_mode == "standard" and (actions_as_text[player.name].startswith("postprocessing") or actions_as_text[player.name] == "miss"):
                         waiter_processes[player.name]["input_queue"].put(True)
                     else:
-                        players_ready.append(player.name)
+                        players_ready.append(player)
 
                 # Check for errors
                 if any([actions_as_text[player.name].endswith("error") for player in self.__players]) and not self.__continue_on_error:
@@ -662,19 +661,19 @@ def _player_process_function ( player:                  Player,
             * action:   Action performed by the player.
             * duration: Duration of the turn.
     """
-    
+
     # Debug
     assert isinstance(player, Player) # Type check for player
     assert isinstance(maze, Maze) # Type check for maze
-    assert isinstance(input_queue, (multiprocessing.managers.BaseProxy, type(None))) # Type check for input_queue
-    assert isinstance(output_queue, (multiprocessing.managers.BaseProxy, type(None))) # Type check for output_queue
-    assert isinstance(turn_start_synchronizer, (multiprocessing.managers.BarrierProxy, type(None))) # Type check for turn_start_synchronizer
-    assert isinstance(turn_timeout_lock, (multiprocessing.managers.AcquirerProxy, type(None))) # Type check for turn_timeout_lock
-    assert isinstance(turn_end_synchronizer, (multiprocessing.managers.BarrierProxy, type(None))) # Type check for turn_end_synchronizer
+    assert isinstance(input_queue, (mpmanagers.BaseProxy, type(None))) # Type check for input_queue
+    assert isinstance(output_queue, (mpmanagers.BaseProxy, type(None))) # Type check for output_queue
+    assert isinstance(turn_start_synchronizer, (mpmanagers.BarrierProxy, type(None))) # Type check for turn_start_synchronizer
+    assert isinstance(turn_timeout_lock, (mpmanagers.AcquirerProxy, type(None))) # Type check for turn_timeout_lock
+    assert isinstance(turn_end_synchronizer, (mpmanagers.BarrierProxy, type(None))) # Type check for turn_end_synchronizer
     assert isinstance(game_state, (GameState, type(None))) # Type check for game_state
     assert isinstance(final_stats, (dict, type(None))) # Type check for final_stats
     assert final_stats is None or all(isinstance(key, str) for key in final_stats) # Type check for final_stats
-    assert (input_queue is not None and output_queue is not None and turn_start_synchronizer is not None and turn_timeout_lock is not None and turn_end_synchronizer is not None) ^ (game_state is not None and final_stats is not None) # Either multiprocessing or sequential
+    assert (input_queue is None and output_queue is None and turn_start_synchronizer is None and turn_timeout_lock is None and turn_end_synchronizer is None) ^ (game_state is None and final_stats is None) # Either multiprocessing or sequential
     
     # We catch exceptions that may happen during the game
     use_multiprocessing = input_queue is not None
@@ -693,7 +692,7 @@ def _player_process_function ( player:                  Player,
             try:
                 
                 # Call postprocessing once the game is over
-                if final_stats is not None:
+                if final_stats:
                     action = "postprocessing_error"
                     player.postprocessing(maze, game_state, final_stats)
                     action = "postprocessing"

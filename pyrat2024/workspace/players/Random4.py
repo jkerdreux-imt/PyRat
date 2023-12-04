@@ -87,7 +87,7 @@ class Random4 (Player):
             Out:
                 * None.
         """
-
+        
         # Store location to initialize trajectory
         self.trajectory.append(game_state.player_locations[self.name])
 
