@@ -23,7 +23,6 @@ import numpy.random as nprandom
 import multiprocessing
 import time
 import traceback
-import ast
 import sys
 import os
 import datetime
@@ -81,7 +80,7 @@ class Game ():
                    save_game:           bool = False,
                    preprocessing_time:  Number = 3.0,
                    turn_time:           Number = 0.1,
-                   synchronous:         bool = False,
+                   game_mode:           str = "standard",
                    continue_on_error:   bool = False
                  ) ->                   Self:
 
@@ -112,7 +111,7 @@ class Game ():
                 * save_game:           Indicates if the game should be saved.
                 * preprocessing_time:  Time given to the players before the game starts.
                 * turn_time:           Time after which players will miss a turn.
-                * synchronous:         If set, waits for all players to return an action before moving, even if turn_time is exceeded.
+                * game_mode:           Indicates if players play concurrently ("standard"), wait for each other ("synchronous"), or if multiprocessing is disabled ("sequential").
                 * continue_on_error:   If a player crashes, continues the game anyway.
             Out:
                 * A new instance of the class.
@@ -130,8 +129,10 @@ class Game ():
         assert turn_time >= 0 # Turn time should be non-negative
         assert isinstance(preprocessing_time, Number) # Type check for preprocessing_time
         assert preprocessing_time >= 0 # Preprocessing time should be non-negative
-        assert isinstance(synchronous, bool) # Type check for synchronous
+        assert isinstance(game_mode, str) # Type check for game_mode
+        assert game_mode in ["standard", "synchronous", "sequential"] # Type check for game_mode
         assert isinstance(continue_on_error, bool) # Type check for continue_on_error
+        assert not(game_mode == "sequential" and "render_mode" == "gui") # Sequential mode is not compatible with GUI rendering
 
         # Private attributes
         self.__random_seed = random_seed
@@ -156,7 +157,7 @@ class Game ():
         self.__save_game = save_game
         self.__preprocessing_time = preprocessing_time
         self.__turn_time = turn_time
-        self.__synchronous = synchronous
+        self.__game_mode = game_mode
         self.__continue_on_error = continue_on_error
         self.__game_random_seed_maze = None
         self.__game_random_seed_cheese = None
@@ -267,22 +268,26 @@ class Game ():
             for player in self.__players:
                 stats["players"][player.name] = {"actions": {"mud": 0, "error": 0, "miss": 0, "nothing": 0, "north": 0, "east": 0, "south": 0, "west": 0, "wall": 0}, "score": 0, "turn_durations": [], "preprocessing_duration": None}
             
-            # Create a process per player
-            turn_start_synchronizer = multiprocessing.Manager().Barrier(len(self.__players) + 1)
-            turn_timeout_lock = multiprocessing.Manager().Lock()
-            player_processes = {}
-            for player in self.__players:
-                player_processes[player.name] = {"process": None, "input_queue": multiprocessing.Manager().Queue(), "output_queue": multiprocessing.Manager().Queue(), "turn_end_synchronizer": multiprocessing.Manager().Barrier(2)}
-                player_processes[player.name]["process"] = multiprocessing.Process(target=_player_process_function, args=(player, copy.deepcopy(self.__maze), player_processes[player.name]["input_queue"], player_processes[player.name]["output_queue"], turn_start_synchronizer, turn_timeout_lock, player_processes[player.name]["turn_end_synchronizer"],))
-                player_processes[player.name]["process"].start()
+            # In multiprocessing mode, prepare processes
+            maze_per_player = {player.name: copy.deepcopy(self.__maze) for player in self.__players}
+            if self.__game_mode != "sequential":
 
-            # If playing asynchrounously, we create processs to wait instead of missing players
-            if not self.__synchronous:
-                waiter_processes = {}
+                # Create a process per player
+                turn_start_synchronizer = multiprocessing.Manager().Barrier(len(self.__players) + 1)
+                turn_timeout_lock = multiprocessing.Manager().Lock()
+                player_processes = {}
                 for player in self.__players:
-                    waiter_processes[player.name] = {"process": None, "input_queue": multiprocessing.Manager().Queue()}
-                    waiter_processes[player.name]["process"] = multiprocessing.Process(target=_waiter_process_function, args=(waiter_processes[player.name]["input_queue"], turn_start_synchronizer,))
-                    waiter_processes[player.name]["process"].start()
+                    player_processes[player.name] = {"process": None, "input_queue": multiprocessing.Manager().Queue(), "output_queue": multiprocessing.Manager().Queue(), "turn_end_synchronizer": multiprocessing.Manager().Barrier(2)}
+                    player_processes[player.name]["process"] = multiprocessing.Process(target=_player_process_function, args=(player, maze_per_player[player.name], player_processes[player.name]["input_queue"], player_processes[player.name]["output_queue"], turn_start_synchronizer, turn_timeout_lock, player_processes[player.name]["turn_end_synchronizer"], None, None,))
+                    player_processes[player.name]["process"].start()
+
+                # If playing in standard mode, we create processs to wait instead of missing players
+                if self.__game_mode == "standard":
+                    waiter_processes = {}
+                    for player in self.__players:
+                        waiter_processes[player.name] = {"process": None, "input_queue": multiprocessing.Manager().Queue()}
+                        waiter_processes[player.name]["process"] = multiprocessing.Process(target=_waiter_process_function, args=(waiter_processes[player.name]["input_queue"], turn_start_synchronizer,))
+                        waiter_processes[player.name]["process"].start()
 
             # Initial rendering of the maze
             self.__rendering_engine.render(self.__players, self.__maze, self.__initial_game_state)
@@ -294,26 +299,32 @@ class Game ():
             while any(players_running.values()):
 
                 # We communicate the state of the game to the players not in mud
-                for ready_player in players_ready:
-                    final_stats = copy.deepcopy(stats) if game_state.game_over() else None
-                    player_processes[ready_player]["input_queue"].put((copy.deepcopy(game_state), final_stats))
-                turn_start_synchronizer.wait()
-                
-                # Check that a turn lasts al least the time it should for each player
-                # Useful to guarantee processs have at least the required time
-                sleep_time = self.__preprocessing_time if game_state.turn == 0 else self.__turn_time
-                time.sleep(sleep_time)
-                
-                # In synchronous mode, we wait for everyone
                 actions_as_text = {player.name: "postprocessing" for player in self.__players}
                 durations = {player.name: None for player in self.__players}
-                if self.__synchronous:
+                for ready_player in players_ready:
+                    final_stats = copy.deepcopy(stats) if game_state.game_over() else None
+                    if self.__game_mode != "sequential":
+                        player_processes[ready_player]["input_queue"].put((copy.deepcopy(game_state), final_stats))
+                    else:
+                        actions_as_text[player.name], durations[player.name] = _player_process_function(player, maze_per_player[player.name], None, None, None, None, None, copy.deepcopy(game_state), final_stats)
+                
+                # In multiprocessing mode, we for everybody to receive data to start
+                # In sequential mode, decisions are already received at this point
+                if self.__game_mode != "sequential":
+                    turn_start_synchronizer.wait()
+
+                # Wait a bit
+                sleep_time = self.__preprocessing_time if game_state.turn == 0 else self.__turn_time
+                time.sleep(sleep_time)
+
+                # In synchronous mode, we wait for everyone
+                if self.__game_mode == "synchronous":
                     for player in self.__players:
                         player_processes[player.name]["turn_end_synchronizer"].wait()
                         actions_as_text[player.name], durations[player.name] = player_processes[player.name]["output_queue"].get()
 
-                # Otherwise, we block the possibility to return an action and check who answered in time
-                else:
+                # In standard mode, we block the possibility to return an action and check who answered in time
+                elif self.__game_mode == "standard":
 
                     # Wait at least for those in mud
                     for player in self.__players:
@@ -336,7 +347,7 @@ class Game ():
                 for player in self.__players:
                     if actions_as_text[player.name].startswith("postprocessing"):
                         players_running[player.name] = False
-                    if not self.__synchronous and (actions_as_text[player.name].startswith("postprocessing") or actions_as_text[player.name] == "miss"):
+                    if self.__game_mode == "standard" and (actions_as_text[player.name].startswith("postprocessing") or actions_as_text[player.name] == "miss"):
                         waiter_processes[player.name]["input_queue"].put(True)
                     else:
                         players_ready.append(player.name)
@@ -467,7 +478,7 @@ class Game ():
                 os.makedirs(self.__save_path)
 
             # Prepare the config dictionary
-            config = {"synchronous": True,
+            config = {"game_mode": "synchronous",
                       "fixed_maze": self.__maze.as_dict(),
                       "fixed_cheese": self.__initial_game_state.cheese}
             
@@ -623,47 +634,61 @@ class Game ():
 
 def _player_process_function ( player:                  Player,
                                maze:                    Maze,
-                               input_queue:             multiprocessing.Queue,
-                               output_queue:            multiprocessing.Queue,
-                               turn_start_synchronizer: multiprocessing.Barrier,
-                               turn_timeout_lock:       multiprocessing.Lock,
-                               turn_end_synchronizer:   multiprocessing.Barrier
-                             ) ->                       None:
+                               input_queue:             Optional[multiprocessing.Queue] = None,
+                               output_queue:            Optional[multiprocessing.Queue] = None,
+                               turn_start_synchronizer: Optional[multiprocessing.Barrier] = None,
+                               turn_timeout_lock:       Optional[multiprocessing.Lock] = None,
+                               turn_end_synchronizer:   Optional[multiprocessing.Barrier] = None,
+                               game_state:              Optional[GameState] = None,
+                               final_stats:             Optional[Dict[str, Any]] = None,
+                             ) ->                       Tuple[str, Optional[float]]:
     
     """
         This function is executed in a separate process per player.
         It handles the communication with the player and calls the functions given as arguments.
         It is defined outside of the class due to multiprocessing limitations.
+        If not using multiprocessing, the function returns the action and the duration of the turn.
         In:
             * player:                  Player controlled by the process.
             * maze:                    Maze in which the player plays.
-            * input_queue:             Queue to receive the game state.
-            * output_queue:            Queue to send the action.
-            * turn_start_synchronizer: Barrier to synchronize the start of the turn.
-            * turn_timeout_lock:       Lock to synchronize the timeout of the turn.
-            * turn_end_synchronizer:   Barrier to synchronize the end of the turn.
+            * input_queue:             Queue to receive the game state (set is multiprocessing).
+            * output_queue:            Queue to send the action (set is multiprocessing).
+            * turn_start_synchronizer: Barrier to synchronize the start of the turn (set is multiprocessing).
+            * turn_timeout_lock:       Lock to synchronize the timeout of the turn (set is multiprocessing).
+            * turn_end_synchronizer:   Barrier to synchronize the end of the turn (set is multiprocessing).
+            * game_state:              Initial game state (set is sequential).
+            * final_stats:             Final stats (set is sequential).
         Out:
-            * None.
+            * action:   Action performed by the player.
+            * duration: Duration of the turn.
     """
     
     # Debug
     assert isinstance(player, Player) # Type check for player
     assert isinstance(maze, Maze) # Type check for maze
-    assert isinstance(input_queue, multiprocessing.managers.BaseProxy) # Type check for input_queue
-    assert isinstance(output_queue, multiprocessing.managers.BaseProxy) # Type check for output_queue
-    assert isinstance(turn_start_synchronizer, multiprocessing.managers.BarrierProxy) # Type check for turn_start_synchronizer
-    assert isinstance(turn_timeout_lock, multiprocessing.managers.AcquirerProxy) # Type check for turn_timeout_lock
-    assert isinstance(turn_end_synchronizer, multiprocessing.managers.BarrierProxy) # Type check for turn_end_synchronizer
+    assert isinstance(input_queue, (multiprocessing.managers.BaseProxy, type(None))) # Type check for input_queue
+    assert isinstance(output_queue, (multiprocessing.managers.BaseProxy, type(None))) # Type check for output_queue
+    assert isinstance(turn_start_synchronizer, (multiprocessing.managers.BarrierProxy, type(None))) # Type check for turn_start_synchronizer
+    assert isinstance(turn_timeout_lock, (multiprocessing.managers.AcquirerProxy, type(None))) # Type check for turn_timeout_lock
+    assert isinstance(turn_end_synchronizer, (multiprocessing.managers.BarrierProxy, type(None))) # Type check for turn_end_synchronizer
+    assert isinstance(game_state, (GameState, type(None))) # Type check for game_state
+    assert isinstance(final_stats, (dict, type(None))) # Type check for final_stats
+    assert final_stats is None or all(isinstance(key, str) for key in final_stats) # Type check for final_stats
+    assert (input_queue is not None and output_queue is not None and turn_start_synchronizer is not None and turn_timeout_lock is not None and turn_end_synchronizer is not None) ^ (game_state is not None and final_stats is not None) # Either multiprocessing or sequential
     
     # We catch exceptions that may happen during the game
+    use_multiprocessing = input_queue is not None
     try:
 
         # Main loop
         while True:
             
-            # Wait for all players ready
-            turn_start_synchronizer.wait()
-            game_state, final_stats = input_queue.get()
+            # In multiprocessing, wait for all players ready
+            if use_multiprocessing:
+                turn_start_synchronizer.wait()
+                game_state, final_stats = input_queue.get()
+            
+            # Call the correct function
             duration = None
             try:
                 
@@ -705,15 +730,21 @@ def _player_process_function ( player:                  Player,
                 print(traceback.format_exc(), file=sys.stderr)
                     
             # Turn is over
-            with turn_timeout_lock:
-                output_queue.put((action, duration))
-            turn_end_synchronizer.wait()
-            if action.startswith("postprocessing"):
-                break
+            if use_multiprocessing:
+                with turn_timeout_lock:
+                    output_queue.put((action, duration))
+                turn_end_synchronizer.wait()
+                if action.startswith("postprocessing"):
+                    break
+            else:
+                return action, duration
 
     # Ignore
     except:
         pass
+
+    # Default return
+    return "error", None
 
 #####################################################################################################################################################
 
