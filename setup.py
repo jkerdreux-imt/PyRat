@@ -22,7 +22,7 @@ import setuptools
 setuptools.setup \
 (
     name =                          "PyRat2024",
-    version =                       "5.1.0",
+    version =                       "5.2.0",
     author =                        "Bastien Pasdeloup",
     author_email =                  "bastien.pasdeloup@imt-atlantique.fr",
     description =                   "PyRat softare used in the PyRat course at IMT Atlantique",
@@ -33,7 +33,7 @@ setuptools.setup \
     license =                       "MIT",
     packages =                      setuptools.find_packages(),
     include_package_data =          True,
-    install_requires =              ["pygame", "colored", "distinctipy", "numpy", "scipy", "tqdm", "typing_extensions", "matplotlib"],
+    install_requires =              ["pygame", "colored", "distinctipy", "numpy", "scipy", "tqdm", "typing_extensions", "matplotlib", "pdoc"],
 )
 
 #####################################################################################################################################################

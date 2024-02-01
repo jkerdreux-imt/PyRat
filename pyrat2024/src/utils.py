@@ -21,25 +21,55 @@ import shutil
 import inspect
 import cProfile
 import pyprof2calltree
+import pdoc
+import pathlib
+import sys
 
 #####################################################################################################################################################
 ##################################################################### FUNCTIONS #####################################################################
 #####################################################################################################################################################
 
-def create_workspace () -> None:
+def create_workspace ( target_directory: str
+                     ) ->                None:
 
     """
         Creates all the directories for a clean student workspace.
         Also creates a few default programs to start with.
         In:
-            * None.
+            * target_directory: The directory in which to create the workspace.
         Out:
             * None.
     """
 
     # Copy the template workspace into the current directory if not already exixting
     source_workspace = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "workspace")
-    shutil.copytree(source_workspace, "pyrat_workspace", ignore=shutil.ignore_patterns('__pycache__'))
+    target_workspace = os.path.join(target_directory, "pyrat_workspace")
+    shutil.copytree(source_workspace, target_workspace, ignore=shutil.ignore_patterns('__pycache__'))
+
+#####################################################################################################################################################
+
+def generate_documentation ( workspace_directory: str
+                           ) ->                   None:
+
+    """
+        Generates the documentation for the project.
+        The function will parse the PyRat library, and all the subdirectories of the workspace directory.
+        This will create a doc directory in the workspace directory, and fill it with the documentation.
+        In:
+            * workspace_directory: The directory in which the workspace is located.
+        Out:
+            * None.
+    """
+    
+    # Process paths
+    target_directory = pathlib.Path(os.path.join(workspace_directory, "doc"))
+    workspace_subdirectories = [os.path.join(workspace_directory, directory) for directory in os.listdir(workspace_directory) if directory != "doc"]
+    for d in workspace_subdirectories:
+        sys.path.append(d)
+    
+    # Generate the documentation for PyRat, and for workspace subdirectories
+    pdoc.render.configure(docformat="google")
+    pdoc.pdoc("pyrat2024", *workspace_subdirectories, output_directory=target_directory)
 
 #####################################################################################################################################################
 

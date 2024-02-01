@@ -23,7 +23,7 @@ from .src.Player import Player
 from .src.PygameRenderingEngine import PygameRenderingEngine
 from .src.RandomMaze import RandomMaze
 from .src.RenderingEngine import RenderingEngine
-from .src.utils import create_workspace, start_profiling, stop_profiling
+from .src.utils import *
 
 #####################################################################################################################################################
 #####################################################################################################################################################
