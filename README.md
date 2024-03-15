@@ -27,9 +27,11 @@ Installation of the PyRat software can be done directly using `pip`. Do not clon
 
 2) Install the PyRat software using the following command:<br />`python -m pip install --user git+https://github.com/BastienPasdeloup/PyRat2024.git`
 
-3) Then, run the following command to create a PyRat workspace:<br />`python -c "import pyrat2024; pyrat2024.create_workspace()"`
+3) Then, run the following command to create a PyRat workspace in the current directory:<br />`python -c "import pyrat2024; pyrat2024.create_workspace('.')"`
 
-4) Check your installation by navigating to `pyrat_workspace/games` and running the following command:<br />`python example.py`
+4) Finally, run the following command to generate the PyRat documentation:<br />`python -c "import pyrat2024; pyrat2024.generate_documentation('pyrat_workspace')"`
+
+5) Check your installation by navigating to `pyrat_workspace/games` and running the following command:<br />`python example.py`
 
 <!-- ##################################################################################################################################################### -->
 <!-- ##################################################################################################################################################### -->
