@@ -304,10 +304,11 @@ class Game ():
                 durations = {player.name: None for player in self.__players}
                 for ready_player in players_ready:
                     final_stats = copy.deepcopy(stats) if game_state.game_over() else {}
+                    player_game_state = copy.deepcopy(game_state)
                     if self.__game_mode != "sequential":
-                        player_processes[ready_player.name]["input_queue"].put((copy.deepcopy(game_state), final_stats))
+                        player_processes[ready_player.name]["input_queue"].put((player_game_state, final_stats))
                     else:
-                        actions_as_text[ready_player.name], durations[ready_player.name] = _player_process_function(ready_player, maze_per_player[ready_player.name], None, None, None, None, None, copy.deepcopy(game_state), final_stats)
+                        actions_as_text[ready_player.name], durations[ready_player.name] = _player_process_function(ready_player, maze_per_player[ready_player.name], None, None, None, None, None, player_game_state, final_stats)
                 
                 # In multiprocessing mode, we for everybody to receive data to start
                 # In sequential mode, decisions are already received at this point
