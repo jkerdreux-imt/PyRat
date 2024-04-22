@@ -183,28 +183,6 @@ class Graph ():
 
     #############################################################################################################################################
 
-    def add_vertex ( self:   Self,
-                     vertex: Any
-                   ) ->      None:
-
-        """
-            Adds a vertex to the graph.
-            In:
-                * self:   Reference to the current object.
-                * vertex: Vertex to add.
-            Out:
-                * None.
-        """
-        
-        # Debug
-        assert vertex not in self.vertices # Vertex is not already in the graph
-
-        # Add vertex to the list of vertices and create an entry in the adjacency matrix
-        self.__vertices.append(vertex)
-        self.__adjacency[len(self.vertices) - 1] = {}
-        
-    #############################################################################################################################################
-
     def as_dict ( self: Self,
                 ) ->    Dict[Any, Dict[Any, Number]]:
 
@@ -225,5 +203,66 @@ class Graph ():
         adjacency_dict = {vertex : {neighbor : self.get_weight(vertex, neighbor) for neighbor in self.get_neighbors(vertex)} for vertex in self.vertices}
         return adjacency_dict
         
+    #############################################################################################################################################
+
+    def remove_vertex ( self:   Self,
+                        vertex: Any
+                      ) ->      None:
+
+        """
+            Removes a vertex from the graph.
+            Also removes all edges connected to this vertex.
+            In:
+                * self:   Reference to the current object.
+                * vertex: Vertex to remove.
+            Out:
+                * None.
+        """
+        
+        # Debug
+        assert vertex in self.vertices # Vertex is in the graph
+
+        # Remove connections to the vertex
+        index = self.vertices.index(vertex)
+        for neighbor in self.get_neighbors(vertex):
+            symmetric = vertex in self.get_neighbors(neighbor)
+            self.remove_edge(vertex, neighbor, symmetric=symmetric)
+        
+        # Remove the vertex
+        del self.__adjacency[index]
+        
+    #############################################################################################################################################
+
+    def remove_edge ( self:      Self,
+                      vertex_1:  Any,
+                      vertex_2:  Any,
+                      symmetric: bool = False
+                    ) ->         None:
+
+        """
+            Removes an edge from the graph.
+            In:
+                * self:      Reference to the current object.
+                * vertex_1:  First vertex.
+                * vertex_2:  Second vertex.
+                * symmetric: Also delete the symmetric edge.
+            Out:
+                * None.
+        """
+        
+        # Debug
+        assert isinstance(symmetric, bool) # Type check for symmetric
+        assert vertex_1 in self.vertices # Vertex 1 is in the graph
+        assert vertex_2 in self.vertices # Vertex 2 is in the graph
+        assert vertex_2 in self.get_neighbors(vertex_1) # Edge exists
+        assert (not symmetric) or (symmetric and vertex_1 in self.get_neighbors(vertex_2)) # If symmetric, the edge exists
+
+        # Remove edge
+        del self.__adjacency[self.vertices.index(vertex_1)][self.vertices.index(vertex_2)]
+
+        # Remove symmetric edge
+        if symmetric:
+            del self.__adjacency[self.vertices.index(vertex_2)][self.vertices.index(vertex_1)]
+    
 #####################################################################################################################################################
 #####################################################################################################################################################
