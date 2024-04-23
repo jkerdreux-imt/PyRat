@@ -20,7 +20,7 @@ from numbers import *
 import random
 
 # Internal imports
-from pyrat2024 import Player, Maze, GameState
+from pyrat import Player, Maze, GameState
 from utils import locations_to_action
 
 #####################################################################################################################################################

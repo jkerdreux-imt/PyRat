@@ -25,7 +25,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "players"))
 
 # Internal imports
-from pyrat2024 import Game
+from pyrat import Game
 from Random1 import Random1
 from Random2 import Random2
 from Random3 import Random3

@@ -29,15 +29,15 @@ import os
 import datetime
 
 # Internal imports
-from pyrat2024.src.Maze import Maze
-from pyrat2024.src.RandomMaze import RandomMaze
-from pyrat2024.src.MazeFromDict import MazeFromDict
-from pyrat2024.src.MazeFromMatrix import MazeFromMatrix
-from pyrat2024.src.Player import Player
-from pyrat2024.src.GameState import GameState
-from pyrat2024.src.RenderingEngine import RenderingEngine
-from pyrat2024.src.AsciiRenderingEngine import AsciiRenderingEngine
-from pyrat2024.src.PygameRenderingEngine import PygameRenderingEngine
+from pyrat.src.Maze import Maze
+from pyrat.src.RandomMaze import RandomMaze
+from pyrat.src.MazeFromDict import MazeFromDict
+from pyrat.src.MazeFromMatrix import MazeFromMatrix
+from pyrat.src.Player import Player
+from pyrat.src.GameState import GameState
+from pyrat.src.RenderingEngine import RenderingEngine
+from pyrat.src.AsciiRenderingEngine import AsciiRenderingEngine
+from pyrat.src.PygameRenderingEngine import PygameRenderingEngine
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################

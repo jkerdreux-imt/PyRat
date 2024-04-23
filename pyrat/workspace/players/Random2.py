@@ -3,7 +3,7 @@
 #####################################################################################################################################################
 
 """
-    This file contains useful elements to define a fixed player.
+    This file contains useful elements to define a particular player.
     It is meant to be used as a library, and not to be executed directly.
 """
 
@@ -16,53 +16,46 @@ from typing import *
 from typing_extensions import *
 from numbers import *
 
+# Other external imports
+import random
+
 # Internal imports
-from pyrat2024.src.Player import Player
-from pyrat2024.src.Maze import Maze
-from pyrat2024.src.GameState import GameState
+from pyrat import Player, Maze, GameState
+from utils import locations_to_action
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class FixedPlayer (Player):
+class Random2 (Player):
 
     """
-        This player follows a predetermined list of actions.
-        This is useful to save and replay a game.
+        This player is an improvement of the Random1 player.
+        Contrary to that previous version, here we take into account the maze structure.
+        More precisely, we select at each turn a random move among those that don't hit a wall.
     """
 
     #############################################################################################################################################
     #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
 
-    def __init__ ( self:    Self,
-                   name:    str,
-                   skin:    str,
-                   actions: List[str]
-                 ) ->       Self:
+    def __init__ ( self: Self,
+                   name: str = "Random 2",
+                   skin: str = "default"
+                 ) ->    Self:
 
         """
             This function is the constructor of the class.
-            We do not duplicate asserts already made in the parent method.
             In:
-                * self:    Reference to the current object.
-                * name:    Name of the player.
-                * skin:    Skin of the player.
-                * actions: List of actions to perform.
+                * self: Reference to the current object.
+                * name: Name of the player.
+                * skin: Skin of the player.
             Out:
                 * A new instance of the class.
         """
 
         # Inherit from parent class
         super().__init__(name, skin)
-
-        # Debug
-        assert isinstance(actions, list) # Type check for actions
-        assert all(action in Maze.possible_actions for action in actions) # Check that all actions are valid
-
-        # Private attributes
-        self.__actions = actions
        
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
@@ -70,13 +63,13 @@ class FixedPlayer (Player):
 
     def turn ( self:       Self,
                maze:       Maze,
-               game_state: GameState
-             ) ->          str:
+               game_state: GameState,
+             ) ->       str:
 
         """
             This method redefines the abstract method of the parent class.
             It is called at each turn of the game.
-            It returns the next action to perform.
+            It returns a random action that does not lead to a wall.
             In:
                 * self:       Reference to the current object.
                 * maze:       An object representing the maze in which the player plays.
@@ -85,8 +78,12 @@ class FixedPlayer (Player):
                 * action: One of the possible actions
         """
 
-        # Get next action
-        action = self.__actions.pop(0)
+        # Choose a random neighbor
+        neighbors = maze.get_neighbors(game_state.player_locations[self.name])
+        neighbor = random.choice(neighbors)
+        
+        # Retrieve the corresponding action
+        action = locations_to_action(maze, game_state.player_locations[self.name], neighbor)
         return action
 
 #####################################################################################################################################################

@@ -23,10 +23,10 @@ import numpy
 import sys
 
 # Internal imports
-from pyrat2024.src.RenderingEngine import RenderingEngine
-from pyrat2024.src.Player import Player
-from pyrat2024.src.Maze import Maze
-from pyrat2024.src.GameState import GameState
+from pyrat.src.RenderingEngine import RenderingEngine
+from pyrat.src.Player import Player
+from pyrat.src.Maze import Maze
+from pyrat.src.GameState import GameState
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################

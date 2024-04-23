@@ -3,7 +3,7 @@
 #####################################################################################################################################################
 
 """
-    This file contains useful elements to define a particular player.
+    This file contains useful elements to define a fixed player.
     It is meant to be used as a library, and not to be executed directly.
 """
 
@@ -16,45 +16,53 @@ from typing import *
 from typing_extensions import *
 from numbers import *
 
-# Other external imports
-import random
-
 # Internal imports
-from pyrat2024 import Player, Maze, GameState
+from pyrat.src.Player import Player
+from pyrat.src.Maze import Maze
+from pyrat.src.GameState import GameState
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class Random1 (Player):
+class FixedPlayer (Player):
 
     """
-        This player controls a PyRat character by performing random actions.
-        More precisely, at each turn, a random choice among all possible actions is selected.
-        Note that this doesn't take into account the structure of the maze.
+        This player follows a predetermined list of actions.
+        This is useful to save and replay a game.
     """
 
     #############################################################################################################################################
     #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
 
-    def __init__ ( self: Self,
-                   name: str = "Random 1",
-                   skin: str = "default"
-                 ) ->    Self:
+    def __init__ ( self:    Self,
+                   name:    str,
+                   skin:    str,
+                   actions: List[str]
+                 ) ->       Self:
 
         """
             This function is the constructor of the class.
+            We do not duplicate asserts already made in the parent method.
             In:
-                * self: Reference to the current object.
-                * name: Name of the player.
-                * skin: Skin of the player.
+                * self:    Reference to the current object.
+                * name:    Name of the player.
+                * skin:    Skin of the player.
+                * actions: List of actions to perform.
             Out:
                 * A new instance of the class.
         """
 
         # Inherit from parent class
         super().__init__(name, skin)
+
+        # Debug
+        assert isinstance(actions, list) # Type check for actions
+        assert all(action in Maze.possible_actions for action in actions) # Check that all actions are valid
+
+        # Private attributes
+        self.__actions = actions
        
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
@@ -62,13 +70,13 @@ class Random1 (Player):
 
     def turn ( self:       Self,
                maze:       Maze,
-               game_state: GameState,
+               game_state: GameState
              ) ->          str:
 
         """
             This method redefines the abstract method of the parent class.
             It is called at each turn of the game.
-            It returns a random action from the list of possible actions.
+            It returns the next action to perform.
             In:
                 * self:       Reference to the current object.
                 * maze:       An object representing the maze in which the player plays.
@@ -77,8 +85,8 @@ class Random1 (Player):
                 * action: One of the possible actions
         """
 
-        # Choose a random action to perform
-        action = random.choice(Maze.possible_actions)
+        # Get next action
+        action = self.__actions.pop(0)
         return action
 
 #####################################################################################################################################################

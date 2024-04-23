@@ -69,7 +69,7 @@ def generate_documentation ( workspace_directory: str
     
     # Generate the documentation for PyRat, and for workspace subdirectories
     pdoc.render.configure(docformat="google")
-    pdoc.pdoc("pyrat2024", *workspace_subdirectories, output_directory=target_directory)
+    pdoc.pdoc("pyrat", *workspace_subdirectories, output_directory=target_directory)
 
 #####################################################################################################################################################
 

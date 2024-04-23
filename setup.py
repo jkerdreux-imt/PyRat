@@ -21,14 +21,14 @@ import setuptools
 # Installation details
 setuptools.setup \
 (
-    name =                          "PyRat2024",
-    version =                       "5.2.0",
+    name =                          "PyRat",
+    version =                       "5.3.0",
     author =                        "Bastien Pasdeloup",
     author_email =                  "bastien.pasdeloup@imt-atlantique.fr",
-    description =                   "PyRat softare used in the PyRat course at IMT Atlantique",
+    description =                   "PyRat softare used in the computer science at IMT Atlantique",
     long_description =              open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type = "text/markdown",
-    url =                           "https://github.com/BastienPasdeloup/PyRat2024",
+    url =                           "https://github.com/BastienPasdeloup/PyRat",
     project_urls =                  {"Course" : "https://formations.imt-atlantique.fr/pyrat"},
     license =                       "MIT",
     packages =                      setuptools.find_packages(),

@@ -3,7 +3,7 @@
 #####################################################################################################################################################
 
 """
-    This file contains useful elements to define a player.
+    This file contains useful elements to define a particular player.
     It is meant to be used as a library, and not to be executed directly.
 """
 
@@ -17,29 +17,26 @@ from typing_extensions import *
 from numbers import *
 
 # Other external imports
-import abc
+import random
 
 # Internal imports
-from pyrat2024.src.Maze import Maze
-from pyrat2024.src.GameState import GameState
+from pyrat import Player, Maze, GameState
+from utils import locations_to_action
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class Player (abc.ABC):
+class Random4 (Player):
 
     """
-        This class is abstract and cannot be instantiated.
-        You should use one of the subclasses to create a maze, or create your own subclass.
-
-        A player is an agent that can play a PyRat game.
-        The preprocessing method is called once at the beginning of the game.
-        The turn method is called at each turn of the game.
-        The postprocessing method is called once at the end of the game.
-        Only the turn method is mandatory.
-        If you want to keep track of some information between turns, you can define a constructor and add attributes to the object.
-        Check examples to see how to do it properly.
+        This player is an improvement of the Random3 player.
+        A limitation of Random3 is that when a cell has no unvisited neighbor, then we may move randomly for a long time before reaching an unvisited cell.
+        To correct this issue, we keep track of our trajectory.
+        This way, if we are stuck, we can backtrack until we reach an already visited cell with an unvisited neighbor.
+        This strategy is pretty close to a depth-first seach.
+        Note that in this file, we redefine the "preprocessing" function of the parent class, that is executed once at the beginning of the game.
+        Here, this function is used to store the initial location of the player.
     """
 
     #############################################################################################################################################
@@ -47,7 +44,7 @@ class Player (abc.ABC):
     #############################################################################################################################################
 
     def __init__ ( self: Self,
-                   name: str,
+                   name: str = "Random 4",
                    skin: str = "default"
                  ) ->    Self:
 
@@ -61,27 +58,28 @@ class Player (abc.ABC):
                 * A new instance of the class.
         """
 
-        # Debug
-        assert isinstance(name, str) # Type check for the name
-        assert isinstance(skin, str) # Type check for the skin
+        # Inherit from parent class
+        super().__init__(name, skin)
 
-        # Public attributes
-        self.name = name
-        self.skin = skin
+        # We create an attribute to keep track of visited cells
+        self.visited_cells = []
 
+        # We create an attribute to keep track of the trajectory
+        self.trajectory = []
+       
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
     def preprocessing ( self:       Self,
                         maze:       Maze,
-                        game_state: GameState
+                        game_state: GameState,
                       ) ->          None:
         
         """
-            This method can optionally be implemented in the child classes.
+            This method redefines the method of the parent class.
             It is called once at the beginning of the game.
-            It is typically given more time than the turn function, to perform complex computations.
+            Here, we initialize the trajectory with the initial location of the player.
             In:
                 * self:       Reference to the current object.
                 * maze:       An object representing the maze in which the player plays.
@@ -89,72 +87,49 @@ class Player (abc.ABC):
             Out:
                 * None.
         """
-
-        # Debug
-        assert isinstance(maze, Maze) # Type check for the maze
-        assert isinstance(game_state, GameState) # Type check for the game state
-
-        # By default, this method does nothing unless implemented in the child classes
-        pass
+        
+        # Store location to initialize trajectory
+        self.trajectory.append(game_state.player_locations[self.name])
 
     #############################################################################################################################################
 
-    @abc.abstractmethod
     def turn ( self:       Self,
                maze:       Maze,
-               game_state: GameState
+               game_state: GameState,
              ) ->          str:
 
         """
-            This method is abstract and must be implemented in the child classes.
+            This method redefines the abstract method of the parent class.
             It is called at each turn of the game.
-            It returns an action to perform among the possible actions, defined as a static attribute of class Maze.
-            These can be accessed using Maze.possible_actions.
+            It returns an action that explores a random unvisited cell if possible.
+            If no such action exists, it returns an action that allows to go back on our trajectory.
             In:
                 * self:       Reference to the current object.
                 * maze:       An object representing the maze in which the player plays.
                 * game_state: An object representing the state of the game.
             Out:
-                * action: One of the possible actions.
+                * action: One of the possible actions
         """
 
-        # Debug
-        assert isinstance(maze, Maze) # Type check for the maze
-        assert isinstance(game_state, GameState) # Type check for the game state
+        # Mark current cell as visited and add it to the trajectory
+        if game_state.player_locations[self.name] not in self.visited_cells:
+            self.visited_cells.append(game_state.player_locations[self.name])
+        self.trajectory.append(game_state.player_locations[self.name])
 
-        # This method must be implemented in the child classes
-        # By default we raise an error
-        raise NotImplementedError("This method must be implemented in the child classes.")
-
-#############################################################################################################################################
-
-    def postprocessing ( self:       Self,
-                         maze:       Maze,
-                         game_state: GameState,
-                         stats:      Dict[str, Any],
-                       ) ->          None:
-
-        """
-            This method can optionally be implemented in the child classes.
-            It is called once at the end of the game.
-            It is not timed, and can be used to make some cleanup, analyses of the completed game, model training, etc.
-            In:
-                * self:       Reference to the current object.
-                * maze:       An object representing the maze in which the player plays.
-                * game_state: An object representing the state of the game.
-                * stats:      Statistics about the game.
-            Out:
-                * None.
-        """
-
-        # Debug
-        assert isinstance(maze, Maze) # Type check for the maze
-        assert isinstance(game_state, GameState) # Type check for the game state
-        assert isinstance(stats, dict) # Type check for the stats
-        assert all(isinstance(key, str) for key in stats.keys()) # Type check for the keys of the stats
-
-        # By default, this method does nothing unless implemented in the child classes
-        pass
+        # Go to an unvisited neighbor in priority
+        neighbors = maze.get_neighbors(game_state.player_locations[self.name])
+        unvisited_neighbors = [neighbor for neighbor in neighbors if neighbor not in self.visited_cells]
+        if len(unvisited_neighbors) > 0:
+            neighbor = random.choice(unvisited_neighbors)
+            
+        # If there is no unvisited neighbor, backtrack the trajectory
+        else:
+            _ = self.trajectory.pop(-1)
+            neighbor = self.trajectory.pop(-1)
+        
+        # Retrieve the corresponding action
+        action = locations_to_action(maze, game_state.player_locations[self.name], neighbor)
+        return action
 
 #####################################################################################################################################################
 #####################################################################################################################################################

@@ -3,7 +3,7 @@
 #####################################################################################################################################################
 
 """
-    This file contains useful elements to define a fixed maze from a given matrix.
+    This file contains useful elements to define a fixed maze from a given dictionary.
     It is meant to be used as a library, and not to be executed directly.
 """
 
@@ -16,27 +16,23 @@ from typing import *
 from typing_extensions import *
 from numbers import *
 
-# Other external imports
-import numpy
-
 # Internal imports
-from pyrat2024.src.Maze import Maze
+from pyrat.src.Maze import Maze
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class MazeFromMatrix (Maze):
+class MazeFromDict (Maze):
 
     """
         This class inherits from the Maze class.
         Therefore, it has the attributes and methods defined in the Maze class in addition to the ones defined below.
 
-        This is a maze that is created from a fixed description as a numpy.ndarray.
-        Indices of rows and columns are the indices of the corresponding cells.
-        Entries are the weights of the corresponding edges.
-        Rows and columns with only 0 values will be ignored.
-        This class can be useful to test a player on a fixed maze, to compare its performance with other players.
+        This is a maze that is created from a fixed description as a dictionary, where keys are cell indices.
+        Associated values are dictionaries, where keys are neighbors of the corresponding cell, and values are the weights of the corresponding edges.
+        This class is especially useful to allow exporting a maze to a file, and then reusing it later.
+        It is also useful to test a player on a fixed maze, to compare its performance with other players.
     """
 
     #############################################################################################################################################
@@ -44,14 +40,14 @@ class MazeFromMatrix (Maze):
     #############################################################################################################################################
 
     def __init__ ( self:        Self,
-                   description: numpy.ndarray
+                   description: Dict[Integral, Dict[Integral, Number]]
                  ) ->           Self:
 
         """
             This function is the constructor of the class.
             In:
                 * self:        Reference to the current object.
-                * description: Fixed maze as a matrix.
+                * description: Fixed maze as a dictionary.
             Out:
                 * A new instance of the class.
         """
@@ -60,14 +56,15 @@ class MazeFromMatrix (Maze):
         super().__init__()
 
         # Debug
-        assert isinstance(description, numpy.ndarray) # Type check for description
-        assert len(description.shape) == 2 # Check that the description is a matrix
-        assert description.shape[0] == description.shape[1] # Check that the matrix is square
-        assert description.shape[0] > 1 # The maze has at least two vertices
-        assert all(isinstance(weight, Integral) for weight in description.flatten()) # Weights are integers
-        assert description == description.T # Check that the matrix is symmetric
-        assert all(weight >= 0 for weight in description.flatten()) # Check that the weights are non-negative
-        assert any(weight > 0 for weight in description.flatten()) # Check that the maze has at least one edge
+        assert isinstance(description, dict) # Type check for description
+        assert all(isinstance(vertex, Integral) for vertex in description) # Type check for description
+        assert all(isinstance(neighbor, Integral) for vertex in description for neighbor in description[vertex]) # Type check for description
+        assert all(isinstance(weight, Number) for vertex in description for neighbor in description[vertex] for weight in description[vertex][neighbor]) # Type check for description
+        assert len(description) > 1 # The maze has at least two vertices
+        assert all(len(description[vertex]) > 0 for vertex in description) # All vertices are connected to at least one neighbor
+        assert all(vertex in description[neighbor] for vertex in description for neighbor in description[vertex]) # The graph is symmetric
+        assert all(description[vertex][neighbor] == description[neighbor][vertex] for vertex in description for neighbor in description[vertex]) # Weights are symmetric
+        assert all(description[vertex][neighbor] > 0 for vertex in description for neighbor in description[vertex]) # Weights are positive
 
         # Private attributes
         self.__description = description
@@ -89,18 +86,16 @@ class MazeFromMatrix (Maze):
             Out:
                 * None.
         """
-
+        
         # Add vertices
-        for vertex in range(self.__description.shape[0]):
-            neighbors = self.__description[vertex].nonzero()[0].tolist()
-            if len(neighbors) > 0:
-                self.add_vertex(vertex)
+        for vertex in self.__description:
+            self.add_vertex(vertex)
         
         # Add edges
-        for vertex in range(self.__description.shape[0]):
-            neighbors = self.__description[vertex].nonzero()[0].tolist()
+        for vertex in self.__description:
+            neighbors = self.__description[vertex]
             for neighbor in neighbors:
-                self.add_edge(vertex, neighbor, self.__description[vertex, neighbor])
+                self.add_edge(vertex, neighbor, self.__description[vertex][neighbor])
 
         # Infer dimensions
         self._infer_dimensions()
