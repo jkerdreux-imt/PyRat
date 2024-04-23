@@ -19,7 +19,7 @@
 import sys
 import os
 
-# Add "players" directory to the path
+# Add needed directories to the path
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "players"))
 
 # Internal imports

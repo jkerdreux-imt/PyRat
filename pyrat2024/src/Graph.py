@@ -62,14 +62,14 @@ class Graph ():
         
         """
             Getter for __vertices.
-            It returns a copy of the attribute to avoid unwanted modifications.
+            It returns a copy of the list of vertices.
             In:
                 * self: Reference to the current object.
             Out:
                 * vertices_copy: A copy of __vertices.
         """
 
-        # Return a copy of the attribute
+        # Return a copy of the list of vertices
         vertices_copy = self.__vertices.copy()
         return vertices_copy
 
@@ -223,13 +223,16 @@ class Graph ():
         assert vertex in self.vertices # Vertex is in the graph
 
         # Remove connections to the vertex
-        index = self.vertices.index(vertex)
         for neighbor in self.get_neighbors(vertex):
             symmetric = vertex in self.get_neighbors(neighbor)
             self.remove_edge(vertex, neighbor, symmetric=symmetric)
         
-        # Remove the vertex
-        del self.__adjacency[index]
+        # Remove the vertex and reindex the adjacency matrix
+        index = self.vertices.index(vertex)
+        for i in range(len(self.vertices) - 1):
+            self.__adjacency[i] = {key if key < index else key - 1 : value for key, value in self.__adjacency[i + 1 if i >= index else i].items()}
+        del self.__adjacency[len(self.vertices) - 1]
+        del self.__vertices[index]
         
     #############################################################################################################################################
 
