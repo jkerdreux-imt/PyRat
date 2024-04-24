@@ -19,7 +19,7 @@ from numbers import *
 # Other external imports
 import colored
 import re
-import numpy
+import math
 import sys
 
 # Internal imports
@@ -131,7 +131,7 @@ class AsciiRenderingEngine (RenderingEngine):
         team_scores = game_state.get_score_per_team()
         scores_str = ""
         for team in game_state.teams:
-            scores_str += "\n" + score_cheese * int(team_scores[team]) + score_half_cheese * int(numpy.ceil(team_scores[team] - int(team_scores[team])))
+            scores_str += "\n" + score_cheese * int(team_scores[team]) + score_half_cheese * math.ceil(team_scores[team] - int(team_scores[team]))
             scores_str += "[" + teams[team] + "] " if len(teams) > 1 or len(team) > 0 else ""
             scores_str += " + ".join(["%s (%s)" % (player_in_team, str(round(game_state.score_per_player[player_in_team], 3)).rstrip('0').rstrip('.') if game_state.score_per_player[player_in_team] > 0 else "0") for player_in_team in game_state.teams[team]])
         environment_str += scores_str
@@ -180,8 +180,8 @@ class AsciiRenderingEngine (RenderingEngine):
                     else:
                         if right_weight == "1":
                             environment_str += path_vertical
-                        elif not self._render_simplified and int(numpy.ceil((cell_height - len(right_weight)) / 2)) <= subrow < int(numpy.ceil((cell_height - len(right_weight)) / 2)) + len(right_weight):
-                            digit_number = subrow - int(numpy.ceil((cell_height - len(right_weight)) / 2))
+                        elif not self._render_simplified and math.ceil((cell_height - len(right_weight)) / 2) <= subrow < math.ceil((cell_height - len(right_weight)) / 2) + len(right_weight):
+                            digit_number = subrow - math.ceil((cell_height - len(right_weight)) / 2)
                             environment_str += mud_value(right_weight[digit_number])
                         else:
                             environment_str += mud_vertical

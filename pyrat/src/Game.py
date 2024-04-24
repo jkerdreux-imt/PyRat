@@ -220,7 +220,7 @@ class Game ():
         elif isinstance(location, Integral) and self.__maze.i_exists(location):
             self.__initial_game_state.player_locations[player.name] = location
         else:
-            print("Warning: Player %s cannot start at unreachable location %d, starting at closest cell (using Euclidean distance)" % (player.name, location), file=sys.stderr)
+            print("Warning: Player '%s' cannot start at unreachable location %d, starting at closest cell (using Euclidean distance)" % (player.name, location), file=sys.stderr)
             location_rc = numpy.array(self.__maze.i_to_rc(location))
             valid_cells = self.__maze.vertices
             distances = [numpy.linalg.norm(location_rc - numpy.array(self.__maze.i_to_rc(cell))) for cell in valid_cells]
