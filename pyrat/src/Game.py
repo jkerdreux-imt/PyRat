@@ -497,11 +497,11 @@ class Game ():
                                             "actions": self.__actions_history[player.name]})
 
             # Create the players' file, forcing players to their initial locations
-            output_file_name = os.path.join(self.__save_path, datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f.py"))
-            with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "save_template.py"), "r") as save_template_file:
+            output_file_name = os.path.join(self.__save_path, datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f.ipynb"))
+            with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "save_template.ipynb"), "r") as save_template_file:
                 save_template = save_template_file.read()
-                save_template = save_template.replace("{PLAYERS}", str(player_descriptions).replace("}, ", "},\n                           "))
-                save_template = save_template.replace("{CONFIG}", str(config).replace(", '", ",\n              '"))
+                save_template = save_template.replace("{PLAYERS}", str(player_descriptions).replace("}, ", "},\\n                       "))
+                save_template = save_template.replace("{CONFIG}", str(config).replace(", '", ",\\n          '"))
                 with open(output_file_name, "w") as output_file:
                     print(save_template, file=output_file)
 
