@@ -4,6 +4,7 @@
 
 """
     This file contains useful elements to define a fixed maze from a given matrix.
+    Supported matrices are numpy ndarrays and torch tensors.
     It is meant to be used as a library, and not to be executed directly.
 """
 
@@ -18,6 +19,7 @@ from numbers import *
 
 # Other external imports
 import numpy
+import torch
 
 # Internal imports
 from pyrat.src.Maze import Maze
@@ -32,7 +34,7 @@ class MazeFromMatrix (Maze):
         This class inherits from the Maze class.
         Therefore, it has the attributes and methods defined in the Maze class in addition to the ones defined below.
 
-        This is a maze that is created from a fixed description as a numpy.ndarray.
+        This is a maze that is created from a fixed description as a numpy ndarray or a torch tensor.
         Indices of rows and columns are the indices of the corresponding cells.
         Entries are the weights of the corresponding edges.
         Rows and columns with only 0 values will be ignored.
@@ -44,7 +46,7 @@ class MazeFromMatrix (Maze):
     #############################################################################################################################################
 
     def __init__ ( self:        Self,
-                   description: numpy.ndarray
+                   description: Union[numpy.ndarray, torch.Tensor]
                  ) ->           Self:
 
         """
@@ -60,14 +62,14 @@ class MazeFromMatrix (Maze):
         super().__init__()
 
         # Debug
-        assert isinstance(description, numpy.ndarray) # Type check for description
+        assert isinstance(description, (numpy.ndarray, torch.Tensor)) # Type check for description
         assert len(description.shape) == 2 # Check that the description is a matrix
         assert description.shape[0] == description.shape[1] # Check that the matrix is square
         assert description.shape[0] > 1 # The maze has at least two vertices
-        assert all(isinstance(weight, Integral) for weight in description.flatten()) # Weights are integers
-        assert description == description.T # Check that the matrix is symmetric
-        assert all(weight >= 0 for weight in description.flatten()) # Check that the weights are non-negative
-        assert any(weight > 0 for weight in description.flatten()) # Check that the maze has at least one edge
+        assert all(isinstance(weight, Integral) for weight in description.flatten().tolist()) # Weights are integers
+        assert (description == description.T).all() # Check that the matrix is symmetric
+        assert (description >= 0).all() # Check that the weights are non-negative
+        assert (description > 0).any() # Check that the maze has at least one edge
 
         # Private attributes
         self.__description = description
@@ -90,20 +92,22 @@ class MazeFromMatrix (Maze):
                 * None.
         """
 
-        # Add vertices
+        # Determine the vertices
+        vertices = []
         for vertex in range(self.__description.shape[0]):
-            neighbors = self.__description[vertex].nonzero()[0].tolist()
+            neighbors = [neighbor for neighbor in range(self.__description.shape[1]) if self.__description[vertex, neighbor] > 0]
             if len(neighbors) > 0:
-                self.add_vertex(vertex)
-        
-        # Add edges
-        for vertex in range(self.__description.shape[0]):
-            neighbors = self.__description[vertex].nonzero()[0].tolist()
-            for neighbor in neighbors:
-                self.add_edge(vertex, neighbor, self.__description[vertex, neighbor])
+                vertices.append(vertex)
 
-        # Infer dimensions
-        self._infer_dimensions()
+        # Determine the edges
+        edges = []
+        for vertex in range(self.__description.shape[0]):
+            for neighbor in range(self.__description.shape[1]):
+                if self.__description[vertex, neighbor] > 0:
+                    edges.append((vertex, neighbor, self.__description[vertex, neighbor].item()))
+
+        # Build the maze
+        self._initialize_maze(vertices, edges)
 
 #####################################################################################################################################################
 #####################################################################################################################################################

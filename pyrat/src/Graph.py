@@ -188,7 +188,6 @@ class Graph ():
 
         """
             Returns a dictionary representing the adjacency matrix.
-            Useful for exporting the maze when saving the game.
             The vertices must be hashable objects.
             In:
                 * self: Reference to the current object.

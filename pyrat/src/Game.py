@@ -18,8 +18,9 @@ from numbers import *
 
 # Other external imports
 import copy
+import math
+import torch
 import numpy
-import numpy.random as nprandom
 import multiprocessing
 import multiprocessing.managers as mpmanagers
 import time
@@ -27,6 +28,7 @@ import traceback
 import sys
 import os
 import datetime
+import random
 
 # Internal imports
 from pyrat.src.Maze import Maze
@@ -69,7 +71,7 @@ class Game ():
                    wall_percentage:     Number = 60.0,
                    mud_percentage:      Number = 20.0,
                    mud_range:           Tuple[Integral, Integral] = (4, 9),
-                   fixed_maze:          Optional[Union[Dict[Integral, Integral], numpy.ndarray]] = None,
+                   fixed_maze:          Optional[Union[Dict[Integral, Dict[Integral, Integral]], numpy.ndarray, torch.Tensor]] = None,
                    nb_cheese:           Integral = 21,
                    fixed_cheese:        Optional[List[Integral]] = None,
                    render_mode:         str = "gui",
@@ -123,6 +125,10 @@ class Game ():
         assert isinstance(random_seed_maze, (Integral, type(None))) # Type check for random_seed_maze
         assert isinstance(random_seed_cheese, (Integral, type(None))) # Type check for random_seed_cheese
         assert isinstance(random_seed_players, (Integral, type(None))) # Type check for random_seed_players
+        assert random_seed is None or (random_seed is not None and 0 <= random_seed < sys.maxsize) # Random seed should be a positive integer
+        assert random_seed_maze is None or (random_seed_maze is not None and 0 <= random_seed_maze < sys.maxsize) # Random seed should be a positive integer
+        assert random_seed_cheese is None or (random_seed_cheese is not None and 0 <= random_seed_cheese < sys.maxsize) # Random seed should be a positive integer
+        assert random_seed_players is None or (random_seed_players is not None and 0 <= random_seed_players < sys.maxsize) # Random seed should be a positive integer
         assert random_seed is None or (random_seed is not None and random_seed_maze is None and random_seed_cheese is None and random_seed_players is None) # If random_seed is set, other random seeds should not be set
         assert isinstance(render_mode, str) # Type check for render_mode
         assert render_mode in ["gui", "ansi", "ascii", "no_rendering"] # Type check for render_mode
@@ -163,6 +169,7 @@ class Game ():
         self.__game_random_seed_maze = None
         self.__game_random_seed_cheese = None
         self.__game_random_seed_players = None
+        self.__players_rng = random.Random()
         self.__players_asked_location = []
         self.__players = []
         self.__initial_game_state = None
@@ -202,9 +209,6 @@ class Game ():
         assert location in ["random", "same", "center"] or (isinstance(location, Integral) and 0 <= location < self.__maze.height * self.__maze.width) # Type check for location
         assert player.name not in self.__player_traces # Player name should be unique
 
-        # Set random seed
-        nprandom.seed(self.__game_random_seed_players + len(self.__players))
-        
         # Set initial location
         # If random, we choose a random location
         # If same, we choose the same location as the previous player
@@ -212,7 +216,7 @@ class Game ():
         # If a fixed index, we choose the closest cell to the index
         self.__players_asked_location.append(location)
         if location == "random":
-            self.__initial_game_state.player_locations[player.name] = nprandom.choice(list(self.__maze.vertices))
+            self.__initial_game_state.player_locations[player.name] = self.__players_rng.choice(list(self.__maze.vertices))
         elif location == "same" and len(self.__players) > 0:
             self.__initial_game_state.player_locations[player.name] = list(self.__initial_game_state.player_locations.values())[-1]
         elif location == "center":
@@ -221,11 +225,11 @@ class Game ():
             self.__initial_game_state.player_locations[player.name] = location
         else:
             print("Warning: Player '%s' cannot start at unreachable location %d, starting at closest cell (using Euclidean distance)" % (player.name, location), file=sys.stderr)
-            location_rc = numpy.array(self.__maze.i_to_rc(location))
             valid_cells = self.__maze.vertices
-            distances = [numpy.linalg.norm(location_rc - numpy.array(self.__maze.i_to_rc(cell))) for cell in valid_cells]
-            self.__initial_game_state.player_locations[player.name] = valid_cells[numpy.argmin(distances)]
-        
+            distances = [math.dist(self.__maze.i_to_rc(location), self.__maze.i_to_rc(cell)) for cell in valid_cells]
+            _, argmin_distance = min((val, idx) for (idx, val) in enumerate(distances))
+            self.__initial_game_state.player_locations[player.name] = valid_cells[argmin_distance]
+
         # Append to team
         if team not in self.__initial_game_state.teams:
             self.__initial_game_state.teams[team] = []
@@ -410,9 +414,10 @@ class Game ():
         """
         
         # Set random seeds for the game
-        self.__game_random_seed_maze = self.__random_seed if self.__random_seed is not None else self.__random_seed_maze if self.__random_seed_maze is not None else nprandom.randint(numpy.iinfo(numpy.int32).max)
-        self.__game_random_seed_cheese = self.__random_seed if self.__random_seed is not None else self.__random_seed_cheese if self.__random_seed_cheese is not None else nprandom.randint(numpy.iinfo(numpy.int32).max)
-        self.__game_random_seed_players = self.__random_seed if self.__random_seed is not None else self.__random_seed_players if self.__random_seed_players is not None else nprandom.randint(numpy.iinfo(numpy.int32).max)
+        self.__game_random_seed_maze = self.__random_seed if self.__random_seed is not None else self.__random_seed_maze if self.__random_seed_maze is not None else random.randint(0, sys.maxsize - 1)
+        self.__game_random_seed_cheese = self.__random_seed if self.__random_seed is not None else self.__random_seed_cheese if self.__random_seed_cheese is not None else random.randint(0, sys.maxsize - 1)
+        self.__game_random_seed_players = self.__random_seed if self.__random_seed is not None else self.__random_seed_players if self.__random_seed_players is not None else random.randint(0, sys.maxsize - 1)
+        self.__players_rng.seed(self.__game_random_seed_players)
         
         # Reset game analysis elements
         self.__player_traces = {}
@@ -619,10 +624,11 @@ class Game ():
             assert len(available_cells) >= self.__nb_cheese # Enough space for cheese
 
             # Set random seed
-            nprandom.seed(self.__game_random_seed_cheese)
+            rng = random.Random()
+            rng.seed(self.__game_random_seed_cheese)
 
             # Place the cheese randomly
-            nprandom.shuffle(available_cells)
+            rng.shuffle(available_cells)
             cheese = available_cells[:self.__nb_cheese]
 
         # Return the cheese

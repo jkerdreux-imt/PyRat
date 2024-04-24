@@ -41,7 +41,10 @@ def create_workspace ( target_directory: str
             * None.
     """
 
-    # Copy the template workspace into the current directory if not already exixting
+    # Debug
+    assert isinstance(target_directory, str) # Type check for target_directory
+
+    # Copy the template workspace into the current directory if not already existing
     source_workspace = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "workspace")
     target_workspace = os.path.join(target_directory, "pyrat_workspace")
     shutil.copytree(source_workspace, target_workspace, ignore=shutil.ignore_patterns('__pycache__'))
@@ -61,6 +64,9 @@ def generate_documentation ( workspace_directory: str
             * None.
     """
     
+    # Debug
+    assert isinstance(workspace_directory, str) # Type check for workspace_directory
+
     # Process paths
     target_directory = pathlib.Path(os.path.join(workspace_directory, "doc"))
     workspace_subdirectories = [os.path.join(workspace_directory, directory) for directory in os.listdir(workspace_directory) if directory != "doc"]
@@ -117,6 +123,9 @@ def stop_profiling () -> None:
             * None.
     """
     
+    # Debug
+    assert "profiler" in globals() # Profiling must have been started
+
     # Get stats and visualize
     global profiler
     profiler.create_stats()

@@ -18,6 +18,9 @@ from numbers import *
 
 # Other external imports
 import abc
+import numpy
+import torch
+import math
 
 # Internal imports
 from pyrat.src.Graph import Graph
@@ -324,33 +327,74 @@ class Maze (Graph, abc.ABC):
         super().add_edge(vertex_1, vertex_2, weight, True)
     
     #############################################################################################################################################
+
+    def as_numpy_ndarray ( self: Self,
+                         ) ->    numpy.ndarray:
+
+        """
+            Returns a numpy ndarray representing the maze.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * adjacency_matrix: Numpy ndarray representing the adjacency matrix.
+        """
+        
+        # Create the adjacency matrix
+        adjacency_matrix = numpy.zeros((self.width * self.height, self.width * self.height), dtype=int)
+        for vertex in self.vertices:
+            for neighbor in self.get_neighbors(vertex):
+                adjacency_matrix[vertex, neighbor] = self.get_weight(vertex, neighbor)
+        return adjacency_matrix
+
+    #############################################################################################################################################
+
+    def as_torch_tensor ( self: Self,
+                        ) ->    torch.Tensor:
+
+        """
+            Returns a torch tensor representing the maze.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * adjacency_matrix: Torch tensor representing the adjacency matrix.
+        """
+        
+        # Create the adjacency matrix
+        adjacency_matrix = torch.zeros((self.width * self.height, self.width * self.height), dtype=torch.int)
+        for vertex in self.vertices:
+            for neighbor in self.get_neighbors(vertex):
+                adjacency_matrix[vertex, neighbor] = self.get_weight(vertex, neighbor)
+        return adjacency_matrix
+
+    #############################################################################################################################################
     #                                                             PROTECTED METHODS                                                             #
     #############################################################################################################################################
 
-    def _infer_dimensions ( self: Self
-                          ) ->    None:
+    def _initialize_maze ( self:     Self,
+                           vertices: List[Integral],
+                           edges:    List[Tuple[Integral, Integral, Integral]]
+                         ) ->        None:
 
         """
-            This function infers the width and height of the maze from its vertices and edges.
+            This function creates a maze from a list of vertices and a list of edges.
+            It is meant to be used in the subclasses to create the maze.
             In:
-                * self: Reference to the current object.
+                * self:     Reference to the current object.
+                * vertices: List of vertices.
+                * edges:    List of edges.
             Out:
                 * None.
         """
 
-        # Debug
-        assert len(self.vertices) > 0 # The maze has at least one vertex
+        # Determine the dimensions of the maze
+        self.__width = max([abs(edge[1] - edge[0]) for edge in edges])
+        self.__height = math.ceil((max(vertices) + 1) / self.width)
 
-        # Infer width
-        self.__width = 1
-        for vertex in self.vertices:
-            neighbors = self.get_neighbors(vertex)
-            if max(neighbors) - vertex > 1:
-                self.__width = max(neighbors) - vertex
-                break
-        
-        # Infer height
-        self.__height = int(numpy.ceil((max(self.vertices) + 1) / self.width))
+        # Add vertices and edges
+        for vertex in vertices:
+            self.add_vertex(vertex)
+        for edge in edges:
+            self.add_edge(edge[0], edge[1], edge[2])
 
 #####################################################################################################################################################
 #####################################################################################################################################################

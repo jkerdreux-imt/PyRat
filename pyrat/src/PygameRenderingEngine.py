@@ -23,7 +23,8 @@ import multiprocessing
 import os
 import glob
 import distinctipy
-import numpy.random as nprandom
+import math
+import random
 import time
 import queue
 
@@ -208,6 +209,9 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
         pygame.init()
         pygame.mixer.init()
 
+        # Random number generator
+        rng = random.Random()
+
         # Start screen
         if fullscreen:
             gui_screen = pygame.display.set_mode((0, 0), pygame.NOFRAME)
@@ -286,7 +290,7 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
         def ___surface_from_image (file_or_dir_name, target_width_or_max_size, target_height=None):
             full_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), file_or_dir_name)
             if os.path.isdir(full_path):
-                full_path = nprandom.choice(glob.glob(os.path.join(full_path, "*")))
+                full_path = rng.choice(glob.glob(os.path.join(full_path, "*")))
             loaded_image_key = str(full_path) + "_" + str(target_width_or_max_size) + "_" + str(target_height)
             if loaded_image_key in already_loaded_images:
                 return already_loaded_images[loaded_image_key]
@@ -325,7 +329,7 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
             mask_surface.blit(color_surface, (0, 0), special_flags=pygame.BLEND_MAX)
             for offset_x in range(-border_size, border_size + 1):
                 for offset_y in range(-border_size, border_size + 1):
-                    if numpy.linalg.norm([offset_x, offset_y]) <= border_size:
+                    if math.dist([0, 0], [offset_x, offset_y]) <= border_size:
                         final_surface.blit(mask_surface, (border_size // 2 + offset_x, border_size // 2 + offset_y))
             final_surface.blit(surface, (border_size // 2, border_size // 2))
             if final_rescale:
@@ -389,8 +393,8 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
             for col in range(maze.width):
                 if maze.rc_exists(row, col):
                     cell = ___surface_from_image(os.path.join("..", "gui", "ground"), cell_size, cell_size)
-                    cell = pygame.transform.rotate(cell, nprandom.randint(4) * 90)
-                    cell = pygame.transform.flip(cell, bool(nprandom.randint(2)), bool(nprandom.randint(2)))
+                    cell = pygame.transform.rotate(cell, rng.randint(0, 3) * 90)
+                    cell = pygame.transform.flip(cell, bool(rng.randint(0, 1)), bool(rng.randint(0, 1)))
                     cell_x = maze_x_offset + col * cell_size
                     cell_y = maze_y_offset + row * cell_size
                     maze_elements.append((cell_x, cell_y, cell))
@@ -633,7 +637,7 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
                     cheese_partial = ___colorize(cheese_partial, [(team_scores[team] - int(team_scores[team])) * 255] * 3)
                     cheese_partial = ___add_color_border(cheese_partial, cheese_score_border_color, cheese_score_border_width)
                     gui_screen.blit(cheese_partial, (score_x_offset + int(team_scores[team]) * score_margin, score_y_offset))
-                for j in range(int(numpy.ceil(team_scores[team])), len(initial_game_state.cheese)):
+                for j in range(math.ceil(team_scores[team]), len(initial_game_state.cheese)):
                     gui_screen.blit(cheese_missing, (score_x_offset + j * score_margin, score_y_offset))
         initial_scores = {team: 0 for team in initial_game_state.teams}
         ___show_scores(initial_scores)
@@ -738,7 +742,7 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
                                 if len(traces[player.name]) > j:
                                     pygame.draw.line(gui_screen, trace_colors[player.name], traces[player.name][-j-1], traces[player.name][-j], width=trace_size)
                             if len(traces[player.name]) == trace_length + 1:
-                                final_segment_length = numpy.sqrt((traces[player.name][-1][0] - (next_x + player_surfaces[player.name].get_width() / 2))**2 + (traces[player.name][-1][1] - (next_y + player_surfaces[player.name].get_height() / 2))**2)
+                                final_segment_length = math.sqrt((traces[player.name][-1][0] - (next_x + player_surfaces[player.name].get_width() / 2))**2 + (traces[player.name][-1][1] - (next_y + player_surfaces[player.name].get_height() / 2))**2)
                                 ratio = 1 - final_segment_length / cell_size
                                 pygame.draw.line(gui_screen, trace_colors[player.name], traces[player.name][1], (traces[player.name][1][0] + ratio * (traces[player.name][0][0] - traces[player.name][1][0]), traces[player.name][1][1] + ratio * (traces[player.name][0][1] - traces[player.name][1][1])), width=trace_size)
                         gui_screen.blit(player_surfaces[player.name], (next_x, next_y))

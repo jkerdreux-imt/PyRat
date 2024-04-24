@@ -19,8 +19,9 @@ from numbers import *
 # Other external imports
 import scipy.sparse as sparse
 import scipy.sparse.csgraph as csgraph
-import numpy
-import numpy.random as nprandom
+import sys
+import random
+import math
 
 # Internal imports
 from pyrat.src.Maze import Maze
@@ -79,6 +80,7 @@ class RandomMaze (Maze):
         assert isinstance(mud_percentage, Number) # Type check for mud_percentage
         assert isinstance(mud_range, (tuple, list)) # Type check for mud_range
         assert isinstance(random_seed, Integral) # Type check for random_seed
+        assert 0 <= random_seed < sys.maxsize # random_seed is a valid seed
         assert len(mud_range) == 2 # Mud range is an interval of 2 elements
         assert isinstance(mud_range[0], Integral) # Type check for mud_range[0]
         assert isinstance(mud_range[1], Integral) # Type check for mud_range[1]
@@ -114,15 +116,16 @@ class RandomMaze (Maze):
         """
 
         # Set random seed
+        rng = random.Random()
         if self.__random_seed is not None:
-            nprandom.seed(self.__random_seed)
+            rng.seed(self.__random_seed)
 
         # Initialize an empty maze, and add cells until it reaches the asked density
         maze_sparse = sparse.lil_matrix((self.width * self.height, self.width * self.height), dtype=int)
         cells = [(self.height // 2, self.width // 2)]
         while len(cells) / maze_sparse.shape[0] * 100 < self.__cell_percentage:
-            row, col = cells[nprandom.randint(len(cells))]
-            neighbor_row, neighbor_col = [(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)][nprandom.randint(4)]
+            row, col = random.choice(cells)
+            neighbor_row, neighbor_col = random.choice([(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)])
             if 0 <= neighbor_row < self.height and 0 <= neighbor_col < self.width:
                 maze_sparse[self.rc_to_i(row, col), self.rc_to_i(neighbor_row, neighbor_col)] = 1
                 maze_sparse[self.rc_to_i(neighbor_row, neighbor_col), self.rc_to_i(row, col)] = 1
@@ -138,17 +141,17 @@ class RandomMaze (Maze):
         maze_full += maze_full.transpose()
         walls = sparse.triu(maze_sparse - maze_full).nonzero()
         walls = [(walls[0][i], walls[1][i]) for i in range(walls[0].shape[0])]
-        nprandom.shuffle(walls)
-        for i in range(int(numpy.ceil(self.__wall_percentage / 100.0 * len(walls)))):
+        rng.shuffle(walls)
+        for i in range(math.ceil(self.__wall_percentage / 100.0 * len(walls))):
             maze_sparse[walls[i][0], walls[i][1]] = 0
             maze_sparse[walls[i][1], walls[i][0]] = 0
 
         # Add mud
         paths = sparse.triu(maze_sparse).nonzero()
         paths = [(paths[0][i], paths[1][i]) for i in range(paths[0].shape[0])]
-        nprandom.shuffle(paths)
-        for i in range(int(numpy.ceil(self.__mud_percentage / 100.0 * len(paths)))):
-            mud_weight = nprandom.choice(range(self.__mud_range[0], self.__mud_range[1] + 1))
+        rng.shuffle(paths)
+        for i in range(math.ceil(self.__mud_percentage / 100.0 * len(paths))):
+            mud_weight = rng.choice(range(self.__mud_range[0], self.__mud_range[1] + 1))
             maze_sparse[paths[i][0], paths[i][1]] = mud_weight
             maze_sparse[paths[i][1], paths[i][0]] = mud_weight
         

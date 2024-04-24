@@ -40,7 +40,7 @@ class MazeFromDict (Maze):
     #############################################################################################################################################
 
     def __init__ ( self:        Self,
-                   description: Dict[Integral, Dict[Integral, Number]]
+                   description: Dict[Integral, Dict[Integral, Integral]]
                  ) ->           Self:
 
         """
@@ -59,7 +59,7 @@ class MazeFromDict (Maze):
         assert isinstance(description, dict) # Type check for description
         assert all(isinstance(vertex, Integral) for vertex in description) # Type check for description
         assert all(isinstance(neighbor, Integral) for vertex in description for neighbor in description[vertex]) # Type check for description
-        assert all(isinstance(weight, Number) for vertex in description for neighbor in description[vertex] for weight in description[vertex][neighbor]) # Type check for description
+        assert all(isinstance(description[vertex][neighbor], Integral) for vertex in description for neighbor in description[vertex]) # Type check for description
         assert len(description) > 1 # The maze has at least two vertices
         assert all(len(description[vertex]) > 0 for vertex in description) # All vertices are connected to at least one neighbor
         assert all(vertex in description[neighbor] for vertex in description for neighbor in description[vertex]) # The graph is symmetric
@@ -87,18 +87,18 @@ class MazeFromDict (Maze):
                 * None.
         """
         
-        # Add vertices
-        for vertex in self.__description:
-            self.add_vertex(vertex)
-        
-        # Add edges
+        # Determine the vertices
+        vertices = self.__description.keys()
+
+        # Determine the edges
+        edges = []
         for vertex in self.__description:
             neighbors = self.__description[vertex]
             for neighbor in neighbors:
-                self.add_edge(vertex, neighbor, self.__description[vertex][neighbor])
+                edges.append((vertex, neighbor, self.__description[vertex][neighbor]))
 
-        # Infer dimensions
-        self._infer_dimensions()
+        # Build the maze
+        self._initialize_maze(vertices, edges)
 
 #####################################################################################################################################################
 #####################################################################################################################################################
