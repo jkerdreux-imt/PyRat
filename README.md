@@ -17,7 +17,7 @@
 
 This repository contains the software used in the computer science course at IMT Atlantique.
 
-The course contents is available at this address:<br />https://formations.imt-atlantique.fr/pyrat/.
+The course contents is available at this address:<br />https://info.gitlab-pages.imt-atlantique.fr/.
 
 # Install
 

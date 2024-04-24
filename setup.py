@@ -29,7 +29,7 @@ setuptools.setup \
     long_description =              open("README.md", "r", encoding="utf-8").read(),
     long_description_content_type = "text/markdown",
     url =                           "https://github.com/BastienPasdeloup/PyRat",
-    project_urls =                  {"Course" : "https://formations.imt-atlantique.fr/pyrat"},
+    project_urls =                  {"Course" : "https://info.gitlab-pages.imt-atlantique.fr/"},
     license =                       "MIT",
     packages =                      setuptools.find_packages(),
     include_package_data =          True,
