@@ -11,15 +11,13 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External typing imports
+# External imports
 from typing import *
 from typing_extensions import *
 from numbers import *
-
-# Other external imports
 import abc
 
-# Internal imports
+# PyRat imports
 from pyrat.src.Maze import Maze
 from pyrat.src.GameState import GameState
 

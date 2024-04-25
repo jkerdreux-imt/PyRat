@@ -11,12 +11,10 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External typing imports
+# External imports
 from typing import *
 from typing_extensions import *
 from numbers import *
-
-# Other external imports
 import copy
 import math
 import torch
@@ -30,7 +28,7 @@ import os
 import datetime
 import random
 
-# Internal imports
+# PyRat imports
 from pyrat.src.Maze import Maze
 from pyrat.src.RandomMaze import RandomMaze
 from pyrat.src.MazeFromDict import MazeFromDict

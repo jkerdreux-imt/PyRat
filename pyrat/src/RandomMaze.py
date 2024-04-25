@@ -11,19 +11,17 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External typing imports
+# External imports
 from typing import *
 from typing_extensions import *
 from numbers import *
-
-# Other external imports
 import scipy.sparse as sparse
 import scipy.sparse.csgraph as csgraph
 import sys
 import random
 import math
 
-# Internal imports
+# PyRat imports
 from pyrat.src.Maze import Maze
 
 #####################################################################################################################################################

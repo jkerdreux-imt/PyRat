@@ -11,12 +11,10 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External typing imports
+# External imports
 from typing import *
 from typing_extensions import *
 from numbers import *
-
-# Other external imports
 import copy
 import numpy
 import multiprocessing
@@ -28,7 +26,7 @@ import random
 import time
 import queue
 
-# Internal imports
+# PyRat imports
 from pyrat.src.RenderingEngine import RenderingEngine
 from pyrat.src.Player import Player
 from pyrat.src.Maze import Maze

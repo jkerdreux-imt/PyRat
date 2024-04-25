@@ -11,18 +11,16 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External typing imports
+# External imports
 from typing import *
 from typing_extensions import *
 from numbers import *
-
-# Other external imports
 import colored
 import re
 import math
 import sys
 
-# Internal imports
+# PyRat imports
 from pyrat.src.RenderingEngine import RenderingEngine
 from pyrat.src.Player import Player
 from pyrat.src.Maze import Maze

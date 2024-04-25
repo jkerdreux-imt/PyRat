@@ -11,18 +11,16 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External typing imports
+# External imports
 from typing import *
 from typing_extensions import *
 from numbers import *
-
-# Other external imports
 import abc
 import numpy
 import torch
 import math
 
-# Internal imports
+# PyRat imports
 from pyrat.src.Graph import Graph
 
 #####################################################################################################################################################
@@ -365,6 +363,41 @@ class Maze (Graph, abc.ABC):
             for neighbor in self.get_neighbors(vertex):
                 adjacency_matrix[vertex, neighbor] = self.get_weight(vertex, neighbor)
         return adjacency_matrix
+
+    #############################################################################################################################################
+
+    def locations_to_action ( self:   Self,
+                              source: Integral,
+                              target: Integral
+                            ) ->      Union[str, None]: 
+
+        """
+            Function to transform two locations into an action to reach the target from the source.
+            In:
+                * self:   Reference to the current object.
+                * source: Vertex on which the player is.
+                * target: Vertex where the character wants to go.
+            Out:
+                * action: Name of the action to go from the source to the target, or None if the move is impossible.
+        """
+
+        # Get the coordinates difference
+        difference = self.coords_difference(source, target)
+
+        # Translate in a move
+        if difference == (0, 0):
+            action = "nothing"
+        elif difference == (0, -1):
+            action = "west"
+        elif difference == (0, 1):
+            action = "east"
+        elif difference == (1, 0):
+            action = "south"
+        elif difference == (-1, 0):
+            action = "north"
+        else:
+            action = None
+        return action
 
     #############################################################################################################################################
     #                                                             PROTECTED METHODS                                                             #

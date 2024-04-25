@@ -11,17 +11,14 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# External typing imports
+# External imports
 from typing import *
 from typing_extensions import *
 from numbers import *
-
-# Other external imports
 import random
 
-# Internal imports
+# PyRat imports
 from pyrat import Player, Maze, GameState
-from utils import locations_to_action
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
@@ -99,7 +96,7 @@ class Random3 (Player):
             neighbor = random.choice(neighbors)
         
         # Retrieve the corresponding action
-        action = locations_to_action(maze, game_state.player_locations[self.name], neighbor)
+        action = maze.locations_to_action(game_state.player_locations[self.name], neighbor)
         return action
 
 #####################################################################################################################################################

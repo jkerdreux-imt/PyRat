@@ -10,7 +10,7 @@
 ###################################################################### IMPORTS ######################################################################
 #####################################################################################################################################################
 
-# Internal imports
+# PyRat imports
 from .src.AsciiRenderingEngine import AsciiRenderingEngine
 from .src.FixedPlayer import FixedPlayer
 from .src.Game import Game
