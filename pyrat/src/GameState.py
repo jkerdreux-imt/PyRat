@@ -263,13 +263,14 @@ class GameState ():
         if len(self.cheese) == 0:
             is_over = True
 
-        # The game is over when no team can catch up anymore
+        # In a multi-team game, the game is over when no team can catch up anymore
         score_per_team = self.get_score_per_team()
-        max_team = max(score_per_team, key=score_per_team.get)
-        max_score = score_per_team[max_team]
-        other_scores = [score_per_team[team] for team in score_per_team if team != max_team]
-        if all(score + len(self.cheese) < max_score for score in other_scores):
-            is_over = True
+        if len(score_per_team) > 1:
+            max_team = max(score_per_team, key=score_per_team.get)
+            max_score = score_per_team[max_team]
+            other_scores = [score_per_team[team] for team in score_per_team if team != max_team]
+            if all(score + len(self.cheese) < max_score for score in other_scores):
+                is_over = True
 
         # Return the result
         return is_over
