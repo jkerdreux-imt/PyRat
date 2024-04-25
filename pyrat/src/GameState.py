@@ -256,15 +256,20 @@ class GameState ():
                 * is_over: Boolean indicating if the game is over.
         """
 
+        # by default, the game is not over
+        is_over = False
+
         # The game is over when there is no more cheese
-        is_over = len(self.cheese) == 0
+        if len(self.cheese) == 0:
+            is_over = True
 
         # The game is over when no team can catch up anymore
         score_per_team = self.get_score_per_team()
-        max_score = max(score_per_team.values())
-        for team in self.teams:
-            if score_per_team[team] != max_score and score_per_team[team] + len(self.cheese) >= max_score:
-                is_over = False
+        max_team = max(score_per_team, key=score_per_team.get)
+        max_score = score_per_team[max_team]
+        other_scores = [score_per_team[team] for team in score_per_team if team != max_team]
+        if all(score + len(self.cheese) < max_score for score in other_scores):
+            is_over = True
 
         # Return the result
         return is_over

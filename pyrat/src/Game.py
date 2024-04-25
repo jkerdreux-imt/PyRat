@@ -169,7 +169,7 @@ class Game ():
         self.__game_random_seed_maze = None
         self.__game_random_seed_cheese = None
         self.__game_random_seed_players = None
-        self.__players_rng = random.Random()
+        self.__players_rng = None
         self.__players_asked_location = []
         self.__players = []
         self.__initial_game_state = None
@@ -417,7 +417,7 @@ class Game ():
         self.__game_random_seed_maze = self.__random_seed if self.__random_seed is not None else self.__random_seed_maze if self.__random_seed_maze is not None else random.randint(0, sys.maxsize - 1)
         self.__game_random_seed_cheese = self.__random_seed if self.__random_seed is not None else self.__random_seed_cheese if self.__random_seed_cheese is not None else random.randint(0, sys.maxsize - 1)
         self.__game_random_seed_players = self.__random_seed if self.__random_seed is not None else self.__random_seed_players if self.__random_seed_players is not None else random.randint(0, sys.maxsize - 1)
-        self.__players_rng.seed(self.__game_random_seed_players)
+        self.__players_rng = random.Random(self.__game_random_seed_players)
         
         # Reset game analysis elements
         self.__player_traces = {}
@@ -623,11 +623,8 @@ class Game ():
             assert self.__nb_cheese > 0 # At least one cheese
             assert len(available_cells) >= self.__nb_cheese # Enough space for cheese
 
-            # Set random seed
-            rng = random.Random()
-            rng.seed(self.__game_random_seed_cheese)
-
             # Place the cheese randomly
+            rng = random.Random(self.__game_random_seed_cheese)
             rng.shuffle(available_cells)
             cheese = available_cells[:self.__nb_cheese]
 
