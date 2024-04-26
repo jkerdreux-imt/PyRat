@@ -266,6 +266,10 @@ class Game ():
                 self.__reset()
             self.__initial_game_state.turn = 0
 
+            # Add cheese
+            available_cells = [i for i in self.__maze.vertices if i not in self.__initial_game_state.player_locations.values()]
+            self.__initial_game_state.cheese.extend(self.__distribute_cheese(available_cells))
+            
             # Initialize stats
             stats = {"players": {}, "turns": -1}
             for player in self.__players:
@@ -449,10 +453,6 @@ class Game ():
             player_team = [team for team in previous_initial_state.teams if player.name in previous_initial_state.teams[team]][0]
             self.add_player(player, player_team, player_asked_location)
 
-        # Add cheese
-        available_cells = [i for i in self.__maze.vertices if i not in self.__initial_game_state.player_locations.values()]
-        self.__initial_game_state.cheese.extend(self.__distribute_cheese(available_cells))
-        
     #############################################################################################################################################
     
     def __end ( self:         Self,
