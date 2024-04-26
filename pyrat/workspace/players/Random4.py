@@ -59,10 +59,12 @@ class Random4 (Player):
         super().__init__(name, skin)
 
         # We create an attribute to keep track of visited cells
-        self.visited_cells = []
+        # By convention, in Python, attributes that are not supposed to be called from outside the class should start with two underscores
+        self.__visited_cells = []
 
         # We create an attribute to keep track of the trajectory
-        self.trajectory = []
+        # By convention, in Python, attributes that are not supposed to be called from outside the class should start with two underscores
+        self.__trajectory = []
        
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
@@ -86,7 +88,7 @@ class Random4 (Player):
         """
         
         # Store location to initialize trajectory
-        self.trajectory.append(game_state.player_locations[self.name])
+        self.__trajectory.append(game_state.player_locations[self.name])
 
     #############################################################################################################################################
 
@@ -109,20 +111,20 @@ class Random4 (Player):
         """
 
         # Mark current cell as visited and add it to the trajectory
-        if game_state.player_locations[self.name] not in self.visited_cells:
-            self.visited_cells.append(game_state.player_locations[self.name])
-        self.trajectory.append(game_state.player_locations[self.name])
+        if game_state.player_locations[self.name] not in self.__visited_cells:
+            self.__visited_cells.append(game_state.player_locations[self.name])
+        self.__trajectory.append(game_state.player_locations[self.name])
 
         # Go to an unvisited neighbor in priority
         neighbors = maze.get_neighbors(game_state.player_locations[self.name])
-        unvisited_neighbors = [neighbor for neighbor in neighbors if neighbor not in self.visited_cells]
+        unvisited_neighbors = [neighbor for neighbor in neighbors if neighbor not in self.__visited_cells]
         if len(unvisited_neighbors) > 0:
             neighbor = random.choice(unvisited_neighbors)
             
         # If there is no unvisited neighbor, backtrack the trajectory
         else:
-            _ = self.trajectory.pop(-1)
-            neighbor = self.trajectory.pop(-1)
+            _ = self.__trajectory.pop(-1)
+            neighbor = self.__trajectory.pop(-1)
         
         # Retrieve the corresponding action
         action = maze.locations_to_action(game_state.player_locations[self.name], neighbor)

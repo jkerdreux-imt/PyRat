@@ -15,6 +15,8 @@
 from typing import *
 from typing_extensions import *
 from numbers import *
+import numpy
+import torch
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
@@ -202,6 +204,50 @@ class Graph ():
         adjacency_dict = {vertex : {neighbor : self.get_weight(vertex, neighbor) for neighbor in self.get_neighbors(vertex)} for vertex in self.vertices}
         return adjacency_dict
         
+    #############################################################################################################################################
+
+    def as_numpy_ndarray ( self: Self,
+                         ) ->    numpy.ndarray:
+
+        """
+            Returns a numpy ndarray representing the graph.
+            Entries are given in order of the vertices.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * adjacency_matrix: Numpy ndarray representing the adjacency matrix.
+        """
+        
+        # Create the adjacency matrix
+        adjacency_matrix = numpy.zeros((len(self.vertices), len(self.vertices)), dtype=int)
+        for i, vertex1 in enumerate(self.vertices):
+            for j, vertex2 in enumerate(self.vertices):
+                if vertex2 in self.get_neighbors(vertex1):
+                    adjacency_matrix[i, j] = self.get_weight(vertex1, vertex2)
+        return adjacency_matrix
+
+    #############################################################################################################################################
+
+    def as_torch_tensor ( self: Self,
+                        ) ->    torch.Tensor:
+
+        """
+            Returns a torch tensor representing the maze.
+            Entries are given in order of the vertices.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * adjacency_matrix: Torch tensor representing the adjacency matrix.
+        """
+        
+        # Create the adjacency matrix
+        adjacency_matrix = torch.zeros((len(self.vertices), len(self.vertices)), dtype=int)
+        for i, vertex1 in enumerate(self.vertices):
+            for j, vertex2 in enumerate(self.vertices):
+                if vertex2 in self.get_neighbors(vertex1):
+                    adjacency_matrix[i, j] = self.get_weight(vertex1, vertex2)
+        return adjacency_matrix
+
     #############################################################################################################################################
 
     def remove_vertex ( self:   Self,

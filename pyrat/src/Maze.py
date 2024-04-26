@@ -330,7 +330,9 @@ class Maze (Graph, abc.ABC):
                          ) ->    numpy.ndarray:
 
         """
+            This redefines a method of the parent class.
             Returns a numpy ndarray representing the maze.
+            Here, we have an entry for each cell in the maze.
             In:
                 * self: Reference to the current object.
             Out:
@@ -350,7 +352,9 @@ class Maze (Graph, abc.ABC):
                         ) ->    torch.Tensor:
 
         """
+            This redefines a method of the parent class.
             Returns a torch tensor representing the maze.
+            Here, we have an entry for each cell in the maze.
             In:
                 * self: Reference to the current object.
             Out:
