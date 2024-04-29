@@ -101,13 +101,12 @@ class Player (abc.ABC):
     def turn ( self:       Self,
                maze:       Maze,
                game_state: GameState
-             ) ->          str:
+             ) ->          Maze.PossibleAction:
 
         """
             This method is abstract and must be implemented in the child classes.
             It is called at each turn of the game.
-            It returns an action to perform among the possible actions, defined as a static attribute of class Maze.
-            These can be accessed using Maze.possible_actions.
+            It returns an action to perform among the possible actions, defined in the Maze.PossibleAction enumeration.
             In:
                 * self:       Reference to the current object.
                 * maze:       An object representing the maze in which the player plays.

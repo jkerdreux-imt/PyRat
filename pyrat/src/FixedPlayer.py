@@ -39,7 +39,7 @@ class FixedPlayer (Player):
     def __init__ ( self:    Self,
                    name:    str,
                    skin:    str,
-                   actions: List[str]
+                   actions: List[Maze.PossibleAction]
                  ) ->       Self:
 
         """
@@ -59,7 +59,7 @@ class FixedPlayer (Player):
 
         # Debug
         assert isinstance(actions, list) # Type check for actions
-        assert all(action in Maze.possible_actions for action in actions) # Check that all actions are valid
+        assert all(action in Maze.PossibleAction for action in actions) # Check that all actions are valid
 
         # Private attributes
         self.__actions = actions
@@ -71,7 +71,7 @@ class FixedPlayer (Player):
     def turn ( self:       Self,
                maze:       Maze,
                game_state: GameState
-             ) ->          str:
+             ) ->          Maze.PossibleAction:
 
         """
             This method redefines the abstract method of the parent class.
@@ -82,7 +82,7 @@ class FixedPlayer (Player):
                 * maze:       An object representing the maze in which the player plays.
                 * game_state: An object representing the state of the game.
             Out:
-                * action: One of the possible actions
+                * action: One of the possible actions.
         """
 
         # Get next action

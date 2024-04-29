@@ -61,7 +61,7 @@ class Random2 (Player):
     def turn ( self:       Self,
                maze:       Maze,
                game_state: GameState,
-             ) ->       str:
+             ) ->          Maze.PossibleAction:
 
         """
             This method redefines the abstract method of the parent class.
@@ -72,7 +72,7 @@ class Random2 (Player):
                 * maze:       An object representing the maze in which the player plays.
                 * game_state: An object representing the state of the game.
             Out:
-                * action: One of the possible actions
+                * action: One of the possible actions.
         """
 
         # Choose a random neighbor

@@ -19,6 +19,7 @@ import abc
 import numpy
 import torch
 import math
+import enum
 
 # PyRat imports
 from pyrat.src.Graph import Graph
@@ -44,15 +45,16 @@ class Maze (Graph, abc.ABC):
     """
 
     #############################################################################################################################################
-    #                                                             STATIC ATTRIBUTES                                                             #
-    #############################################################################################################################################
 
     """
-        This attribute is a list of all the possible actions a player can take in a maze.
-        It is a static attribute, meaning that it is shared by all the instances of the class.
+        This attribute is an eumeration of all the possible actions one can take in a maze.
     """
 
-    possible_actions = ["nothing", "north", "south", "east", "west"]
+    PossibleAction = enum.Enum("PossibleAction", {"NOTHING": "nothing",
+                                                  "NORTH": "north",
+                                                  "SOUTH": "south",
+                                                  "EAST": "east",
+                                                  "WEST": "west"})
 
     #############################################################################################################################################
     #                                                                CONSTRUCTOR                                                                #
@@ -373,7 +375,7 @@ class Maze (Graph, abc.ABC):
     def locations_to_action ( self:   Self,
                               source: Integral,
                               target: Integral
-                            ) ->      Union[str, None]: 
+                            ) ->      Optional[PossibleAction]: 
 
         """
             Function to transform two locations into an action to reach the target from the source.
@@ -382,7 +384,7 @@ class Maze (Graph, abc.ABC):
                 * source: Vertex on which the player is.
                 * target: Vertex where the character wants to go.
             Out:
-                * action: Name of the action to go from the source to the target, or None if the move is impossible.
+                * action: Action to go from the source to the target, or None if the move is impossible.
         """
 
         # Get the coordinates difference
@@ -390,15 +392,15 @@ class Maze (Graph, abc.ABC):
 
         # Translate in a move
         if difference == (0, 0):
-            action = "nothing"
+            action = Maze.PossibleAction.NOTHING
         elif difference == (0, -1):
-            action = "west"
+            action = Maze.PossibleAction.WEST
         elif difference == (0, 1):
-            action = "east"
+            action = Maze.PossibleAction.EAST
         elif difference == (1, 0):
-            action = "south"
+            action = Maze.PossibleAction.SOUTH
         elif difference == (-1, 0):
-            action = "north"
+            action = Maze.PossibleAction.NORTH
         else:
             action = None
         return action

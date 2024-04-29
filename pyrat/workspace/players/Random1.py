@@ -61,22 +61,22 @@ class Random1 (Player):
     def turn ( self:       Self,
                maze:       Maze,
                game_state: GameState,
-             ) ->          str:
+             ) ->          Maze.PossibleAction:
 
         """
             This method redefines the abstract method of the parent class.
             It is called at each turn of the game.
-            It returns a random action from the list of possible actions.
+            It returns an action to perform among the possible actions, defined in the Maze.PossibleAction enumeration.
             In:
                 * self:       Reference to the current object.
                 * maze:       An object representing the maze in which the player plays.
                 * game_state: An object representing the state of the game.
             Out:
-                * action: One of the possible actions
+                * action: One of the possible actions.
         """
 
         # Choose a random action to perform
-        action = random.choice(Maze.possible_actions)
+        action = random.choice(list(Maze.PossibleAction))
         return action
 
 #####################################################################################################################################################
