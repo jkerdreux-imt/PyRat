@@ -340,7 +340,7 @@ class Game ():
             while any(players_running.values()):
 
                 # We communicate the state of the game to the players not in mud
-                game_phases = {player.name: "preprocessing" for player in self.__players}
+                game_phases = {player.name: "none" for player in self.__players}
                 turn_actions = {player.name: "miss" for player in self.__players}
                 durations = {player.name: None for player in self.__players}
                 for ready_player in players_ready:
@@ -382,7 +382,7 @@ class Game ():
                                 if not player_processes[player.name]["output_queue"].empty():
                                     player_processes[player.name]["turn_end_synchronizer"].wait()
                                     turn_actions[player.name], game_phases[player.name], durations[player.name] = player_processes[player.name]["output_queue"].get()
-                
+
                 # Check which players are ready to continue
                 players_ready = []
                 for player in self.__players:
@@ -406,7 +406,9 @@ class Game ():
 
                     # Save stats
                     for player in self.__players:
-                        if game_phases[player.name] != "preprocessing":
+                        if game_phases[player.name] == "none":
+                            stats["players"][player.name]["actions"]["miss"] += 1
+                        elif game_phases[player.name] != "preprocessing":
                             if turn_actions[player.name] in possible_actions and turn_actions[player.name] != Maze.PossibleAction.NOTHING.value and game_state.player_locations[player.name] == new_game_state.player_locations[player.name] and not game_state.is_in_mud(player.name):
                                 stats["players"][player.name]["actions"]["wall"] += 1
                             else:
