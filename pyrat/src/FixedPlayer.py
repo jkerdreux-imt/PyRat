@@ -3,8 +3,10 @@
 #####################################################################################################################################################
 
 """
-    This file contains useful elements to define a fixed player.
+    This file is part of the PyRat library.
     It is meant to be used as a library, and not to be executed directly.
+    Please import necessary elements using the following syntax:
+        from pyrat import <element_name>
 """
 
 #####################################################################################################################################################
@@ -20,6 +22,7 @@ from numbers import *
 from pyrat.src.Player import Player
 from pyrat.src.Maze import Maze
 from pyrat.src.GameState import GameState
+from pyrat.src.enums import Action
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
@@ -36,30 +39,30 @@ class FixedPlayer (Player):
     #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
 
-    def __init__ ( self:    Self,
-                   name:    str,
-                   skin:    str,
-                   actions: List[Maze.PossibleAction]
-                 ) ->       Self:
+    def __init__ ( self:     Self,
+                   actions:  List[Action],
+                   *args:    Any,
+                   **kwargs: Any
+                 ) ->        Self:
 
         """
             This function is the constructor of the class.
             We do not duplicate asserts already made in the parent method.
             In:
                 * self:    Reference to the current object.
-                * name:    Name of the player.
-                * skin:    Skin of the player.
                 * actions: List of actions to perform.
+                * args:    Arguments to pass to the parent constructor.
+                * kwargs:  Keyword arguments to pass to the parent constructor.
             Out:
                 * A new instance of the class.
         """
 
         # Inherit from parent class
-        super().__init__(name, skin)
+        super().__init__(*args, **kwargs)
 
         # Debug
         assert isinstance(actions, list) # Type check for actions
-        assert all(action in Maze.PossibleAction for action in actions) # Check that all actions are valid
+        assert all(action in Action for action in actions) # Check that all actions are valid
 
         # Private attributes
         self.__actions = actions
@@ -71,7 +74,7 @@ class FixedPlayer (Player):
     def turn ( self:       Self,
                maze:       Maze,
                game_state: GameState
-             ) ->          Maze.PossibleAction:
+             ) ->          Action:
 
         """
             This method redefines the abstract method of the parent class.

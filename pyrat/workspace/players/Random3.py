@@ -4,7 +4,8 @@
 
 """
     This file contains useful elements to define a particular player.
-    It is meant to be used as a library, and not to be executed directly.
+    In order to use this player, you need to instanciate it and add it to a game.
+    Please refer to example games to see how to do it properly.
 """
 
 #####################################################################################################################################################
@@ -18,7 +19,7 @@ from numbers import *
 import random
 
 # PyRat imports
-from pyrat import Player, Maze, GameState
+from pyrat import Player, Maze, GameState, Action
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
@@ -38,23 +39,23 @@ class Random3 (Player):
     #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
 
-    def __init__ ( self: Self,
-                   name: str = "Random 3",
-                   skin: str = "default"
-                 ) ->    Self:
+    def __init__ ( self:     Self,
+                   *args:    Any,
+                   **kwargs: Any
+                 ) ->        Self:
 
         """
             This function is the constructor of the class.
             In:
-                * self: Reference to the current object.
-                * name: Name of the player.
-                * skin: Skin of the player.
+                * self:   Reference to the current object.
+                * args:   Arguments to pass to the parent constructor.
+                * kwargs: Keyword arguments to pass to the parent constructor.
             Out:
                 * A new instance of the class.
         """
 
         # Inherit from parent class
-        super().__init__(name, skin)
+        super().__init__(*args, **kwargs)
 
         # We create an attribute to keep track of visited cells
         # By convention, in Python, attributes that are not supposed to be called from outside the class should start with two underscores
@@ -67,7 +68,7 @@ class Random3 (Player):
     def turn ( self:       Self,
                maze:       Maze,
                game_state: GameState,
-             ) ->          Maze.PossibleAction:
+             ) ->          Action:
 
         """
             This method redefines the abstract method of the parent class.

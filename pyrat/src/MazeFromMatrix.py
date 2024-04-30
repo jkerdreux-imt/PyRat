@@ -3,9 +3,10 @@
 #####################################################################################################################################################
 
 """
-    This file contains useful elements to define a fixed maze from a given matrix.
-    Supported matrices are numpy ndarrays and torch tensors.
+    This file is part of the PyRat library.
     It is meant to be used as a library, and not to be executed directly.
+    Please import necessary elements using the following syntax:
+        from pyrat import <element_name>
 """
 
 #####################################################################################################################################################
@@ -44,7 +45,9 @@ class MazeFromMatrix (Maze):
     #############################################################################################################################################
 
     def __init__ ( self:        Self,
-                   description: Union[numpy.ndarray, torch.Tensor]
+                   description: Union[numpy.ndarray, torch.Tensor],
+                   *args:       Any,
+                   **kwargs:    Any
                  ) ->           Self:
 
         """
@@ -52,12 +55,14 @@ class MazeFromMatrix (Maze):
             In:
                 * self:        Reference to the current object.
                 * description: Fixed maze as a matrix.
+                * args:        Arguments to pass to the parent constructor.
+                * kwargs:      Keyword arguments to pass to the parent constructor.
             Out:
                 * A new instance of the class.
         """
 
         # Inherit from parent class
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
         # Debug
         assert isinstance(description, (numpy.ndarray, torch.Tensor)) # Type check for description

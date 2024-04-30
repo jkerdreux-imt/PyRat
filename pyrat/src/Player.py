@@ -3,8 +3,10 @@
 #####################################################################################################################################################
 
 """
-    This file contains useful elements to define a player.
+    This file is part of the PyRat library.
     It is meant to be used as a library, and not to be executed directly.
+    Please import necessary elements using the following syntax:
+        from pyrat import <element_name>
 """
 
 #####################################################################################################################################################
@@ -20,6 +22,7 @@ import abc
 # PyRat imports
 from pyrat.src.Maze import Maze
 from pyrat.src.GameState import GameState
+from pyrat.src.enums import Action, PlayerSkin
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
@@ -45,26 +48,26 @@ class Player (abc.ABC):
     #############################################################################################################################################
 
     def __init__ ( self: Self,
-                   name: str,
-                   skin: str = "default"
+                   name: Optional[str] = None,
+                   skin: PlayerSkin = PlayerSkin.RAT
                  ) ->    Self:
 
         """
             This function is the constructor of the class.
             In:
                 * self: Reference to the current object.
-                * name: Name of the player.
+                * name: Name of the player (if None, we take the name of the class).
                 * skin: Skin of the player.
             Out:
                 * A new instance of the class.
         """
 
         # Debug
-        assert isinstance(name, str) # Type check for the name
-        assert isinstance(skin, str) # Type check for the skin
+        assert isinstance(name, (str, type(None))) # Type check for the name
+        assert isinstance(skin, PlayerSkin) # Type check for the skin
 
         # Public attributes
-        self.name = name
+        self.name = name if name is not None else self.__class__.__name__
         self.skin = skin
 
     #############################################################################################################################################
@@ -101,12 +104,12 @@ class Player (abc.ABC):
     def turn ( self:       Self,
                maze:       Maze,
                game_state: GameState
-             ) ->          Maze.PossibleAction:
+             ) ->          Action:
 
         """
             This method is abstract and must be implemented in the child classes.
             It is called at each turn of the game.
-            It returns an action to perform among the possible actions, defined in the Maze.PossibleAction enumeration.
+            It returns an action to perform among the possible actions, defined in the Action enumeration.
             In:
                 * self:       Reference to the current object.
                 * maze:       An object representing the maze in which the player plays.

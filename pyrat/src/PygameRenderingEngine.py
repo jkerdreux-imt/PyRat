@@ -3,8 +3,10 @@
 #####################################################################################################################################################
 
 """
-    This file contains useful elements to define a fixed maze.
+    This file is part of the PyRat library.
     It is meant to be used as a library, and not to be executed directly.
+    Please import necessary elements using the following syntax:
+        from pyrat import <element_name>
 """
 
 #####################################################################################################################################################
@@ -51,28 +53,30 @@ class PygameRenderingEngine (RenderingEngine):
     #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
 
-    def __init__ ( self:              Self,
-                   fullscreen:        bool = False,
-                   trace_length:      Integral = 0,
-                   gui_speed:         Number = 1.0,
-                   render_simplified: bool = False
-                 ) ->                 Self:
+    def __init__ ( self:         Self,
+                   fullscreen:   bool = False,
+                   trace_length: Integral = 0,
+                   gui_speed:    Number = 1.0,
+                   *args:        Any,
+                   **kwargs:     Any
+                 ) ->            Self:
 
         """
             This function is the constructor of the class.
             We do not duplicate asserts already made in the parent method.
             In:
-                * self:              Reference to the current object.
-                * fullscreen:        Indicates if the GUI should be fullscreen.
-                * trace_length:      Length of the trace to display.
-                * gui_speed:         Speed of the GUI.
-                * render_simplified: Whether to render the simplified version of the game.
+                * self:         Reference to the current object.
+                * fullscreen:   Indicates if the GUI should be fullscreen.
+                * trace_length: Length of the trace to display.
+                * gui_speed:    Speed of the GUI.
+                * args:         Arguments to pass to the parent constructor.
+                * kwargs:       Keyword arguments to pass to the parent constructor.
             Out:
                 * A new instance of the class.
         """
 
         # Inherit from parent class
-        super().__init__(render_simplified)
+        super().__init__(*args, **kwargs)
 
         # Debug
         assert isinstance(fullscreen, bool) # Type check for fullscreen
@@ -337,11 +341,11 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
         # Function to load the surfaces of a player
         def ___load_player_surfaces (player_skin, scale, border_color=None, border_width=None, add_border=teams_enabled):
             try:
-                player_neutral = ___surface_from_image(os.path.join("..", "gui", "players", player_skin, "neutral.png"), scale)
-                player_north = ___surface_from_image(os.path.join("..", "gui", "players", player_skin, "north.png"), scale)
-                player_south = ___surface_from_image(os.path.join("..", "gui", "players", player_skin, "south.png"), scale)
-                player_west = ___surface_from_image(os.path.join("..", "gui", "players", player_skin, "west.png"), scale)
-                player_east = ___surface_from_image(os.path.join("..", "gui", "players", player_skin, "east.png"), scale)
+                player_neutral = ___surface_from_image(os.path.join("..", "gui", "players", player_skin.value, "neutral.png"), scale)
+                player_north = ___surface_from_image(os.path.join("..", "gui", "players", player_skin.value, "north.png"), scale)
+                player_south = ___surface_from_image(os.path.join("..", "gui", "players", player_skin.value, "south.png"), scale)
+                player_west = ___surface_from_image(os.path.join("..", "gui", "players", player_skin.value, "west.png"), scale)
+                player_east = ___surface_from_image(os.path.join("..", "gui", "players", player_skin.value, "east.png"), scale)
                 if add_border:
                     player_neutral = ___add_color_border(player_neutral, border_color, border_width)
                     player_north = ___add_color_border(player_north, border_color, border_width)
@@ -364,7 +368,7 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
         # Function to load the avatar of a player
         def ___load_player_avatar (player_skin, scale):
             try:
-                return ___surface_from_image(os.path.join("..", "gui", "players", player_skin, "avatar.png"), scale)
+                return ___surface_from_image(os.path.join("..", "gui", "players", player_skin.value, "avatar.png"), scale)
             except:
                 return ___load_player_avatar("default", scale)
         
@@ -762,7 +766,7 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
                 # Play a sound is a cheese is eaten
                 for player in players:
                     if new_state.player_locations[player.name] in current_state.cheese and mud_being_crossed[player.name] == 0:
-                        ___play_sound(os.path.join("..", "gui", "players", player.skin, "cheese_eaten.wav"), os.path.join("..", "gui", "players", "default", "cheese_eaten.wav"))
+                        ___play_sound(os.path.join("..", "gui", "players", player.skin.value, "cheese_eaten.wav"), os.path.join("..", "gui", "players", "default", "cheese_eaten.wav"))
                 
                 # Update score
                 ___show_avatars()

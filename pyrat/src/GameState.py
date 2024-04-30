@@ -3,8 +3,10 @@
 #####################################################################################################################################################
 
 """
-    This file contains useful elements to define a game state.
+    This file is part of the PyRat library.
     It is meant to be used as a library, and not to be executed directly.
+    Please import necessary elements using the following syntax:
+        from pyrat import <element_name>
 """
 
 #####################################################################################################################################################

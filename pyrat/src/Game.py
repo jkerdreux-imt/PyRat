@@ -3,8 +3,10 @@
 #####################################################################################################################################################
 
 """
-    This file contains useful elements to define a PyRat game.
+    This file is part of the PyRat library.
     It is meant to be used as a library, and not to be executed directly.
+    Please import necessary elements using the following syntax:
+        from pyrat import <element_name>
 """
 
 #####################################################################################################################################################
@@ -27,7 +29,6 @@ import sys
 import os
 import datetime
 import random
-import enum
 
 # PyRat imports
 from pyrat.src.Maze import Maze
@@ -37,8 +38,9 @@ from pyrat.src.MazeFromMatrix import MazeFromMatrix
 from pyrat.src.Player import Player
 from pyrat.src.GameState import GameState
 from pyrat.src.RenderingEngine import RenderingEngine
-from pyrat.src.AsciiRenderingEngine import AsciiRenderingEngine
+from pyrat.src.ShellRenderingEngine import ShellRenderingEngine
 from pyrat.src.PygameRenderingEngine import PygameRenderingEngine
+from pyrat.src.enums import RenderMode, GameMode, Action, StartingLocation
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
@@ -55,29 +57,6 @@ class Game ():
         Set your own parameters to define interesting objectives for the players.
     """
 
-    #############################################################################################################################################
-    #                                                             STATIC ATTRIBUTES                                                             #
-    #############################################################################################################################################
-
-    """
-        This attribute is an enumeration of all accepted rendering modes.
-    """
-
-    RenderMode = enum.Enum("RenderMode", {"GUI": "gui",
-                                          "ANSI": "ansi",
-                                          "ASCII": "ascii",
-                                          "NO_RENDERING": "no_rendering"})
-
-    #############################################################################################################################################
-
-    """
-        This attribute is an enumeration of all accepted game modes.
-    """
-
-    GameMode = enum.Enum("GameMode", {"STANDARD": "standard",
-                                      "SYNCHRONOUS": "synchronous",
-                                      "SEQUENTIAL": "sequential"}) # TODO: SIMULATION (pas de gui + sequential + turn time 0 + preprocessing time 0)
-    
     #############################################################################################################################################
     #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
@@ -152,15 +131,18 @@ class Game ():
         assert random_seed_cheese is None or (random_seed_cheese is not None and 0 <= random_seed_cheese < sys.maxsize) # Random seed should be a positive integer
         assert random_seed_players is None or (random_seed_players is not None and 0 <= random_seed_players < sys.maxsize) # Random seed should be a positive integer
         assert random_seed is None or (random_seed is not None and random_seed_maze is None and random_seed_cheese is None and random_seed_players is None) # If random_seed is set, other random seeds should not be set
-        assert isinstance(render_mode, Game.RenderMode) # Type check for render_mode
+        assert isinstance(render_mode, RenderMode) # Type check for render_mode
         assert isinstance(turn_time, Number) # Type check for render_simplified
         assert turn_time >= 0 # Turn time should be non-negative
         assert isinstance(preprocessing_time, Number) # Type check for preprocessing_time
         assert preprocessing_time >= 0 # Preprocessing time should be non-negative
-        assert isinstance(game_mode, Game.GameMode) # Type check for game_mode
+        assert isinstance(game_mode, GameMode) # Type check for game_mode
         assert isinstance(continue_on_error, bool) # Type check for continue_on_error
-        assert not(game_mode == Game.GameMode.SEQUENTIAL and render_mode == Game.RenderMode.GUI) # Sequential mode is not compatible with GUI rendering
-        
+        assert not(game_mode == GameMode.SEQUENTIAL and render_mode == RenderMode.GUI) # Sequential mode is not compatible with GUI rendering
+
+        # TODO: Assert that no random stuff is given if fixed stuff is given
+        # TODO: Assert that no incompatible stuff is given is game mode is simulation
+
         # Private attributes
         self.__random_seed = random_seed
         self.__random_seed_maze = random_seed_maze
@@ -198,6 +180,13 @@ class Game ():
         self.__rendering_engine = None
         self.__maze = None
 
+        # If the game is in simulation mode, we update some parameters
+        if self.__game_mode == GameMode.SIMULATION:
+            self.__preprocessing_time = 0.0
+            self.__turn_time = 0.0
+            self.__render_mode = RenderMode.NO_RENDERING
+            self.__game_mode = GameMode.SEQUENTIAL
+
         # Initialize the game
         self.__reset()
 
@@ -208,7 +197,7 @@ class Game ():
     def add_player ( self:     Self,
                      player:   Player,
                      team:     str = "",
-                     location: Union[str, Integral] = "center"
+                     location: Union[StartingLocation, Integral] = StartingLocation.CENTER
                    ) ->        None:
         
         """
@@ -217,7 +206,7 @@ class Game ():
                 * self:     Reference to the current object.
                 * player:   Player to add.
                 * team:     Team of the player.
-                * location: Controls initial location of the player ("random", "same", "center", or a fixed index).
+                * location: Controls initial location of the player (fixed index, or value of the StartingLocation enumeration).
             Out:
                 * None.
         """
@@ -225,28 +214,36 @@ class Game ():
         # Debug
         assert isinstance(player, Player) # Type check for player
         assert isinstance(team, str) # Type check for team
-        assert isinstance(location, (str, Integral)) # Type check for location
-        assert location in ["random", "same", "center"] or (isinstance(location, Integral) and 0 <= location < self.__maze.height * self.__maze.width) # Type check for location
+        assert isinstance(location, (StartingLocation, Integral)) # Type check for location
+        assert location in list(StartingLocation) or (isinstance(location, Integral) and 0 <= location < self.__maze.height * self.__maze.width) # Type check for location
         assert player.name not in self.__player_traces # Player name should be unique
+        assert not (location == StartingLocation.SAME and len(self.__players) == 0) # Location cannot be SAME if no player was added before
 
         # Set initial location
-        # If random, we choose a random location
-        # If same, we choose the same location as the previous player
-        # If center, we choose the center of the maze
-        # If a fixed index, we choose the closest cell to the index
         self.__players_asked_location.append(location)
-        if location == "random":
-            self.__initial_game_state.player_locations[player.name] = self.__players_rng.choice(list(self.__maze.vertices))
-        elif location == "same" and len(self.__players) > 0:
-            self.__initial_game_state.player_locations[player.name] = list(self.__initial_game_state.player_locations.values())[-1]
-        elif location == "center":
-            self.__initial_game_state.player_locations[player.name] = self.__maze.rc_to_i(self.__maze.height // 2, self.__maze.width // 2)
-        elif isinstance(location, Integral) and self.__maze.i_exists(location):
-            self.__initial_game_state.player_locations[player.name] = location
+        corrected_location = location
+        if location == StartingLocation.RANDOM:
+            corrected_location = self.__players_rng.choice(list(self.__maze.vertices))
+        elif location == StartingLocation.SAME:
+            corrected_location = list(self.__initial_game_state.player_locations.values())[-1]
+        elif location == StartingLocation.CENTER:
+            corrected_location = self.__maze.rc_to_i(self.__maze.height // 2, self.__maze.width // 2)
+        elif location == StartingLocation.TOP_LEFT:
+            corrected_location = self.__maze.rc_to_i(0, 0)
+        elif location == StartingLocation.TOP_RIGHT:
+            corrected_location = self.__maze.rc_to_i(0, self.__maze.width - 1)
+        elif location == StartingLocation.BOTTOM_LEFT:
+            corrected_location = self.__maze.rc_to_i(self.__maze.height - 1, 0)
+        elif location == StartingLocation.BOTTOM_RIGHT:
+            corrected_location = self.__maze.rc_to_i(self.__maze.height - 1, self.__maze.width - 1)
+        
+        # If the location is not reachable, we choose the closest reachable location
+        if self.__maze.i_exists(corrected_location):
+            self.__initial_game_state.player_locations[player.name] = corrected_location
         else:
-            print("Warning: Player '%s' cannot start at unreachable location %d, starting at closest cell (using Euclidean distance)" % (player.name, location), file=sys.stderr)
+            print("Warning: Player '%s' cannot start at unreachable location %d, starting at closest cell (using Euclidean distance)" % (player.name, corrected_location), file=sys.stderr)
             valid_cells = self.__maze.vertices
-            distances = [math.dist(self.__maze.i_to_rc(location), self.__maze.i_to_rc(cell)) for cell in valid_cells]
+            distances = [math.dist(self.__maze.i_to_rc(corrected_location), self.__maze.i_to_rc(cell)) for cell in valid_cells]
             _, argmin_distance = min((val, idx) for (idx, val) in enumerate(distances))
             self.__initial_game_state.player_locations[player.name] = valid_cells[argmin_distance]
 
@@ -282,7 +279,7 @@ class Game ():
 
         # We catch exceptions that may happen during the game
         try:
-            
+        
             # Reset the game
             if self.__initial_game_state.turn is not None:
                 self.__reset()
@@ -296,21 +293,21 @@ class Game ():
             stats = {"players": {}, "turns": -1}
             for player in self.__players:
                 stats["players"][player.name] = {"score": 0,
-                                                 "preprocessing_duration": None,
-                                                 "turn_durations": [],
-                                                 "actions": {Maze.PossibleAction.NOTHING.value: 0,
-                                                             Maze.PossibleAction.NORTH.value: 0,
-                                                             Maze.PossibleAction.EAST.value: 0,
-                                                             Maze.PossibleAction.SOUTH.value: 0,
-                                                             Maze.PossibleAction.WEST.value: 0,
-                                                             "mud": 0,
-                                                             "error": 0,
-                                                             "miss": 0,
-                                                             "wall" : 0}}
+                                                    "preprocessing_duration": None,
+                                                    "turn_durations": [],
+                                                    "actions": {Action.NOTHING.value: 0,
+                                                                Action.NORTH.value: 0,
+                                                                Action.EAST.value: 0,
+                                                                Action.SOUTH.value: 0,
+                                                                Action.WEST.value: 0,
+                                                                "mud": 0,
+                                                                "error": 0,
+                                                                "miss": 0,
+                                                                "wall" : 0}}
             
             # In multiprocessing mode, prepare processes
             maze_per_player = {player.name: copy.deepcopy(self.__maze) for player in self.__players}
-            if self.__game_mode in [Game.GameMode.STANDARD, Game.GameMode.SYNCHRONOUS]:
+            if self.__game_mode in [GameMode.STANDARD, GameMode.SYNCHRONOUS]:
 
                 # Create a process per player
                 turn_start_synchronizer = multiprocessing.Manager().Barrier(len(self.__players) + 1)
@@ -322,7 +319,7 @@ class Game ():
                     player_processes[player.name]["process"].start()
 
                 # If playing in standard mode, we create processs to wait instead of missing players
-                if self.__game_mode == Game.GameMode.STANDARD:
+                if self.__game_mode == GameMode.STANDARD:
                     waiter_processes = {}
                     for player in self.__players:
                         waiter_processes[player.name] = {"process": None, "input_queue": multiprocessing.Manager().Queue()}
@@ -336,7 +333,7 @@ class Game ():
             game_state = copy.deepcopy(self.__initial_game_state)
             players_ready = [player for player in self.__players]
             players_running = {player.name: True for player in self.__players}
-            possible_actions = [action.value for action in Maze.PossibleAction]
+            all_action_names = [action.value for action in Action]
             while any(players_running.values()):
 
                 # We communicate the state of the game to the players not in mud
@@ -346,14 +343,14 @@ class Game ():
                 for ready_player in players_ready:
                     final_stats = copy.deepcopy(stats) if game_state.game_over() else {}
                     player_game_state = copy.deepcopy(game_state)
-                    if self.__game_mode in [Game.GameMode.STANDARD, Game.GameMode.SYNCHRONOUS]:
+                    if self.__game_mode in [GameMode.STANDARD, GameMode.SYNCHRONOUS]:
                         player_processes[ready_player.name]["input_queue"].put((player_game_state, final_stats))
                     else:
                         turn_actions[ready_player.name], game_phases[ready_player.name], durations[ready_player.name] = _player_process_function(ready_player, maze_per_player[ready_player.name], None, None, None, None, None, player_game_state, final_stats)
                 
                 # In multiprocessing mode, we for everybody to receive data to start
                 # In sequential mode, decisions are already received at this point
-                if self.__game_mode in [Game.GameMode.STANDARD, Game.GameMode.SYNCHRONOUS]:
+                if self.__game_mode in [GameMode.STANDARD, GameMode.SYNCHRONOUS]:
                     turn_start_synchronizer.wait()
 
                 # Wait a bit
@@ -361,13 +358,13 @@ class Game ():
                 time.sleep(sleep_time)
 
                 # In synchronous mode, we wait for everyone
-                if self.__game_mode == Game.GameMode.SYNCHRONOUS:
+                if self.__game_mode == GameMode.SYNCHRONOUS:
                     for player in self.__players:
                         player_processes[player.name]["turn_end_synchronizer"].wait()
                         turn_actions[player.name], game_phases[player.name], durations[player.name] = player_processes[player.name]["output_queue"].get()
 
                 # In standard mode, we block the possibility to return an action and check who answered in time
-                elif self.__game_mode == Game.GameMode.STANDARD:
+                elif self.__game_mode == GameMode.STANDARD:
 
                     # Wait at least for those in mud
                     for player in self.__players:
@@ -388,7 +385,7 @@ class Game ():
                 for player in self.__players:
                     if game_phases[player.name] == "postprocessing":
                         players_running[player.name] = False
-                    if self.__game_mode == Game.GameMode.STANDARD and (game_phases[player.name] == "postprocessing" or turn_actions[player.name] == "miss"):
+                    if self.__game_mode == GameMode.STANDARD and (game_phases[player.name] == "postprocessing" or turn_actions[player.name] == "miss"):
                         waiter_processes[player.name]["input_queue"].put(True)
                     else:
                         players_ready.append(player)
@@ -401,7 +398,7 @@ class Game ():
                 if not game_state.game_over():
                 
                     # Apply the actions
-                    corrected_actions = {player.name: Maze.PossibleAction(turn_actions[player.name]) if turn_actions[player.name] in possible_actions else Maze.PossibleAction.NOTHING for player in self.__players}
+                    corrected_actions = {player.name: Action(turn_actions[player.name]) if turn_actions[player.name] in all_action_names else Action.NOTHING for player in self.__players}
                     new_game_state = self.__determine_new_game_state(game_state, corrected_actions)
 
                     # Save stats
@@ -409,7 +406,7 @@ class Game ():
                         if game_phases[player.name] == "none":
                             stats["players"][player.name]["actions"]["miss"] += 1
                         elif game_phases[player.name] != "preprocessing":
-                            if turn_actions[player.name] in possible_actions and turn_actions[player.name] != Maze.PossibleAction.NOTHING.value and game_state.player_locations[player.name] == new_game_state.player_locations[player.name] and not game_state.is_in_mud(player.name):
+                            if turn_actions[player.name] in all_action_names and turn_actions[player.name] != Action.NOTHING.value and game_state.player_locations[player.name] == new_game_state.player_locations[player.name] and not game_state.is_in_mud(player.name):
                                 stats["players"][player.name]["actions"]["wall"] += 1
                             else:
                                 stats["players"][player.name]["actions"][turn_actions[player.name]] += 1
@@ -464,19 +461,19 @@ class Game ():
         
         # Initialize the maze
         if self.__fixed_maze is None:
-            self.__maze = RandomMaze(self.__maze_width, self.__maze_height, self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze)
+            self.__maze = RandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
         elif isinstance(self.__fixed_maze, dict):
             self.__maze = MazeFromDict(self.__fixed_maze)
         else:
             self.__maze = MazeFromMatrix(self.__fixed_maze)
 
         # Initialize the rendering engine
-        if self.__render_mode in [Game.RenderMode.ASCII, Game.RenderMode.ANSI]:
-            use_colors = self.__render_mode == Game.RenderMode.ANSI
-            self.__rendering_engine = AsciiRenderingEngine(use_colors, self.__render_simplified)
-        elif self.__render_mode == Game.RenderMode.GUI:
+        if self.__render_mode in [RenderMode.ASCII, RenderMode.ANSI]:
+            use_colors = self.__render_mode == RenderMode.ANSI
+            self.__rendering_engine = ShellRenderingEngine(use_colors, self.__render_simplified)
+        elif self.__render_mode == RenderMode.GUI:
             self.__rendering_engine = PygameRenderingEngine(self.__fullscreen, self.__trace_length, self.__gui_speed, self.__render_simplified)
-        elif self.__render_mode == Game.RenderMode.NO_RENDERING:
+        elif self.__render_mode == RenderMode.NO_RENDERING:
             self.__rendering_engine = RenderingEngine(self.__render_simplified)
         
         # Initialize the game state
@@ -537,8 +534,8 @@ class Game ():
                 save_template = save_template_file.read()
                 save_template = save_template.replace("{PLAYERS}", str(player_descriptions).replace("}, ", "},\\n                       "))
                 save_template = save_template.replace("{CONFIG}", str(config).replace(", '", ",\\n          '"))
-                save_template = save_template.replace("'{GAME_MODE}'", "Game.GameMode.SYNCHRONOUS")
-                save_template = save_template.replace("'{ACTIONS}'", "[" + ", ".join("Maze.PossibleAction." + action.name for action in self.__actions_history[player.name]) + "]")
+                save_template = save_template.replace("'{GAME_MODE}'", "GameMode.SYNCHRONOUS")
+                save_template = save_template.replace("'{ACTIONS}'", "[" + ", ".join("Action." + action.name for action in self.__actions_history[player.name]) + "]")
                 with open(output_file_name, "w") as output_file:
                     print(save_template, file=output_file)
 
@@ -549,7 +546,7 @@ class Game ():
 
     def __determine_new_game_state ( self:       Self,
                                      game_state: GameState,
-                                     actions:    Dict[str, Maze.PossibleAction]
+                                     actions:    Dict[str, Action]
                                    ) ->          GameState:
         
         """
@@ -566,7 +563,7 @@ class Game ():
         assert isinstance(game_state, GameState) # Type check for game_state
         assert isinstance(actions, dict) # Type check for actions
         assert all(player_name in [player.name for player in self.__players] for player_name in actions) # Type check for actions
-        assert all(action in Maze.PossibleAction for action in actions.values()) # All actions are valid
+        assert all(action in Action for action in actions.values()) # All actions are valid
 
         # Initialize new game state
         new_game_state = copy.deepcopy(game_state)
@@ -576,13 +573,13 @@ class Game ():
         for player in self.__players:
             row, col = self.__maze.i_to_rc(game_state.player_locations[player.name])
             target = None
-            if actions[player.name] == Maze.PossibleAction.NORTH and row > 0:
+            if actions[player.name] == Action.NORTH and row > 0:
                 target = self.__maze.rc_to_i(row - 1, col)
-            elif actions[player.name] == Maze.PossibleAction.SOUTH and row < self.__maze.height - 1:
+            elif actions[player.name] == Action.SOUTH and row < self.__maze.height - 1:
                 target = self.__maze.rc_to_i(row + 1, col)
-            elif actions[player.name] == Maze.PossibleAction.WEST and col > 0:
+            elif actions[player.name] == Action.WEST and col > 0:
                 target = self.__maze.rc_to_i(row, col - 1)
-            elif actions[player.name] == Maze.PossibleAction.EAST and col < self.__maze.width - 1:
+            elif actions[player.name] == Action.EAST and col < self.__maze.width - 1:
                 target = self.__maze.rc_to_i(row, col + 1)
             if target is not None and target in self.__maze.get_neighbors(game_state.player_locations[player.name]):
                 weight = self.__maze.get_weight(game_state.player_locations[player.name], target)
@@ -681,7 +678,7 @@ def _player_process_function ( player:                  Player,
                                turn_end_synchronizer:   Optional[multiprocessing.Barrier] = None,
                                game_state:              Optional[GameState] = None,
                                final_stats:             Optional[Dict[str, Any]] = None,
-                             ) ->                       Tuple[str, Optional[str], Optional[float]]:
+                             ) ->                       Tuple[str, str, Optional[float]]:
     
     """
         This function is executed in a separate process per player.
@@ -691,13 +688,13 @@ def _player_process_function ( player:                  Player,
         In:
             * player:                  Player controlled by the process.
             * maze:                    Maze in which the player plays.
-            * input_queue:             Queue to receive the game state (set is multiprocessing).
-            * output_queue:            Queue to send the action (set is multiprocessing).
-            * turn_start_synchronizer: Barrier to synchronize the start of the turn (set is multiprocessing).
-            * turn_timeout_lock:       Lock to synchronize the timeout of the turn (set is multiprocessing).
-            * turn_end_synchronizer:   Barrier to synchronize the end of the turn (set is multiprocessing).
-            * game_state:              Initial game state (set is sequential).
-            * final_stats:             Final stats (set is sequential).
+            * input_queue:             Queue to receive the game state (set if multiprocessing).
+            * output_queue:            Queue to send the action (set if multiprocessing).
+            * turn_start_synchronizer: Barrier to synchronize the start of the turn (set if multiprocessing).
+            * turn_timeout_lock:       Lock to synchronize the timeout of the turn (set if multiprocessing).
+            * turn_end_synchronizer:   Barrier to synchronize the end of the turn (set if multiprocessing).
+            * game_state:              Initial game state (set if sequential).
+            * final_stats:             Final stats (set if sequential).
         Out:
             * action:     Action performed by the player.
             * game_phase: Phase of the game in which the player is.
@@ -739,7 +736,7 @@ def _player_process_function ( player:                  Player,
                     game_phase = "postprocessing"
                     action = "error"
                     player.postprocessing(maze, game_state, final_stats)
-                    action = Maze.PossibleAction.NOTHING.value
+                    action = "ignore"
                     
                 # If in mud, we return immediately (main process will wait for us in all cases)
                 elif game_state.is_in_mud(player.name):
@@ -756,10 +753,10 @@ def _player_process_function ( player:                  Player,
                     if game_state.turn == 0:
                         game_phase = "preprocessing"
                         player.preprocessing(maze, game_state)
-                        action = Maze.PossibleAction.NOTHING.value
+                        action = "ignore"
                     else:
                         a = player.turn(maze, game_state)
-                        if a not in list(Maze.PossibleAction):
+                        if a not in list(Action):
                             raise Exception("Invalid action %s by player %s" % (str(a), player.name))
                         action = a.value
                     
@@ -786,8 +783,9 @@ def _player_process_function ( player:                  Player,
     except:
         pass
 
-    # Default return
-    return "error", None, None
+    # Default return when the process is killed
+    # This is useless and there just to match the return type
+    return "abort", "any", None
 
 #####################################################################################################################################################
 

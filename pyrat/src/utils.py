@@ -3,7 +3,10 @@
 #####################################################################################################################################################
 
 """
-    This file contains a few functions that can be useful in general.
+    This file is part of the PyRat library.
+    It is meant to be used as a library, and not to be executed directly.
+    Please import necessary elements using the following syntax:
+        from pyrat import <element_name>
 """
 
 #####################################################################################################################################################
@@ -90,6 +93,18 @@ def caller_file () -> str:
     # Check stack to get the name
     caller = inspect.currentframe().f_back.f_back.f_code.co_filename
     return caller
+
+#####################################################################################################################################################
+
+def argument_passed ( argument: Any
+                    ) ->        bool:
+
+    """
+        Indicates whether an argument was passed to the function calling this one.
+        
+    """
+
+    return True # TODO
 
 #####################################################################################################################################################
 

@@ -11,7 +11,7 @@
 #####################################################################################################################################################
 
 # PyRat imports
-from .src.AsciiRenderingEngine import AsciiRenderingEngine
+from .src.ShellRenderingEngine import AsciiRenderingEngine
 from .src.FixedPlayer import FixedPlayer
 from .src.Game import Game
 from .src.GameState import GameState
@@ -24,6 +24,7 @@ from .src.PygameRenderingEngine import PygameRenderingEngine
 from .src.RandomMaze import RandomMaze
 from .src.RenderingEngine import RenderingEngine
 from .src.utils import *
+from .src.enums import *
 
 #####################################################################################################################################################
 #####################################################################################################################################################

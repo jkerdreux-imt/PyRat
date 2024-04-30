@@ -3,8 +3,10 @@
 #####################################################################################################################################################
 
 """
-    This file contains useful elements to define a random maze.
+    This file is part of the PyRat library.
     It is meant to be used as a library, and not to be executed directly.
+    Please import necessary elements using the following syntax:
+        from pyrat import <element_name>
 """
 
 #####################################################################################################################################################
@@ -44,13 +46,13 @@ class RandomMaze (Maze):
     #############################################################################################################################################
 
     def __init__ ( self:            Self,
-                   width:           Integral,
-                   height:          Integral,
                    cell_percentage: Number,
                    wall_percentage: Number,
                    mud_percentage:  Number,
                    mud_range:       Tuple[Integral, Integral],
-                   random_seed:     Optional[Integral] = None
+                   random_seed:     Optional[Integral] = None,
+                   *args:           Any,
+                   **kwargs:        Any
                  ) ->               Self:
 
         """
@@ -58,19 +60,19 @@ class RandomMaze (Maze):
             We do not duplicate asserts already made in the parent method.
             In:
                 * self:            Reference to the current object.
-                * width:           Width of the maze.
-                * height:          Height of the maze.
                 * cell_percentage: Percentage of cells to be reachable.
                 * wall_percentage: Percentage of walls to be present.
                 * mud_percentage:  Percentage of mud to be present.
                 * mud_range:       Range of the mud values.
                 * random_seed:     Random seed for the maze generation, set to None for a random value.
+                * args:            Arguments to pass to the parent constructor.
+                * kwargs:          Keyword arguments to pass to the parent constructor.
             Out:
                 * A new instance of the class.
         """
 
         # Inherit from parent class
-        super().__init__(width, height)
+        super().__init__(*args, **kwargs)
         
         # Debug
         assert isinstance(cell_percentage, Number) # Type check for cell_percentage

@@ -3,8 +3,10 @@
 #####################################################################################################################################################
 
 """
-    This file contains useful elements to define a maze.
+    This file is part of the PyRat library.
     It is meant to be used as a library, and not to be executed directly.
+    Please import necessary elements using the following syntax:
+        from pyrat import <element_name>
 """
 
 #####################################################################################################################################################
@@ -19,10 +21,10 @@ import abc
 import numpy
 import torch
 import math
-import enum
 
 # PyRat imports
 from pyrat.src.Graph import Graph
+from pyrat.src.enums import Action
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
@@ -45,25 +47,15 @@ class Maze (Graph, abc.ABC):
     """
 
     #############################################################################################################################################
-
-    """
-        This attribute is an eumeration of all the possible actions one can take in a maze.
-    """
-
-    PossibleAction = enum.Enum("PossibleAction", {"NOTHING": "nothing",
-                                                  "NORTH": "north",
-                                                  "SOUTH": "south",
-                                                  "EAST": "east",
-                                                  "WEST": "west"})
-
-    #############################################################################################################################################
     #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
 
-    def __init__ ( self:   Self,
-                   width:  Optional[Integral] = None,
-                   height: Optional[Integral] = None
-                 ) ->      Self:
+    def __init__ ( self:     Self,
+                   width:    Optional[Integral] = None,
+                   height:   Optional[Integral] = None,
+                   *args:    Any,
+                   **kwargs: Any
+                 ) ->        Self:
 
         """
             This function is the constructor of the class.
@@ -71,12 +63,14 @@ class Maze (Graph, abc.ABC):
                 * self:   Reference to the current object.
                 * width:  Width of the maze, initialized to None in case it is determined afterward.
                 * height: Height of the maze, initialized to None in case it is determined afterward.
+                * args:   Arguments to pass to the parent constructor.
+                * kwargs: Keyword arguments to pass to the parent constructor.
             Out:
                 * A new instance of the class.
         """
 
         # Inherit from parent class
-        super().__init__()
+        super().__init__(*args, **kwargs)
         
         # Debug
         assert isinstance(width, (Integral, type(None))) # Type check for width
@@ -375,7 +369,7 @@ class Maze (Graph, abc.ABC):
     def locations_to_action ( self:   Self,
                               source: Integral,
                               target: Integral
-                            ) ->      Optional[PossibleAction]: 
+                            ) ->      Optional[Action]: 
 
         """
             Function to transform two locations into an action to reach the target from the source.
@@ -392,15 +386,15 @@ class Maze (Graph, abc.ABC):
 
         # Translate in a move
         if difference == (0, 0):
-            action = Maze.PossibleAction.NOTHING
+            action = Action.NOTHING
         elif difference == (0, -1):
-            action = Maze.PossibleAction.WEST
+            action = Action.WEST
         elif difference == (0, 1):
-            action = Maze.PossibleAction.EAST
+            action = Action.EAST
         elif difference == (1, 0):
-            action = Maze.PossibleAction.SOUTH
+            action = Action.SOUTH
         elif difference == (-1, 0):
-            action = Maze.PossibleAction.NORTH
+            action = Action.NORTH
         else:
             action = None
         return action

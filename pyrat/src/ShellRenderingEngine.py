@@ -3,8 +3,10 @@
 #####################################################################################################################################################
 
 """
-    This file contains useful elements to define a fixed maze.
+    This file is part of the PyRat library.
     It is meant to be used as a library, and not to be executed directly.
+    Please import necessary elements using the following syntax:
+        from pyrat import <element_name>
 """
 
 #####################################################################################################################################################
@@ -30,7 +32,7 @@ from pyrat.src.GameState import GameState
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class AsciiRenderingEngine (RenderingEngine):
+class ShellRenderingEngine (RenderingEngine):
 
     """
         This class inherits from the RenderingEngine class.
@@ -44,24 +46,26 @@ class AsciiRenderingEngine (RenderingEngine):
     #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
 
-    def __init__ ( self:              Self,
-                   use_colors:        bool = True,
-                   render_simplified: bool = False
-                 ) ->                 Self:
+    def __init__ ( self:       Self,
+                   use_colors: bool = True,
+                   *args:      Any,
+                   **kwargs:   Any
+                 ) ->          Self:
 
         """
             This function is the constructor of the class.
             We do not duplicate asserts already made in the parent method.
             In:
-                * self:              Reference to the current object.
-                * use_colors:        Boolean indicating whether the rendering engine should use colors or not.
-                * render_simplified: Whether to render the simplified version of the game.
+                * self:       Reference to the current object.
+                * use_colors: Boolean indicating whether the rendering engine should use colors or not.
+                * args:       Arguments to pass to the parent constructor.
+                * kwargs:     Keyword arguments to pass to the parent constructor.
             Out:
                 * A new instance of the class.
         """
 
         # Inherit from parent class
-        super().__init__(render_simplified)
+        super().__init__(*args, **kwargs)
 
         # Debug
         assert isinstance(use_colors, bool) # Type check for the use of colors

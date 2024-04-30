@@ -3,8 +3,10 @@
 #####################################################################################################################################################
 
 """
-    This file contains useful elements to define a fixed maze from a given dictionary.
+    This file is part of the PyRat library.
     It is meant to be used as a library, and not to be executed directly.
+    Please import necessary elements using the following syntax:
+        from pyrat import <element_name>
 """
 
 #####################################################################################################################################################
@@ -40,7 +42,9 @@ class MazeFromDict (Maze):
     #############################################################################################################################################
 
     def __init__ ( self:        Self,
-                   description: Dict[Integral, Dict[Integral, Integral]]
+                   description: Dict[Integral, Dict[Integral, Integral]],
+                   *args:       Any,
+                   **kwargs:    Any
                  ) ->           Self:
 
         """
@@ -48,12 +52,14 @@ class MazeFromDict (Maze):
             In:
                 * self:        Reference to the current object.
                 * description: Fixed maze as a dictionary.
+                * args:        Arguments to pass to the parent constructor.
+                * kwargs:      Keyword arguments to pass to the parent constructor.
             Out:
                 * A new instance of the class.
         """
 
         # Inherit from parent class
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
         # Debug
         assert isinstance(description, dict) # Type check for description
