@@ -11,7 +11,7 @@
 #####################################################################################################################################################
 
 # PyRat imports
-from .src.ShellRenderingEngine import AsciiRenderingEngine
+from .src.ShellRenderingEngine import ShellRenderingEngine
 from .src.FixedPlayer import FixedPlayer
 from .src.Game import Game
 from .src.GameState import GameState

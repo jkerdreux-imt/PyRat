@@ -40,7 +40,7 @@ from pyrat.src.GameState import GameState
 from pyrat.src.RenderingEngine import RenderingEngine
 from pyrat.src.ShellRenderingEngine import ShellRenderingEngine
 from pyrat.src.PygameRenderingEngine import PygameRenderingEngine
-from pyrat.src.enums import RenderMode, GameMode, Action, StartingLocation
+from pyrat.src.enums import RenderMode, GameMode, Action, StartingLocation, PlayerSkin
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
@@ -66,26 +66,26 @@ class Game ():
                    random_seed_maze:    Optional[Integral] = None,
                    random_seed_cheese:  Optional[Integral] = None,
                    random_seed_players: Optional[Integral] = None,
-                   maze_width:          Integral = 15,
-                   maze_height:         Integral = 13,
-                   cell_percentage:     Number = 80.0,
-                   wall_percentage:     Number = 60.0,
-                   mud_percentage:      Number = 20.0,
-                   mud_range:           Tuple[Integral, Integral] = (4, 9),
+                   maze_width:          Optional[Integral] = None,
+                   maze_height:         Optional[Integral] = None,
+                   cell_percentage:     Optional[Number] = None,
+                   wall_percentage:     Optional[Number] = None,
+                   mud_percentage:      Optional[Number] = None,
+                   mud_range:           Optional[Tuple[Integral, Integral]] = None,
                    fixed_maze:          Optional[Union[Dict[Integral, Dict[Integral, Integral]], numpy.ndarray, torch.Tensor]] = None,
-                   nb_cheese:           Integral = 21,
+                   nb_cheese:           Optional[Integral] = None,
                    fixed_cheese:        Optional[List[Integral]] = None,
-                   render_mode:         RenderMode = RenderMode.GUI,
-                   render_simplified:   bool = False,
-                   gui_speed:           Number = 1.0,
-                   trace_length:        Integral = 0,
-                   fullscreen:          bool = False,
-                   save_path:           str = ".",
-                   save_game:           bool = False,
-                   preprocessing_time:  Number = 3.0,
-                   turn_time:           Number = 0.1,
-                   game_mode:           GameMode = GameMode.STANDARD,
-                   continue_on_error:   bool = False
+                   render_mode:         Optional[RenderMode] = None,
+                   render_simplified:   Optional[bool] = None,
+                   gui_speed:           Optional[Number] = None,
+                   trace_length:        Optional[Integral] = None,
+                   fullscreen:          Optional[bool] = None,
+                   save_path:           Optional[str] = None,
+                   save_game:           Optional[bool] = None,
+                   preprocessing_time:  Optional[Number] = None,
+                   turn_time:           Optional[Number] = None,
+                   game_mode:           Optional[GameMode] = None,
+                   continue_on_error:   Optional[bool] = None
                  ) ->                   Self:
 
         """
@@ -130,44 +130,79 @@ class Game ():
         assert random_seed_maze is None or (random_seed_maze is not None and 0 <= random_seed_maze < sys.maxsize) # Random seed should be a positive integer
         assert random_seed_cheese is None or (random_seed_cheese is not None and 0 <= random_seed_cheese < sys.maxsize) # Random seed should be a positive integer
         assert random_seed_players is None or (random_seed_players is not None and 0 <= random_seed_players < sys.maxsize) # Random seed should be a positive integer
-        assert random_seed is None or (random_seed is not None and random_seed_maze is None and random_seed_cheese is None and random_seed_players is None) # If random_seed is set, other random seeds should not be set
-        assert isinstance(render_mode, RenderMode) # Type check for render_mode
-        assert isinstance(turn_time, Number) # Type check for render_simplified
-        assert turn_time >= 0 # Turn time should be non-negative
-        assert isinstance(preprocessing_time, Number) # Type check for preprocessing_time
-        assert preprocessing_time >= 0 # Preprocessing time should be non-negative
-        assert isinstance(game_mode, GameMode) # Type check for game_mode
-        assert isinstance(continue_on_error, bool) # Type check for continue_on_error
+        assert random_seed is None or (random_seed is not None and all([param is None for param in [random_seed_maze, random_seed_cheese, random_seed_players]])) # If random_seed is set, other random seeds should not be set
+        assert isinstance(render_mode, (RenderMode, type(None))) # Type check for render_mode
+        assert isinstance(turn_time, (Number, type(None))) # Type check for render_simplified
+        assert turn_time is None or turn_time >= 0 # Turn time should be non-negative
+        assert isinstance(preprocessing_time, (Number, type(None))) # Type check for preprocessing_time
+        assert preprocessing_time is None or preprocessing_time >= 0 # Preprocessing time should be non-negative
+        assert isinstance(game_mode, (GameMode, type(None))) # Type check for game_mode
+        assert isinstance(continue_on_error, (bool, type(None))) # Type check for continue_on_error
         assert not(game_mode == GameMode.SEQUENTIAL and render_mode == RenderMode.GUI) # Sequential mode is not compatible with GUI rendering
+        assert (fixed_maze is not None) != (any(param is not None for param in [random_seed_maze, maze_width, maze_height, cell_percentage, wall_percentage, mud_percentage, mud_range])) # Fixed maze should be given if and only if no other maze description is given
+        assert (fixed_cheese is not None) != (any(param is not None for param in [random_seed_cheese, nb_cheese])) # Fixed cheese should be given if and only if no other cheese description is given
+        assert game_mode != GameMode.SIMULATION or (game_mode == GameMode.SIMULATION and all([param is None for param in [render_mode, preprocessing_time, turn_time]])) # Simulation mode will enforce some parameters
 
-        # TODO: Assert that no random stuff is given if fixed stuff is given
-        # TODO: Assert that no incompatible stuff is given is game mode is simulation
+        # Default configuration when nothing is specified
+        self.__default_config = {"random_seed": None,
+                                 "random_seed_maze": None,
+                                 "random_seed_cheese": None,
+                                 "random_seed_players": None,
+                                 "maze_width": 15,
+                                 "maze_height": 13,
+                                 "cell_percentage": 80.0,
+                                 "wall_percentage": 60.0,
+                                 "mud_percentage": 20.0,
+                                 "mud_range": (4, 9),
+                                 "fixed_maze": None,
+                                 "nb_cheese": 21,
+                                 "fixed_cheese": None,
+                                 "render_mode": RenderMode.GUI,
+                                 "render_simplified": False,
+                                 "gui_speed": 1.0,
+                                 "trace_length": 10,
+                                 "fullscreen": False,
+                                 "save_path": ".",
+                                 "save_game": False,
+                                 "preprocessing_time": 3.0,
+                                 "turn_time": 0.1,
+                                 "game_mode": GameMode.STANDARD,
+                                 "continue_on_error": False}
+
+        # Store given parameters or default values
+        self.__random_seed = random_seed if random_seed is not None else self.__default_config["random_seed"]
+        self.__random_seed_maze = random_seed_maze if random_seed_maze is not None else self.__default_config["random_seed_maze"]
+        self.__random_seed_cheese = random_seed_cheese if random_seed_cheese is not None else self.__default_config["random_seed_cheese"]
+        self.__random_seed_players = random_seed_players if random_seed_players is not None else self.__default_config["random_seed_players"]
+        self.__maze_width = maze_width if maze_width is not None else self.__default_config["maze_width"]
+        self.__maze_height = maze_height if maze_height is not None else self.__default_config["maze_height"]
+        self.__cell_percentage = cell_percentage if cell_percentage is not None else self.__default_config["cell_percentage"]
+        self.__wall_percentage = wall_percentage if wall_percentage is not None else self.__default_config["wall_percentage"]
+        self.__mud_percentage = mud_percentage if mud_percentage is not None else self.__default_config["mud_percentage"]
+        self.__mud_range = mud_range if mud_range is not None else self.__default_config["mud_range"]
+        self.__fixed_maze = fixed_maze if fixed_maze is not None else self.__default_config["fixed_maze"]
+        self.__nb_cheese = nb_cheese if nb_cheese is not None else self.__default_config["nb_cheese"]
+        self.__fixed_cheese = fixed_cheese if fixed_cheese is not None else self.__default_config["fixed_cheese"]
+        self.__render_mode = render_mode if render_mode is not None else self.__default_config["render_mode"]
+        self.__render_simplified = render_simplified if render_simplified is not None else self.__default_config["render_simplified"]
+        self.__gui_speed = gui_speed if gui_speed is not None else self.__default_config["gui_speed"]
+        self.__trace_length = trace_length if trace_length is not None else self.__default_config["trace_length"]
+        self.__fullscreen = fullscreen if fullscreen is not None else self.__default_config["fullscreen"]
+        self.__save_path = save_path if save_path is not None else self.__default_config["save_path"]
+        self.__save_game = save_game if save_game is not None else self.__default_config["save_game"]
+        self.__preprocessing_time = preprocessing_time if preprocessing_time is not None else self.__default_config["preprocessing_time"]
+        self.__turn_time = turn_time if turn_time is not None else self.__default_config["turn_time"]
+        self.__game_mode = game_mode if game_mode is not None else self.__default_config["game_mode"]
+        self.__continue_on_error = continue_on_error if continue_on_error is not None else self.__default_config["continue_on_error"]
+
+        # If the game is in simulation mode, we enforce some parameters
+        if self.__game_mode == GameMode.SIMULATION:
+            self.__preprocessing_time = 0.0
+            self.__turn_time = 0.0
+            self.__render_mode = RenderMode.NO_RENDERING
+            self.__game_mode = GameMode.SEQUENTIAL
 
         # Private attributes
-        self.__random_seed = random_seed
-        self.__random_seed_maze = random_seed_maze
-        self.__random_seed_cheese = random_seed_cheese
-        self.__random_seed_players = random_seed_players
-        self.__maze_width = maze_width
-        self.__maze_height = maze_height
-        self.__cell_percentage = cell_percentage
-        self.__wall_percentage = wall_percentage
-        self.__mud_percentage = mud_percentage
-        self.__mud_range = mud_range
-        self.__fixed_maze = fixed_maze
-        self.__nb_cheese = nb_cheese
-        self.__fixed_cheese = fixed_cheese
-        self.__render_mode = render_mode
-        self.__render_simplified = render_simplified
-        self.__gui_speed = gui_speed
-        self.__trace_length = trace_length
-        self.__fullscreen = fullscreen
-        self.__save_path = save_path
-        self.__save_game = save_game
-        self.__preprocessing_time = preprocessing_time
-        self.__turn_time = turn_time
-        self.__game_mode = game_mode
-        self.__continue_on_error = continue_on_error
         self.__game_random_seed_maze = None
         self.__game_random_seed_cheese = None
         self.__game_random_seed_players = None
@@ -179,13 +214,6 @@ class Game ():
         self.__actions_history = None
         self.__rendering_engine = None
         self.__maze = None
-
-        # If the game is in simulation mode, we update some parameters
-        if self.__game_mode == GameMode.SIMULATION:
-            self.__preprocessing_time = 0.0
-            self.__turn_time = 0.0
-            self.__render_mode = RenderMode.NO_RENDERING
-            self.__game_mode = GameMode.SEQUENTIAL
 
         # Initialize the game
         self.__reset()
@@ -523,7 +551,7 @@ class Game ():
             player_descriptions = []
             for player in self.__players:
                 player_descriptions.append({"name": player.name,
-                                            "skin": player.skin,
+                                            "skin": "{SKIN_" + player.skin.name + "}",
                                             "team": [team for team in self.__initial_game_state.teams if player.name in self.__initial_game_state.teams[team]][0],
                                             "location": self.__initial_game_state.player_locations[player.name],
                                             "actions": "{ACTIONS}"})
@@ -535,6 +563,8 @@ class Game ():
                 save_template = save_template.replace("{PLAYERS}", str(player_descriptions).replace("}, ", "},\\n                       "))
                 save_template = save_template.replace("{CONFIG}", str(config).replace(", '", ",\\n          '"))
                 save_template = save_template.replace("'{GAME_MODE}'", "GameMode.SYNCHRONOUS")
+                for skin in PlayerSkin:
+                    save_template = save_template.replace("'{SKIN_" + skin.name + "}'", "PlayerSkin." + skin.name)
                 save_template = save_template.replace("'{ACTIONS}'", "[" + ", ".join("Action." + action.name for action in self.__actions_history[player.name]) + "]")
                 with open(output_file_name, "w") as output_file:
                     print(save_template, file=output_file)
