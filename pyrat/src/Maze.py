@@ -429,5 +429,34 @@ class Maze (Graph, abc.ABC):
         for edge in edges:
             self.add_edge(edge[0], edge[1], edge[2])
 
+    #############################################################################################################################################
+    #                                                              PRIVATE METHODS                                                              #
+    #############################################################################################################################################
+
+    def __str__ ( self: Self,
+                ) ->    str:
+
+        """
+            This method returns a string representation of the object.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * string: String representation of the object.
+        """
+        
+        # Create the string
+        string = "Maze object:\n"
+        string += "|  Width: " + str(self.width) + "\n"
+        string += "|  Height: " + str(self.height) + "\n"
+        string += "|  Vertices: " + str(self.vertices) + "\n"
+        string += "|  Adjacency matrix:\n"
+        for vertex in self.vertices:
+            for neighbor in self.get_neighbors(vertex):
+                if self.vertices.index(neighbor) > self.vertices.index(vertex):
+                    symmetric = vertex in self.get_neighbors(neighbor)
+                    weight = self.get_weight(vertex, neighbor)
+                    string += "|  |  {} {} ({}) --> {}\n".format(vertex, "<--" if symmetric else "---", weight, neighbor)
+        return string.strip()
+
 #####################################################################################################################################################
 #####################################################################################################################################################

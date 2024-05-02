@@ -313,6 +313,33 @@ class Graph ():
         # Remove symmetric edge
         if symmetric:
             del self.__adjacency[self.vertices.index(vertex_2)][self.vertices.index(vertex_1)]
-    
+
+    #############################################################################################################################################
+    #                                                              PRIVATE METHODS                                                              #
+    #############################################################################################################################################
+
+    def __str__ ( self: Self,
+                ) ->    str:
+
+        """
+            This method returns a string representation of the object.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * string: String representation of the object.
+        """
+        
+        # Create the string
+        string = "Graph object:\n"
+        string += "|  Vertices: " + str(self.vertices) + "\n"
+        string += "|  Adjacency matrix:\n"
+        for vertex in self.vertices:
+            for neighbor in self.get_neighbors(vertex):
+                if self.vertices.index(neighbor) > self.vertices.index(vertex):
+                    symmetric = vertex in self.get_neighbors(neighbor)
+                    weight = self.get_weight(vertex, neighbor)
+                    string += "|  |  {} {} ({}) --> {}\n".format(vertex, "<--" if symmetric else "---", weight, neighbor)
+        return string.strip()
+
 #####################################################################################################################################################
 #####################################################################################################################################################

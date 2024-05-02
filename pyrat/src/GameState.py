@@ -256,24 +256,50 @@ class GameState ():
                 * is_over: Boolean indicating if the game is over.
         """
 
-        # by default, the game is not over
-        is_over = False
-
         # The game is over when there is no more cheese
         if len(self.cheese) == 0:
             is_over = True
+            return is_over
 
-        # In a multi-team game, the game is over when no team can catch up anymore
+        # In a multi-team game, the game is over when no team can change their ranking anymore
         score_per_team = self.get_score_per_team()
         if len(score_per_team) > 1:
-            max_team = max(score_per_team, key=score_per_team.get)
-            max_score = score_per_team[max_team]
-            other_scores = [score_per_team[team] for team in score_per_team if team != max_team]
-            if all(score + len(self.cheese) < max_score for score in other_scores):
-                is_over = True
+            is_over = True
+            for team1 in score_per_team:
+                for team2 in score_per_team:
+                    if team1 != team2:
+                        if score_per_team[team1] == score_per_team[team2] or (score_per_team[team1] < score_per_team[team2] and score_per_team[team1] + len(self.cheese) >= score_per_team[team2]):
+                            is_over = False
+            return is_over
 
-        # Return the result
+        # The game is not over
+        is_over = False
         return is_over
+
+    #############################################################################################################################################
+    #                                                              PRIVATE METHODS                                                              #
+    #############################################################################################################################################
+
+    def __str__ ( self: Self,
+                ) ->    str:
+
+        """
+            This method returns a string representation of the object.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * string: String representation of the object.
+        """
+
+        # Create the string
+        string = "GameState object:\n"
+        string += "|  Players: {}\n".format(self.player_locations)
+        string += "|  Scores: {}\n".format(self.score_per_player)
+        string += "|  Muds: {}\n".format(self.muds)
+        string += "|  Teams: {}\n".format(self.teams)
+        string += "|  Cheese: {}\n".format(self.cheese)
+        string += "|  Turn: {}".format(self.turn)
+        return string
 
 #####################################################################################################################################################
 #####################################################################################################################################################

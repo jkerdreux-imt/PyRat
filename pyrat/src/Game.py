@@ -58,6 +58,40 @@ class Game ():
     """
 
     #############################################################################################################################################
+    #                                                              CLASS ATTRIBUTES                                                             #
+    #############################################################################################################################################
+    
+    """
+        To ease creating games, we provide a set of default parameters.
+        We do not put them in the constructor to be able to ckeck for valid configurations.
+    """
+
+    DEFAULT_RANDOM_SEED = None
+    DEFAULT_RANDOM_SEED_MAZE = None
+    DEFAULT_RANDOM_SEED_CHEESE = None
+    DEFAULT_RANDOM_SEED_PLAYERS = None
+    DEFAULT_MAZE_WIDTH = 15
+    DEFAULT_MAZE_HEIGHT = 13
+    DEFAULT_CELL_PERCENTAGE = 80.0
+    DEFAULT_WALL_PERCENTAGE = 60.0
+    DEFAULT_MUD_PERCENTAGE = 20.0
+    DEFAULT_MUD_RANGE = (4, 9)
+    DEFAULT_FIXED_MAZE = None
+    DEFAULT_NB_CHEESE = 21
+    DEFAULT_FIXED_CHEESE = None
+    DEFAULT_RENDER_MODE = RenderMode.GUI
+    DEFAULT_RENDER_SIMPLIFIED = False
+    DEFAULT_GUI_SPEED = 1.0
+    DEFAULT_TRACE_LENGTH = 0
+    DEFAULT_FULLSCREEN = False
+    DEFAULT_SAVE_PATH = "."
+    DEFAULT_SAVE_GAME = False
+    DEFAULT_PREPROCESSING_TIME = 3.0
+    DEFAULT_TURN_TIME = 0.1
+    DEFAULT_GAME_MODE = GameMode.STANDARD
+    DEFAULT_CONTINUE_ON_ERROR = False
+    
+    #############################################################################################################################################
     #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
 
@@ -103,9 +137,9 @@ class Game ():
                 * wall_percentage:     Percentage of walls in the maze, 0%% being an empty maze, and 100%% being the maximum number of walls that keep the maze connected.
                 * mud_percentage:      Percentage of pairs of adjacent cells that are separated by mud in the maze.
                 * mud_range:           Interval of turns needed to cross mud.
-                * fixed_maze:          Fixed maze in any PyRat accepted representation (takes priority over any maze description and will automatically set maze_height and maze_width).
+                * fixed_maze:          Fixed maze in any PyRat accepted representation.
                 * nb_cheese:           Number of pieces of cheese in the maze.
-                * fixed_cheese:        Fixed list of cheese (takes priority over number of cheese).
+                * fixed_cheese:        Fixed list of cheese.
                 * render_mode:         Method to display the game.
                 * render_simplified:   If the maze is rendered, hides some elements that are not essential.
                 * gui_speed:           When rendering as GUI, controls the speed of the game (GUI rendering only).
@@ -139,61 +173,36 @@ class Game ():
         assert isinstance(game_mode, (GameMode, type(None))) # Type check for game_mode
         assert isinstance(continue_on_error, (bool, type(None))) # Type check for continue_on_error
         assert not(game_mode == GameMode.SEQUENTIAL and render_mode == RenderMode.GUI) # Sequential mode is not compatible with GUI rendering
-        assert (fixed_maze is not None) != (any(param is not None for param in [random_seed_maze, maze_width, maze_height, cell_percentage, wall_percentage, mud_percentage, mud_range])) # Fixed maze should be given if and only if no other maze description is given
-        assert (fixed_cheese is not None) != (any(param is not None for param in [random_seed_cheese, nb_cheese])) # Fixed cheese should be given if and only if no other cheese description is given
-        assert game_mode != GameMode.SIMULATION or (game_mode == GameMode.SIMULATION and all([param is None for param in [render_mode, preprocessing_time, turn_time]])) # Simulation mode will enforce some parameters
-
-        # Default configuration when nothing is specified
-        self.__default_config = {"random_seed": None,
-                                 "random_seed_maze": None,
-                                 "random_seed_cheese": None,
-                                 "random_seed_players": None,
-                                 "maze_width": 15,
-                                 "maze_height": 13,
-                                 "cell_percentage": 80.0,
-                                 "wall_percentage": 60.0,
-                                 "mud_percentage": 20.0,
-                                 "mud_range": (4, 9),
-                                 "fixed_maze": None,
-                                 "nb_cheese": 21,
-                                 "fixed_cheese": None,
-                                 "render_mode": RenderMode.GUI,
-                                 "render_simplified": False,
-                                 "gui_speed": 1.0,
-                                 "trace_length": 10,
-                                 "fullscreen": False,
-                                 "save_path": ".",
-                                 "save_game": False,
-                                 "preprocessing_time": 3.0,
-                                 "turn_time": 0.1,
-                                 "game_mode": GameMode.STANDARD,
-                                 "continue_on_error": False}
+        assert fixed_maze is None or (fixed_maze is not None and all(param is None for param in [random_seed_maze, maze_width, maze_height, cell_percentage, wall_percentage, mud_percentage, mud_range])) # Fixed maze should be given if and only if no other maze description is given
+        assert fixed_cheese is None or (fixed_cheese is not None and all(param is None for param in [random_seed_cheese, nb_cheese])) # Fixed cheese should be given if and only if no other cheese description is given
+        assert game_mode is None or game_mode != GameMode.SIMULATION or (game_mode == GameMode.SIMULATION and all([param is None for param in [render_mode, preprocessing_time, turn_time]])) # Simulation mode will enforce some parameters
+        assert render_mode is None or render_mode == RenderMode.GUI or (render_mode != RenderMode.GUI and all([param is None for param in [trace_length, gui_speed, fullscreen]])) # Some parameters can only be set when rendering as GUI
 
         # Store given parameters or default values
-        self.__random_seed = random_seed if random_seed is not None else self.__default_config["random_seed"]
-        self.__random_seed_maze = random_seed_maze if random_seed_maze is not None else self.__default_config["random_seed_maze"]
-        self.__random_seed_cheese = random_seed_cheese if random_seed_cheese is not None else self.__default_config["random_seed_cheese"]
-        self.__random_seed_players = random_seed_players if random_seed_players is not None else self.__default_config["random_seed_players"]
-        self.__maze_width = maze_width if maze_width is not None else self.__default_config["maze_width"]
-        self.__maze_height = maze_height if maze_height is not None else self.__default_config["maze_height"]
-        self.__cell_percentage = cell_percentage if cell_percentage is not None else self.__default_config["cell_percentage"]
-        self.__wall_percentage = wall_percentage if wall_percentage is not None else self.__default_config["wall_percentage"]
-        self.__mud_percentage = mud_percentage if mud_percentage is not None else self.__default_config["mud_percentage"]
-        self.__mud_range = mud_range if mud_range is not None else self.__default_config["mud_range"]
-        self.__fixed_maze = fixed_maze if fixed_maze is not None else self.__default_config["fixed_maze"]
-        self.__nb_cheese = nb_cheese if nb_cheese is not None else self.__default_config["nb_cheese"]
-        self.__fixed_cheese = fixed_cheese if fixed_cheese is not None else self.__default_config["fixed_cheese"]
-        self.__render_mode = render_mode if render_mode is not None else self.__default_config["render_mode"]
-        self.__render_simplified = render_simplified if render_simplified is not None else self.__default_config["render_simplified"]
-        self.__gui_speed = gui_speed if gui_speed is not None else self.__default_config["gui_speed"]
-        self.__trace_length = trace_length if trace_length is not None else self.__default_config["trace_length"]
-        self.__fullscreen = fullscreen if fullscreen is not None else self.__default_config["fullscreen"]
-        self.__save_path = save_path if save_path is not None else self.__default_config["save_path"]
-        self.__save_game = save_game if save_game is not None else self.__default_config["save_game"]
-        self.__preprocessing_time = preprocessing_time if preprocessing_time is not None else self.__default_config["preprocessing_time"]
-        self.__turn_time = turn_time if turn_time is not None else self.__default_config["turn_time"]
-        self.__game_mode = game_mode if game_mode is not None else self.__default_config["game_mode"]
-        self.__continue_on_error = continue_on_error if continue_on_error is not None else self.__default_config["continue_on_error"]
+        self.__random_seed = random_seed if random_seed is not None else Game.DEFAULT_RANDOM_SEED
+        self.__random_seed_maze = random_seed_maze if random_seed_maze is not None else Game.DEFAULT_RANDOM_SEED_MAZE
+        self.__random_seed_cheese = random_seed_cheese if random_seed_cheese is not None else Game.DEFAULT_RANDOM_SEED_CHEESE
+        self.__random_seed_players = random_seed_players if random_seed_players is not None else Game.DEFAULT_RANDOM_SEED_PLAYERS
+        self.__maze_width = maze_width if maze_width is not None else Game.DEFAULT_MAZE_WIDTH
+        self.__maze_height = maze_height if maze_height is not None else Game.DEFAULT_MAZE_HEIGHT
+        self.__cell_percentage = cell_percentage if cell_percentage is not None else Game.DEFAULT_CELL_PERCENTAGE
+        self.__wall_percentage = wall_percentage if wall_percentage is not None else Game.DEFAULT_WALL_PERCENTAGE
+        self.__mud_percentage = mud_percentage if mud_percentage is not None else Game.DEFAULT_MUD_PERCENTAGE
+        self.__mud_range = mud_range if mud_range is not None else Game.DEFAULT_MUD_RANGE
+        self.__fixed_maze = fixed_maze if fixed_maze is not None else Game.DEFAULT_FIXED_MAZE
+        self.__nb_cheese = nb_cheese if nb_cheese is not None else Game.DEFAULT_NB_CHEESE
+        self.__fixed_cheese = fixed_cheese if fixed_cheese is not None else Game.DEFAULT_FIXED_CHEESE
+        self.__render_mode = render_mode if render_mode is not None else Game.DEFAULT_RENDER_MODE
+        self.__render_simplified = render_simplified if render_simplified is not None else Game.DEFAULT_RENDER_SIMPLIFIED
+        self.__gui_speed = gui_speed if gui_speed is not None else Game.DEFAULT_GUI_SPEED
+        self.__trace_length = trace_length if trace_length is not None else Game.DEFAULT_TRACE_LENGTH
+        self.__fullscreen = fullscreen if fullscreen is not None else Game.DEFAULT_FULLSCREEN
+        self.__save_path = save_path if save_path is not None else Game.DEFAULT_SAVE_PATH
+        self.__save_game = save_game if save_game is not None else Game.DEFAULT_SAVE_GAME
+        self.__preprocessing_time = preprocessing_time if preprocessing_time is not None else Game.DEFAULT_PREPROCESSING_TIME
+        self.__turn_time = turn_time if turn_time is not None else Game.DEFAULT_TURN_TIME
+        self.__game_mode = game_mode if game_mode is not None else Game.DEFAULT_GAME_MODE
+        self.__continue_on_error = continue_on_error if continue_on_error is not None else Game.DEFAULT_CONTINUE_ON_ERROR
 
         # If the game is in simulation mode, we enforce some parameters
         if self.__game_mode == GameMode.SIMULATION:
