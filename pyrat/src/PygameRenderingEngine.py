@@ -407,7 +407,7 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
             for col in range(maze.width):
                 if maze.rc_exists(row, col):
                     if maze.rc_exists(row, col - 1):
-                        if maze.rc_to_i(row, col - 1) in maze.get_neighbors(maze.rc_to_i(row, col)):
+                        if maze.has_edge(maze.rc_to_i(row, col), maze.rc_to_i(row, col - 1)):
                             if maze.get_weight(maze.rc_to_i(row, col), maze.rc_to_i(row, col - 1)) > 1:
                                 mud_x = maze_x_offset + col * cell_size - mud.get_width() // 2
                                 mud_y = maze_y_offset + row * cell_size
@@ -418,7 +418,7 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
                                     weight_text_y = maze_y_offset + row * cell_size + (cell_size - weight_text.get_height()) // 2
                                     maze_elements.append((weight_text_x, weight_text_y, weight_text))
                     if maze.rc_exists(row - 1, col):
-                        if maze.rc_to_i(row - 1, col) in maze.get_neighbors(maze.rc_to_i(row, col)):
+                        if maze.has_edge(maze.rc_to_i(row, col), maze.rc_to_i(row - 1, col)):
                             if maze.get_weight(maze.rc_to_i(row, col), maze.rc_to_i(row - 1, col)) > 1:
                                 mud_horizontal = pygame.transform.rotate(mud, 90)
                                 mud_x = maze_x_offset + col * cell_size
@@ -447,7 +447,7 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
             for col in range(maze.width + 1):
                 case_outside_to_inside = not maze.rc_exists(row, col) and maze.rc_exists(row, col - 1)
                 case_inside_to_outside = maze.rc_exists(row, col) and not maze.rc_exists(row, col - 1)
-                case_inside_to_inside = maze.rc_exists(row, col) and maze.rc_exists(row, col - 1) and maze.rc_to_i(row, col - 1) not in maze.get_neighbors(maze.rc_to_i(row, col))
+                case_inside_to_inside = maze.rc_exists(row, col) and maze.rc_exists(row, col - 1) and not maze.has_edge(maze.rc_to_i(row, col), maze.rc_to_i(row, col - 1))
                 if case_outside_to_inside or case_inside_to_outside or case_inside_to_inside:
                     wall_x = maze_x_offset + col * cell_size - wall.get_width() // 2
                     wall_y = maze_y_offset + row * cell_size
@@ -455,7 +455,7 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
                     walls.append((row, col, row, col - 1))
                 case_outside_to_inside = not maze.rc_exists(row, col) and maze.rc_exists(row - 1, col)
                 case_inside_to_outside = maze.rc_exists(row, col) and not maze.rc_exists(row - 1, col)
-                case_inside_to_inside = maze.rc_exists(row, col) and maze.rc_exists(row - 1, col) and maze.rc_to_i(row - 1, col) not in maze.get_neighbors(maze.rc_to_i(row, col))
+                case_inside_to_inside = maze.rc_exists(row, col) and maze.rc_exists(row - 1, col) and not maze.has_edge(maze.rc_to_i(row, col), maze.rc_to_i(row - 1, col))
                 if case_outside_to_inside or case_inside_to_outside or case_inside_to_inside:
                     wall_horizontal = pygame.transform.rotate(wall, 90)
                     wall_x = maze_x_offset + col * cell_size

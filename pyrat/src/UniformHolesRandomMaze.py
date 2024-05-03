@@ -25,14 +25,14 @@ from pyrat.src.RandomMaze import RandomMaze
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class SubtractiveRandomMaze (RandomMaze):
+class UniformHolesRandomMaze (RandomMaze):
 
     """
         This class inherits from the RandomMaze class.
         Therefore, it has the attributes and methods defined in the RandomMaze class in addition to the ones defined below.
 
-        A subtractive random maze is a random maze where the cells are removed one by one.
-        The maze is created by removing cells from a full maze, and making sure the maze remains connected.
+        With this maze, holes are uniformly distributed in the maze.
+        The maze is created by removing random cells from a full maze, and making sure the maze remains connected.
     """
 
     #############################################################################################################################################
@@ -61,15 +61,15 @@ class SubtractiveRandomMaze (RandomMaze):
         self._create_maze()
 
     #############################################################################################################################################
-    #                                                              PRIVATE METHODS                                                              #
+    #                                                             PROTECTED METHODS                                                             #
     #############################################################################################################################################
 
-    def _create_maze ( self: Self,
-                     ) ->    None:
+    def _add_cells ( self: Self,
+                   ) ->    None:
         
         """
             This method redefines the abstract method of the parent class.
-            It creates a random maze using the parameters given at initialization.
+            It adds cells to the maze by starting from a full maze and removing cells one by one.
             In:
                 * self: Reference to the current object.
             Out:
@@ -90,23 +90,18 @@ class SubtractiveRandomMaze (RandomMaze):
                     self.add_edge(self.rc_to_i(row, col), self.rc_to_i(row, col - 1))
 
         # Remove some vertices until the desired density is reached
-        target_nb_vertices = int(self.width * self.height * self._cell_percentage / 100)
-        while self.nb_vertices() > target_nb_vertices:
+        while self.nb_vertices() > self._target_nb_vertices:
 
             # Remove a random vertex
-            vertex = self._rng.choice(list(self.vertices))
+            vertex = self._rng.choice(self.vertices)
+            neighbors = self.get_neighbors(vertex)
             self.remove_vertex(vertex)
 
             # Make sure the maze is still connected
             if not self.is_connected():
                 self.add_vertex(vertex)
-                row, col = self.i_to_rc(vertex)
-                self.add_edge(vertex, self.rc_to_i(row - 1, col))
-                self.add_edge(vertex, self.rc_to_i(row + 1, col))
-
-        # Determine the maximum number of walls by computing the minimum spanning tree
-        mst = self.minimum_spanning_tree()
-        target_nb_walls = (self.nb_edges() - mst.nb_edges()) * self._wall_percentage / 100
+                for neighbor in neighbors:
+                    self.add_edge(vertex, neighbor)
 
 #####################################################################################################################################################
 #####################################################################################################################################################

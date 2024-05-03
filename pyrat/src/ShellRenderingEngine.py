@@ -176,7 +176,7 @@ class ShellRenderingEngine (RenderingEngine):
                     environment_str += background * (cell_width - self.__colored_len(cell_contents))
                     
                     # Right separation
-                    right_weight = "0" if not maze.rc_exists(row, col) or not maze.rc_exists(row, col + 1) or maze.rc_to_i(row, col + 1) not in maze.get_neighbors(maze.rc_to_i(row, col)) else str(maze.get_weight(maze.rc_to_i(row, col), maze.rc_to_i(row, col + 1)))
+                    right_weight = "0" if not maze.rc_exists(row, col) or not maze.rc_exists(row, col + 1) or not maze.has_edge(maze.rc_to_i(row, col), maze.rc_to_i(row, col + 1)) else str(maze.get_weight(maze.rc_to_i(row, col), maze.rc_to_i(row, col + 1)))
                     if col == maze.width - 1 or right_weight == "0":
                         environment_str += wall
                     else:
@@ -192,7 +192,7 @@ class ShellRenderingEngine (RenderingEngine):
             
             # Bottom separation
             for col in range(maze.width):
-                bottom_weight = "0" if not maze.rc_exists(row, col) or not maze.rc_exists(row + 1, col) or maze.rc_to_i(row + 1, col) not in maze.get_neighbors(maze.rc_to_i(row, col)) else str(maze.get_weight(maze.rc_to_i(row, col), maze.rc_to_i(row + 1, col)))
+                bottom_weight = "0" if not maze.rc_exists(row, col) or not maze.rc_exists(row + 1, col) or not maze.has_edge(maze.rc_to_i(row, col), maze.rc_to_i(row + 1, col)) else str(maze.get_weight(maze.rc_to_i(row, col), maze.rc_to_i(row + 1, col)))
                 if bottom_weight == "0":
                     environment_str += wall * (cell_width + 1)
                 elif bottom_weight == "1":

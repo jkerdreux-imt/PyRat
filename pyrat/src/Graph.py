@@ -19,6 +19,8 @@ from typing_extensions import *
 from numbers import *
 import numpy
 import torch
+import random
+import sys
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
@@ -129,8 +131,8 @@ class Graph ():
         assert isinstance(symmetric, bool) # Type check for symmetric
         assert vertex_1 in self.vertices # Vertex 1 is in the graph
         assert vertex_2 in self.vertices # Vertex 2 is in the graph
-        assert vertex_2 not in self.get_neighbors(vertex_1) # Edge does not already exist
-        assert not (symmetric and vertex_1 in self.get_neighbors(vertex_2)) # Symmetric edge does not already exist if asked
+        assert not self.has_edge(vertex_1, vertex_2) # Edge does not already exist
+        assert not (symmetric and self.has_edge(vertex_2, vertex_1)) # Symmetric edge does not already exist if asked
 
         # Add edge to the adjacency dictionary
         self.__adjacency[self.vertices.index(vertex_1)][self.vertices.index(vertex_2)] = weight
@@ -179,7 +181,7 @@ class Graph ():
         # Debug
         assert vertex_1 in self.vertices # Vertex 1 is in the graph
         assert vertex_2 in self.vertices # Vertex 2 is in the graph
-        assert vertex_2 in self.get_neighbors(vertex_1) # Edge exists
+        assert self.has_edge(vertex_1, vertex_2) # Edge exists
 
         # Get weight
         weight = self.__adjacency[self.vertices.index(vertex_1)][self.vertices.index(vertex_2)]
@@ -224,7 +226,7 @@ class Graph ():
         adjacency_matrix = numpy.zeros((self.nb_vertices(), self.nb_vertices()), dtype=int)
         for i, vertex1 in enumerate(self.vertices):
             for j, vertex2 in enumerate(self.vertices):
-                if vertex2 in self.get_neighbors(vertex1):
+                if self.has_edge(vertex1, vertex2):
                     adjacency_matrix[i, j] = self.get_weight(vertex1, vertex2)
         return adjacency_matrix
 
@@ -246,7 +248,7 @@ class Graph ():
         adjacency_matrix = torch.zeros((self.nb_vertices(), self.nb_vertices()), dtype=int)
         for i, vertex1 in enumerate(self.vertices):
             for j, vertex2 in enumerate(self.vertices):
-                if vertex2 in self.get_neighbors(vertex1):
+                if self.has_edge(vertex1, vertex2):
                     adjacency_matrix[i, j] = self.get_weight(vertex1, vertex2)
         return adjacency_matrix
 
@@ -271,7 +273,7 @@ class Graph ():
 
         # Remove connections to the vertex
         for neighbor in self.get_neighbors(vertex):
-            symmetric = vertex in self.get_neighbors(neighbor)
+            symmetric = self.has_edge(neighbor, vertex)
             self.remove_edge(vertex, neighbor, symmetric=symmetric)
         
         # Remove the vertex and reindex the adjacency matrix
@@ -304,8 +306,8 @@ class Graph ():
         assert isinstance(symmetric, bool) # Type check for symmetric
         assert vertex_1 in self.vertices # Vertex 1 is in the graph
         assert vertex_2 in self.vertices # Vertex 2 is in the graph
-        assert vertex_2 in self.get_neighbors(vertex_1) # Edge exists
-        assert (not symmetric) or (symmetric and vertex_1 in self.get_neighbors(vertex_2)) # If symmetric, the edge exists
+        assert self.has_edge(vertex_1, vertex_2) # Edge exists
+        assert (not symmetric) or (symmetric and self.has_edge(vertex_2, vertex_1)) # If symmetric, the edge exists
 
         # Remove edge
         del self.__adjacency[self.vertices.index(vertex_1)][self.vertices.index(vertex_2)]
@@ -328,6 +330,9 @@ class Graph ():
                 * connected: Whether the graph is connected.
         """
         
+        # Debug
+        assert self.nb_vertices() > 0 # The graph has at least one vertex
+
         # Create a list of visited vertices
         visited = [True] + [False] * (self.nb_vertices() - 1)
         stack = [0]
@@ -347,33 +352,51 @@ class Graph ():
 
     #############################################################################################################################################
 
-    def minimum_spanning_tree ( self: Self,
-                              ) ->    Self:
+    def minimum_spanning_tree ( self:        Self,
+                                random_seed: Optional[Integral] = None
+                              ) ->           Self:
 
         """
             Returns the minimum spanning tree of the graph.
-            Uses Prim's algorithm.
             In:
                 * self: Reference to the current object.
+                * random_seed: Seed for the random number generator.
             Out:
-                * minimum_spanning_tree: Minimum spanning tree of the graph.
+                * minimum_spanning_tree: Graph representing the minimum spanning tree.
         """
         
-        # Create the minimum spanning tree
+        # Debug
+        assert random_seed is None or isinstance(random_seed, Integral) # Type check for random_seed
+        assert random_seed is None or 0 <= random_seed < sys.maxsize # random_seed is a valid seed
+
+        # Initialize a random number generator
+        rng = random.Random(random_seed)
+
+        # Shuffle vertices
+        vertices_to_add = self.vertices
+        rng.shuffle(vertices_to_add)
+
+        # Create the minimum spanning tree, initialized with a random vertex
         mst = Graph()
-        mst.add_vertex(self.vertices[0])
-        while mst.nb_vertices() < self.nb_vertices():
-            min_weight = float("inf")
-            min_edge = None
-            for vertex in mst.vertices:
-                for neighbor in self.get_neighbors(vertex):
-                    if neighbor not in mst.vertices:
-                        weight = self.get_weight(vertex, neighbor)
-                        if weight < min_weight:
-                            min_weight = weight
-                            min_edge = (vertex, neighbor)
-            mst.add_vertex(min_edge[1])
-            mst.add_edge(*min_edge)
+        vertex = vertices_to_add.pop(0)
+        mst.add_vertex(vertex)
+        
+        # Add vertices until all are included
+        while vertices_to_add:
+            vertex = vertices_to_add.pop(0)
+            neighbors = self.get_neighbors(vertex)
+            rng.shuffle(neighbors)
+            neighbors_in_mst = [neighbor for neighbor in neighbors if neighbor in mst.vertices]
+            if neighbors_in_mst:
+                neighbor = neighbors_in_mst[0]
+                symmetric = self.has_edge(neighbor, vertex)
+                weight = self.get_weight(neighbor, vertex)
+                mst.add_vertex(vertex)
+                mst.add_edge(vertex, neighbor, weight, symmetric)
+            else:
+                vertices_to_add.append(vertex)
+
+        # Return the minimum spanning tree
         return mst
 
     #############################################################################################################################################
@@ -408,14 +431,58 @@ class Graph ():
         """
         
         # Get the number of edges
-        nb_edges = 0
-        for vertex in self.vertices:
+        nb_edges = len(self.get_edge_list())
+        return nb_edges
+
+    #############################################################################################################################################
+
+    def get_edge_list ( self: Self,
+                      ) ->    List[Tuple[Any, Any]]:
+
+        """
+            Returns the list of edges in the graph.
+            Symmetric edges are counted once.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * edge_list: List of edges in the graph, as tuples (vertex_1, vertex_2).
+        """
+        
+        # Get the list of edges
+        edge_list = []
+        for i, vertex in enumerate(self.vertices):
             for neighbor in self.get_neighbors(vertex):
-                if vertex in self.get_neighbors(neighbor):
-                    nb_edges += 0.5
-                else:
-                    nb_edges += 1
-        return int(nb_edges)
+                if i < self.vertices.index(neighbor):
+                    edge_list.append((vertex, neighbor))
+        return edge_list
+
+    #############################################################################################################################################
+
+    def has_edge ( self:      Self,
+                   vertex_1:  Any,
+                   vertex_2:  Any,
+                 ) ->         bool:
+        
+        """
+            Checks whether an edge exists between two vertices.
+            In:
+                * self:     Reference to the current object.
+                * vertex_1: First vertex.
+                * vertex_2: Second vertex.
+            Out:
+                * edge_exists: Whether an edge exists between the two vertices.
+        """
+
+        # Debug
+        assert vertex_1 in self.vertices # Vertex 1 is in the graph
+        assert vertex_2 in self.vertices # Vertex 2 is in the graph
+
+        # Check whether the edge exists
+        edge_exists = vertex_2 in self.get_neighbors(vertex_1)
+        return edge_exists
+
+    #############################################################################################################################################
+
 
     #############################################################################################################################################
     #                                                              PRIVATE METHODS                                                              #
@@ -436,12 +503,8 @@ class Graph ():
         string = "Graph object:\n"
         string += "|  Vertices: " + str(self.vertices) + "\n"
         string += "|  Adjacency matrix:\n"
-        for vertex in self.vertices:
-            for neighbor in self.get_neighbors(vertex):
-                if self.vertices.index(neighbor) > self.vertices.index(vertex):
-                    symmetric = vertex in self.get_neighbors(neighbor)
-                    weight = self.get_weight(vertex, neighbor)
-                    string += "|  |  {} {} ({}) --> {}\n".format(vertex, "<--" if symmetric else "---", weight, neighbor)
+        for vertex_1, vertex_2, weight, symmetric in self.get_edge_list():
+            string += "|  |  {} {} ({}) --> {}\n".format(vertex_1, "<--" if symmetric else "---", weight, vertex_2)
         return string.strip()
 
 #####################################################################################################################################################

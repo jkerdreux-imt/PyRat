@@ -19,62 +19,44 @@ from typing_extensions import *
 from numbers import *
 
 # PyRat imports
-from pyrat.src.FixedMaze import FixedMaze
+from pyrat.src.RandomMaze import RandomMaze
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class MazeFromDict (FixedMaze):
+class HolesOnSideRandomMaze (RandomMaze):
 
     """
-        This class inherits from the FixedMaze class.
-        Therefore, it has the attributes and methods defined in the FixedMaze class in addition to the ones defined below.
+        This class inherits from the RandomMaze class.
+        Therefore, it has the attributes and methods defined in the RandomMaze class in addition to the ones defined below.
 
-        This is a maze that is created from a fixed description as a dictionary, where keys are cell indices.
-        Associated values are dictionaries, where keys are neighbors of the corresponding cell, and values are the weights of the corresponding edges.
-        This class is especially useful to allow exporting a maze to a file, and then reusing it later.
-        It is also useful to test a player on a fixed maze, to compare its performance with other players.
+        With this maze, holes are distributed on the sides of the maze.
+        The maze is created by adding cells from the center of the maze
     """
 
     #############################################################################################################################################
     #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
 
-    def __init__ ( self:        Self,
-                   description: Dict[Integral, Dict[Integral, Integral]],
-                   *args:       Any,
-                   **kwargs:    Any
-                 ) ->           Self:
+    def __init__ ( self:     Self,
+                   *args:    Any,
+                   **kwargs: Any
+                 ) ->        Self:
 
         """
             This function is the constructor of the class.
             In:
-                * self:        Reference to the current object.
-                * description: Fixed maze as a dictionary.
-                * args:        Arguments to pass to the parent constructor.
-                * kwargs:      Keyword arguments to pass to the parent constructor.
+                * self:   Reference to the current object.
+                * args:   Arguments to pass to the parent constructor.
+                * kwargs: Keyword arguments to pass to the parent constructor.
             Out:
                 * A new instance of the class.
         """
 
         # Inherit from parent class
         super().__init__(*args, **kwargs)
-
-        # Debug
-        assert isinstance(description, dict) # Type check for description
-        assert all(isinstance(vertex, Integral) for vertex in description) # Type check for description
-        assert all(isinstance(neighbor, Integral) for vertex in description for neighbor in description[vertex]) # Type check for description
-        assert all(isinstance(description[vertex][neighbor], Integral) for vertex in description for neighbor in description[vertex]) # Type check for description
-        assert len(description) > 1 # The maze has at least two vertices
-        assert all(len(description[vertex]) > 0 for vertex in description) # All vertices are connected to at least one neighbor
-        assert all(vertex in description[neighbor] for vertex in description for neighbor in description[vertex]) # The graph is symmetric
-        assert all(description[vertex][neighbor] == description[neighbor][vertex] for vertex in description for neighbor in description[vertex]) # Weights are symmetric
-        assert all(description[vertex][neighbor] > 0 for vertex in description for neighbor in description[vertex]) # Weights are positive
-
-        # Private attributes
-        self.__description = description
-
+        
         # Generate the maze
         self._create_maze()
 
@@ -82,30 +64,48 @@ class MazeFromDict (FixedMaze):
     #                                                             PROTECTED METHODS                                                             #
     #############################################################################################################################################
 
-    def _create_maze ( self: Self,
-                     ) ->    None:
-
+    def _add_cells ( self: Self,
+                   ) ->    None:
+        
         """
             This method redefines the abstract method of the parent class.
-            Creates a maze from the description provided at initialization.
+            It adds cells to the maze by starting from a full maze and removing cells one by one.
             In:
                 * self: Reference to the current object.
             Out:
                 * None.
         """
+
+        # Add cells from the middle of the maze
+        vertices_to_add = [self.rc_to_i(self.height // 2, self.width // 2)]
+
+        # Make some sort of breadth-first search to add cells
+        while self.nb_vertices() < self._target_nb_vertices:
+
+            # Get a random vertex
+            vertex = vertices_to_add.pop(self._rng.randint(0, len(vertices_to_add) - 1))
+
+            # Add it if it is not already in the maze
+            if vertex in self.vertices:
+                continue
+            self.add_vertex(vertex)
+
+            # Add neighbors
+            row, col = self.i_to_rc(vertex)
+            if 0 < row < self.height:
+                vertices_to_add.append(self.rc_to_i(row - 1, col))
+            if 0 <= row < self.height - 1:
+                vertices_to_add.append(self.rc_to_i(row + 1, col))
+            if 0 < col < self.width:
+                vertices_to_add.append(self.rc_to_i(row, col - 1))
+            if 0 <= col < self.width - 1:
+                vertices_to_add.append(self.rc_to_i(row, col + 1))
         
-        # Determine the vertices
-        vertices = self.__description.keys()
-
-        # Determine the edges
-        edges = []
-        for vertex in self.__description:
-            neighbors = self.__description[vertex]
-            for neighbor in neighbors:
-                edges.append((vertex, neighbor, self.__description[vertex][neighbor]))
-
-        # Build the maze
-        self._initialize_maze(vertices, edges)
+        # Connect the vertices
+        for i, vertex_1 in enumerate(self.vertices):
+            for j, vertex_2 in enumerate(self.vertices, i + 1):
+                if self.coords_difference(vertex_1, vertex_2) in [(0, 1), (1, 0), (-1, 0), (0, -1)]:
+                    self.add_edge(vertex_1, vertex_2)
 
 #####################################################################################################################################################
 #####################################################################################################################################################

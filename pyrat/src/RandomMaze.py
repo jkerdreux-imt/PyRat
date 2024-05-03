@@ -89,9 +89,10 @@ class RandomMaze (Maze, abc.ABC):
         assert 0.0 <= wall_percentage <= 100.0 # wall_percentage is a percentage
         assert 0.0 <= mud_percentage <= 100.0 # mud_percentage is a percentage
         assert 1 < mud_range[0] <= mud_range[1] # mud_range is a valid interval with minimum value 1
+        assert int(self.width * self.height * cell_percentage / 100) > 1 # At least two vertices
 
         # Protected attributes
-        self._cell_percentage = cell_percentage
+        self._target_nb_vertices = int(self.width * self.height * cell_percentage / 100)
         self._wall_percentage = wall_percentage
         self._mud_percentage = mud_percentage
         self._mud_range = mud_range
@@ -114,16 +115,82 @@ class RandomMaze (Maze, abc.ABC):
                 * None.
         """
 
-        # Add cells
+        # Add cells, walls, and mud
         self._add_cells()
-        
-        # Add walls
         self._add_walls()
-
-        # Add mud
         self._add_mud()
 
-        # TODO
+    #############################################################################################################################################
+
+    @abc.abstractmethod
+    def _add_cells ( self: Self,
+                   ) ->    None:
+
+        """
+            This method is abstract and must be implemented in the subclasses.
+            It should add cells to the maze.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * None.
+        """
+
+        # This method must be implemented in the child classes
+        # By default we raise an error
+        raise NotImplementedError("This method must be implemented in the child classes.")
+
+    #############################################################################################################################################
+
+    def _add_walls ( self: Self,
+                   ) ->    None:
+
+        """
+            This method adds walls to the maze.
+            It uses the minimum spanning tree to determine the maximum number of walls.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * None.
+        """
+
+        # Determine the maximum number of walls by computing the minimum spanning tree
+        mst = self.minimum_spanning_tree(self._rng.randint(0, sys.maxsize))
+        target_nb_walls = int((self.nb_edges() - mst.nb_edges()) * self._wall_percentage / 100)
+        walls = []
+        for vertex, neighbor in self.get_edge_list():
+            if not mst.has_edge(vertex, neighbor):
+                self.remove_edge(vertex, neighbor, True)
+                walls.append((vertex, neighbor))
+        
+        # Remove some walls until the desired density is reached
+        self._rng.shuffle(walls)
+        for vertex, neighbor in walls[target_nb_walls:]:
+            self.add_edge(vertex, neighbor)
+
+    #############################################################################################################################################
+
+    def _add_mud ( self: Self,
+                 ) ->    None:
+
+        """
+            This method adds mud to the maze.
+            It replaces some edges with weighted ones.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * None.
+        """
+
+        # Determine the number of mud edges
+        target_nb_mud = int(self.nb_edges() * self._mud_percentage / 100)
+        edges = self.get_edge_list()
+
+        # Add mud to some edges
+        self._rng.shuffle(edges)
+        for vertex, neighbor in edges[:target_nb_mud]:
+            self.remove_edge(vertex, neighbor, True)
+            weight = self._rng.randint(self._mud_range[0], self._mud_range[1])
+            self.add_edge(vertex, neighbor, weight)
 
 #####################################################################################################################################################
 #####################################################################################################################################################

@@ -125,12 +125,14 @@ class RandomMazeAlgorithm (enum.Enum):
     """
         This enumeration defines all the possible algorithms to generate a random maze.
         Values:
-            * ADDITIVE:    The maze is created by adding cells to an empty maze, and connecting them to the existing cells.
-            * SUBTRACTIVE: The maze is created by removing cells from a full maze, and making sure the maze remains connected.
+            * HOLES_ON_SIDE: Missing cells tend to be on the sides of the maze.
+            * UNIFORM_HOLES: Missing cells are uniformly distributed.
+            * BIG_HOLES:     Missing cells tend to be grouped together.
     """
 
-    ADDITIVE = "additive"
-    SUBTRACTIVE = "subtractive"
+    HOLES_ON_SIDE = "holes_on_side"
+    UNIFORM_HOLES = "uniform_holes"
+    BIG_HOLES = "big_holes"
 
 #####################################################################################################################################################
 #####################################################################################################################################################

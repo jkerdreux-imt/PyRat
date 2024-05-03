@@ -20,7 +20,6 @@ from numbers import *
 import abc
 import numpy
 import torch
-import math
 
 # PyRat imports
 from pyrat.src.Graph import Graph
@@ -314,7 +313,7 @@ class Maze (Graph, abc.ABC):
         assert self.coords_difference(vertex_1, vertex_2) in [(0, 1), (0, -1), (1, 0), (-1, 0)] # Vertices are adjacent on the grid
 
         # If the symmetric edge already exists, we do not add it
-        if vertex_1 in self.get_neighbors(vertex_2):
+        if self.has_edge(vertex_2, vertex_1):
             return
 
         # Add edge to the graph using the parent's method
@@ -381,6 +380,12 @@ class Maze (Graph, abc.ABC):
                 * action: Action to go from the source to the target, or None if the move is impossible.
         """
 
+        # Debug
+        assert isinstance(source, Integral) # Type check for source
+        assert isinstance(target, Integral) # Type check for target
+        assert self.i_exists(source) # Source is in the maze
+        assert self.i_exists(target) # Target is in the maze
+
         # Get the coordinates difference
         difference = self.coords_difference(source, target)
 
@@ -441,12 +446,8 @@ class Maze (Graph, abc.ABC):
         string += "|  Height: " + str(self.height) + "\n"
         string += "|  Vertices: " + str(self.vertices) + "\n"
         string += "|  Adjacency matrix:\n"
-        for vertex in self.vertices:
-            for neighbor in self.get_neighbors(vertex):
-                if self.vertices.index(neighbor) > self.vertices.index(vertex):
-                    symmetric = vertex in self.get_neighbors(neighbor)
-                    weight = self.get_weight(vertex, neighbor)
-                    string += "|  |  {} {} ({}) --> {}\n".format(vertex, "<--" if symmetric else "---", weight, neighbor)
+        for vertex_1, vertex_2, weight, symmetric in self.get_edge_list():
+            string += "|  |  {} {} ({}) --> {}\n".format(vertex_1, "<--" if symmetric else "---", weight, vertex_2)
         return string.strip()
 
 #####################################################################################################################################################

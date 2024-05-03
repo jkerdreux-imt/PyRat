@@ -32,8 +32,9 @@ import random
 
 # PyRat imports
 from pyrat.src.Maze import Maze
-from pyrat.src.AdditiveRandomMaze import AdditiveRandomMaze
-from pyrat.src.SubtractiveRandomMaze import SubtractiveRandomMaze
+from pyrat.src.HolesOnSideRandomMaze import HolesOnSideRandomMaze
+from pyrat.src.UniformHolesRandomMaze import UniformHolesRandomMaze
+from pyrat.src.BigHolesRandomMaze import BigHolesRandomMaze
 from pyrat.src.MazeFromDict import MazeFromDict
 from pyrat.src.MazeFromMatrix import MazeFromMatrix
 from pyrat.src.Player import Player
@@ -78,7 +79,7 @@ class Game ():
     DEFAULT_MUD_PERCENTAGE = 20.0
     DEFAULT_MUD_RANGE = (4, 9)
     DEFAULT_FIXED_MAZE = None
-    DEFAULT_RANDOM_MAZE_ALGORITHM = RandomMazeAlgorithm.SUBTRACTIVE
+    DEFAULT_RANDOM_MAZE_ALGORITHM = RandomMazeAlgorithm.BIG_HOLES
     DEFAULT_NB_CHEESE = 21
     DEFAULT_FIXED_CHEESE = None
     DEFAULT_RENDER_MODE = RenderMode.GUI
@@ -503,10 +504,12 @@ class Game ():
         self.__actions_history = {}
         
         # Initialize the maze
-        if self.__random_maze_algorithm == RandomMazeAlgorithm.SUBTRACTIVE:
-            self.__maze = SubtractiveRandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
-        elif self.__random_maze_algorithm == RandomMazeAlgorithm.ADDITIVE:
-            self.__maze = AdditiveRandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
+        if self.__random_maze_algorithm == RandomMazeAlgorithm.UNIFORM_HOLES:
+            self.__maze = UniformHolesRandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
+        elif self.__random_maze_algorithm == RandomMazeAlgorithm.HOLES_ON_SIDE:
+            self.__maze = HolesOnSideRandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
+        elif self.__random_maze_algorithm == RandomMazeAlgorithm.BIG_HOLES:
+            self.__maze = BigHolesRandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
         elif isinstance(self.__fixed_maze, dict):
             self.__maze = MazeFromDict(self.__fixed_maze)
         else:
@@ -628,7 +631,7 @@ class Game ():
                 target = self.__maze.rc_to_i(row, col - 1)
             elif actions[player.name] == Action.EAST and col < self.__maze.width - 1:
                 target = self.__maze.rc_to_i(row, col + 1)
-            if target is not None and target in self.__maze.get_neighbors(game_state.player_locations[player.name]):
+            if target is not None and self.__maze.has_edge(game_state.player_locations[player.name], target):
                 weight = self.__maze.get_weight(game_state.player_locations[player.name], target)
                 if weight == 1:
                     new_game_state.player_locations[player.name] = target
