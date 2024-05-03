@@ -103,7 +103,7 @@ class ShellRenderingEngine (RenderingEngine):
         assert isinstance(game_state, GameState) # Type check for the game state
 
         # Dimensions
-        max_weight = max([maze.get_weight(vertex, neighbor) for vertex in maze.vertices for neighbor in maze.get_neighbors(vertex)])
+        max_weight = max([edge[2] for edge in maze.get_edge_list()])
         max_weight_len = len(str(max_weight))
         max_player_name_len = max([len(player.name) for player in players]) + (max_weight_len + 5 if max_weight > 1 else 0)
         max_cell_number_len = len(str(maze.width * maze.height - 1))

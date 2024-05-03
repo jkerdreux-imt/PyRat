@@ -30,8 +30,8 @@ class Graph ():
 
     """
         A graph is a mathematical structure that models pairwise relations between objects.
-        It consists of a set of vertices and a set of edges.
         It is implemented using an adjacency dictionary.
+        We assume that all vertices are hashable.
         The keys of the dictionary are the vertices of the graph.
         The values of the dictionary are dictionaries themselves.
         The keys of these dictionaries are the neighbors of the corresponding vertex.
@@ -55,36 +55,31 @@ class Graph ():
         """
 
         # Private attributes
-        self.__vertices = []
         self.__adjacency = {}
-
-    #############################################################################################################################################
-    #                                                                  GETTERS                                                                  #
-    #############################################################################################################################################
-
-    @property
-    def vertices ( self: Self
-                 ) ->    List[Any]:
-        
-        """
-            Getter for __vertices.
-            It returns a copy of the list of vertices.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * vertices_copy: A copy of __vertices.
-        """
-
-        # Return a copy of the list of vertices
-        vertices_copy = self.__vertices.copy()
-        return vertices_copy
 
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
+    def get_vertices ( self: Self,
+                     ) ->    List[Hashable]:
+        
+        """
+            Returns the list of vertices in the graph.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * vertices: List of vertices in the graph.
+        """
+
+        # Get the list of vertices
+        vertices = list(self.__adjacency.keys())
+        return vertices
+
+    #############################################################################################################################################
+
     def add_vertex ( self:   Self,
-                     vertex: Any
+                     vertex: Hashable
                    ) ->      None:
 
         """
@@ -97,17 +92,17 @@ class Graph ():
         """
         
         # Debug
-        assert vertex not in self.vertices # Vertex is not already in the graph
+        assert isinstance(vertex, Hashable) # Type check for vertex
+        assert vertex not in self.__adjacency # Vertex is not already in the graph
 
-        # Add vertex to the list of vertices and create an entry in the adjacency matrix
-        self.__vertices.append(vertex)
-        self.__adjacency[self.nb_vertices() - 1] = {}
+        # Add vertex to the adjacency matrix
+        self.__adjacency[vertex] = {}
         
     #############################################################################################################################################
 
     def add_edge ( self:      Self,
-                   vertex_1:  Any,
-                   vertex_2:  Any,
+                   vertex_1:  Hashable,
+                   vertex_2:  Hashable,
                    weight:    Number = 1,
                    symmetric: bool = False
                  ) ->         None:
@@ -127,23 +122,25 @@ class Graph ():
         """
         
         # Debug
+        assert isinstance(vertex_1, Hashable) # Type check for vertex_1
+        assert isinstance(vertex_2, Hashable) # Type check for vertex_2
         assert isinstance(weight, Number) # Type check for weight
         assert isinstance(symmetric, bool) # Type check for symmetric
-        assert vertex_1 in self.vertices # Vertex 1 is in the graph
-        assert vertex_2 in self.vertices # Vertex 2 is in the graph
+        assert vertex_1 in self.__adjacency # Vertex 1 is in the graph
+        assert vertex_2 in self.__adjacency # Vertex 2 is in the graph
         assert not self.has_edge(vertex_1, vertex_2) # Edge does not already exist
         assert not (symmetric and self.has_edge(vertex_2, vertex_1)) # Symmetric edge does not already exist if asked
 
         # Add edge to the adjacency dictionary
-        self.__adjacency[self.vertices.index(vertex_1)][self.vertices.index(vertex_2)] = weight
+        self.__adjacency[vertex_1][vertex_2] = weight
         if symmetric:
-            self.__adjacency[self.vertices.index(vertex_2)][self.vertices.index(vertex_1)] = weight
+            self.__adjacency[vertex_2][vertex_1] = weight
     
     #############################################################################################################################################
 
     def get_neighbors ( self:   Self,
-                        vertex: Any
-                      ) ->      List[Any]:
+                        vertex: Hashable
+                      ) ->      List[Hashable]:
 
         """
             Returns the list of neighbors of a vertex.
@@ -155,17 +152,18 @@ class Graph ():
         """
         
         # Debug
-        assert vertex in self.vertices # Vertex is in the graph
+        assert isinstance(vertex, Hashable) # Type check for vertex
+        assert vertex in self.__adjacency # Vertex is in the graph
 
         # Get neighbors
-        neighbors = [self.vertices[i] for i in self.__adjacency[self.vertices.index(vertex)]]
+        neighbors = list(self.__adjacency[vertex].keys())
         return neighbors
 
     #############################################################################################################################################
 
     def get_weight ( self:     Self,
-                     vertex_1: Any,
-                     vertex_2: Any
+                     vertex_1: Hashable,
+                     vertex_2: Hashable
                    ) ->        Number:
 
         """
@@ -179,33 +177,31 @@ class Graph ():
         """
         
         # Debug
-        assert vertex_1 in self.vertices # Vertex 1 is in the graph
-        assert vertex_2 in self.vertices # Vertex 2 is in the graph
+        assert isinstance(vertex_1, Hashable) # Type check for vertex_1
+        assert isinstance(vertex_2, Hashable) # Type check for vertex_2
+        assert vertex_1 in self.__adjacency # Vertex 1 is in the graph
+        assert vertex_2 in self.__adjacency # Vertex 2 is in the graph
         assert self.has_edge(vertex_1, vertex_2) # Edge exists
 
         # Get weight
-        weight = self.__adjacency[self.vertices.index(vertex_1)][self.vertices.index(vertex_2)]
+        weight = self.__adjacency[vertex_1][vertex_2]
         return weight
 
     #############################################################################################################################################
 
     def as_dict ( self: Self,
-                ) ->    Dict[Any, Dict[Any, Number]]:
+                ) ->    Dict[Hashable, Dict[Hashable, Number]]:
 
         """
             Returns a dictionary representing the adjacency matrix.
-            The vertices must be hashable objects.
             In:
                 * self: Reference to the current object.
             Out:
                 * adjacency_dict: Dictionary representing the adjacency matrix.
         """
         
-        # Debug
-        assert all([isinstance(vertex, Hashable) for vertex in self.vertices]) # Vertices are hashable
-
-        # Transform in a dictionary
-        adjacency_dict = {vertex : {neighbor : self.get_weight(vertex, neighbor) for neighbor in self.get_neighbors(vertex)} for vertex in self.vertices}
+        # Make a copy of the adjacency matrix
+        adjacency_dict = self.__adjacency.copy()
         return adjacency_dict
         
     #############################################################################################################################################
@@ -224,8 +220,8 @@ class Graph ():
         
         # Create the adjacency matrix
         adjacency_matrix = numpy.zeros((self.nb_vertices(), self.nb_vertices()), dtype=int)
-        for i, vertex1 in enumerate(self.vertices):
-            for j, vertex2 in enumerate(self.vertices):
+        for i, vertex1 in enumerate(self.__adjacency):
+            for j, vertex2 in enumerate(self.__adjacency):
                 if self.has_edge(vertex1, vertex2):
                     adjacency_matrix[i, j] = self.get_weight(vertex1, vertex2)
         return adjacency_matrix
@@ -246,8 +242,8 @@ class Graph ():
         
         # Create the adjacency matrix
         adjacency_matrix = torch.zeros((self.nb_vertices(), self.nb_vertices()), dtype=int)
-        for i, vertex1 in enumerate(self.vertices):
-            for j, vertex2 in enumerate(self.vertices):
+        for i, vertex1 in enumerate(self.__adjacency):
+            for j, vertex2 in enumerate(self.__adjacency):
                 if self.has_edge(vertex1, vertex2):
                     adjacency_matrix[i, j] = self.get_weight(vertex1, vertex2)
         return adjacency_matrix
@@ -255,7 +251,7 @@ class Graph ():
     #############################################################################################################################################
 
     def remove_vertex ( self:   Self,
-                        vertex: Any
+                        vertex: Hashable
                       ) ->      None:
 
         """
@@ -269,25 +265,19 @@ class Graph ():
         """
         
         # Debug
-        assert vertex in self.vertices # Vertex is in the graph
+        assert isinstance(vertex, Hashable) # Type check for vertex
+        assert vertex in self.__adjacency # Vertex is in the graph
 
-        # Remove connections to the vertex
-        for neighbor in self.get_neighbors(vertex):
-            symmetric = self.has_edge(neighbor, vertex)
-            self.remove_edge(vertex, neighbor, symmetric=symmetric)
-        
-        # Remove the vertex and reindex the adjacency matrix
-        index = self.vertices.index(vertex)
-        for i in range(self.nb_vertices() - 1):
-            self.__adjacency[i] = {key if key < index else key - 1 : value for key, value in self.__adjacency[i + 1 if i >= index else i].items()}
-        del self.__adjacency[self.nb_vertices() - 1]
-        del self.__vertices[index]
+        # Remove the vertex and connections to it
+        for neighbor in self.__adjacency[vertex]:
+            del self.__adjacency[neighbor][vertex]
+        del self.__adjacency[vertex]
         
     #############################################################################################################################################
 
     def remove_edge ( self:      Self,
-                      vertex_1:  Any,
-                      vertex_2:  Any,
+                      vertex_1:  Hashable,
+                      vertex_2:  Hashable,
                       symmetric: bool = False
                     ) ->         None:
 
@@ -303,18 +293,18 @@ class Graph ():
         """
         
         # Debug
+        assert isinstance(vertex_1, Hashable) # Type check for vertex_1
+        assert isinstance(vertex_2, Hashable) # Type check for vertex_2
         assert isinstance(symmetric, bool) # Type check for symmetric
-        assert vertex_1 in self.vertices # Vertex 1 is in the graph
-        assert vertex_2 in self.vertices # Vertex 2 is in the graph
+        assert vertex_1 in self.__adjacency # Vertex 1 is in the graph
+        assert vertex_2 in self.__adjacency # Vertex 2 is in the graph
         assert self.has_edge(vertex_1, vertex_2) # Edge exists
         assert (not symmetric) or (symmetric and self.has_edge(vertex_2, vertex_1)) # If symmetric, the edge exists
 
-        # Remove edge
-        del self.__adjacency[self.vertices.index(vertex_1)][self.vertices.index(vertex_2)]
-
-        # Remove symmetric edge
+        # Remove edge and symmetric
+        del self.__adjacency[vertex_1][vertex_2]
         if symmetric:
-            del self.__adjacency[self.vertices.index(vertex_2)][self.vertices.index(vertex_1)]
+            del self.__adjacency[vertex_2][vertex_1]
 
     #############################################################################################################################################
 
@@ -334,20 +324,21 @@ class Graph ():
         assert self.nb_vertices() > 0 # The graph has at least one vertex
 
         # Create a list of visited vertices
-        visited = [True] + [False] * (self.nb_vertices() - 1)
-        stack = [0]
-        
+        vertices = list(self.get_vertices())
+        visited = {vertex: False for vertex in self.__adjacency}
+        visited[vertices[0]] = True
+        stack = [vertices[0]]
+                
         # Depth-first search
         while stack:
             vertex = stack.pop()
-            for neighbor in self.get_neighbors(self.vertices[vertex]):
-                index = self.vertices.index(neighbor)
-                if not visited[index]:
-                    visited[index] = True
-                    stack.append(index)
+            for neighbor in self.get_neighbors(vertex):
+                if not visited[neighbor]:
+                    visited[neighbor] = True
+                    stack.append(neighbor)
         
         # Check if all vertices have been visited
-        connected = all(visited)
+        connected = all(visited.values())
         return connected
 
     #############################################################################################################################################
@@ -373,7 +364,7 @@ class Graph ():
         rng = random.Random(random_seed)
 
         # Shuffle vertices
-        vertices_to_add = self.vertices
+        vertices_to_add = self.get_vertices()
         rng.shuffle(vertices_to_add)
 
         # Create the minimum spanning tree, initialized with a random vertex
@@ -386,7 +377,7 @@ class Graph ():
             vertex = vertices_to_add.pop(0)
             neighbors = self.get_neighbors(vertex)
             rng.shuffle(neighbors)
-            neighbors_in_mst = [neighbor for neighbor in neighbors if neighbor in mst.vertices]
+            neighbors_in_mst = [neighbor for neighbor in neighbors if neighbor in mst.get_vertices()]
             if neighbors_in_mst:
                 neighbor = neighbors_in_mst[0]
                 symmetric = self.has_edge(neighbor, vertex)
@@ -413,7 +404,7 @@ class Graph ():
         """
         
         # Get the number of vertices
-        nb_vertices = len(self.vertices)
+        nb_vertices = len(self.__adjacency)
         return nb_vertices
 
     #############################################################################################################################################
@@ -437,7 +428,7 @@ class Graph ():
     #############################################################################################################################################
 
     def get_edge_list ( self: Self,
-                      ) ->    List[Tuple[Any, Any]]:
+                      ) ->    List[Tuple[Hashable, Hashable]]:
 
         """
             Returns the list of edges in the graph.
@@ -449,18 +440,19 @@ class Graph ():
         """
         
         # Get the list of edges
+        vertices = self.get_vertices()
         edge_list = []
-        for i, vertex in enumerate(self.vertices):
-            for neighbor in self.get_neighbors(vertex):
-                if i < self.vertices.index(neighbor):
-                    edge_list.append((vertex, neighbor))
+        for vertex_1 in vertices:
+            for vertex_2 in self.get_neighbors(vertex_1):
+                if (vertex_2, vertex_1) not in edge_list:
+                    edge_list.append((vertex_1, vertex_2))
         return edge_list
 
     #############################################################################################################################################
 
     def has_edge ( self:      Self,
-                   vertex_1:  Any,
-                   vertex_2:  Any,
+                   vertex_1:  Hashable,
+                   vertex_2:  Hashable,
                  ) ->         bool:
         
         """
@@ -474,15 +466,12 @@ class Graph ():
         """
 
         # Debug
-        assert vertex_1 in self.vertices # Vertex 1 is in the graph
-        assert vertex_2 in self.vertices # Vertex 2 is in the graph
+        assert vertex_1 in self.__adjacency # Vertex 1 is in the graph
+        assert vertex_2 in self.__adjacency # Vertex 2 is in the graph
 
         # Check whether the edge exists
         edge_exists = vertex_2 in self.get_neighbors(vertex_1)
         return edge_exists
-
-    #############################################################################################################################################
-
 
     #############################################################################################################################################
     #                                                              PRIVATE METHODS                                                              #
@@ -501,7 +490,7 @@ class Graph ():
         
         # Create the string
         string = "Graph object:\n"
-        string += "|  Vertices: " + str(self.vertices) + "\n"
+        string += "|  Vertices: " + str(self.get_vertices()) + "\n"
         string += "|  Adjacency matrix:\n"
         for vertex_1, vertex_2, weight, symmetric in self.get_edge_list():
             string += "|  |  {} {} ({}) --> {}\n".format(vertex_1, "<--" if symmetric else "---", weight, vertex_2)

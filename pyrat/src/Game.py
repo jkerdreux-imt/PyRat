@@ -267,7 +267,7 @@ class Game ():
         self.__players_asked_location.append(location)
         corrected_location = location
         if location == StartingLocation.RANDOM:
-            corrected_location = self.__players_rng.choice(list(self.__maze.vertices))
+            corrected_location = self.__players_rng.choice(self.__maze.get_vertices())
         elif location == StartingLocation.SAME:
             corrected_location = list(self.__initial_game_state.player_locations.values())[-1]
         elif location == StartingLocation.CENTER:
@@ -286,7 +286,7 @@ class Game ():
             self.__initial_game_state.player_locations[player.name] = corrected_location
         else:
             print("Warning: Player '%s' cannot start at unreachable location %d, starting at closest cell (using Euclidean distance)" % (player.name, corrected_location), file=sys.stderr)
-            valid_cells = self.__maze.vertices
+            valid_cells = self.__maze.get_vertices()
             distances = [math.dist(self.__maze.i_to_rc(corrected_location), self.__maze.i_to_rc(cell)) for cell in valid_cells]
             _, argmin_distance = min((val, idx) for (idx, val) in enumerate(distances))
             self.__initial_game_state.player_locations[player.name] = valid_cells[argmin_distance]
@@ -330,7 +330,7 @@ class Game ():
             self.__initial_game_state.turn = 0
 
             # Add cheese
-            available_cells = [i for i in self.__maze.vertices if i not in self.__initial_game_state.player_locations.values()]
+            available_cells = [i for i in self.__maze.get_vertices() if i not in self.__initial_game_state.player_locations.values()]
             self.__initial_game_state.cheese.extend(self.__distribute_cheese(available_cells))
             
             # Initialize stats
@@ -631,7 +631,7 @@ class Game ():
                 target = self.__maze.rc_to_i(row, col - 1)
             elif actions[player.name] == Action.EAST and col < self.__maze.width - 1:
                 target = self.__maze.rc_to_i(row, col + 1)
-            if target is not None and self.__maze.has_edge(game_state.player_locations[player.name], target):
+            if target is not None and self.__maze.i_exists(target) and self.__maze.has_edge(game_state.player_locations[player.name], target):
                 weight = self.__maze.get_weight(game_state.player_locations[player.name], target)
                 if weight == 1:
                     new_game_state.player_locations[player.name] = target

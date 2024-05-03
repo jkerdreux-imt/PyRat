@@ -93,7 +93,7 @@ class UniformHolesRandomMaze (RandomMaze):
         while self.nb_vertices() > self._target_nb_vertices:
 
             # Remove a random vertex
-            vertex = self._rng.choice(self.vertices)
+            vertex = self._rng.choice(self.get_vertices())
             neighbors = self.get_neighbors(vertex)
             self.remove_vertex(vertex)
 

@@ -91,16 +91,17 @@ class BigHolesRandomMaze (RandomMaze):
                     self.add_edge(self.rc_to_i(row, col), self.rc_to_i(row, col - 1))
 
         # Remember the number of neighbors per vertex
-        neighbors_per_vertex = {vertex: len(self.get_neighbors(vertex)) for vertex in self.vertices}
+        neighbors_per_vertex = {vertex: len(self.get_neighbors(vertex)) for vertex in self.get_vertices()}
 
         # Remove some vertices until the desired density is reached
         while self.nb_vertices() > self._target_nb_vertices:
 
             # The probability to be removed depends on the number of neighbors already removed
-            selection_weights = [1 + math.sqrt(self._target_nb_vertices) * (neighbors_per_vertex[vertex] - len(self.get_neighbors(vertex)))**2.0 for vertex in self.vertices]
+            vertices = self.get_vertices()
+            selection_weights = [1 + (self.width * self.height - self.nb_vertices()) * (neighbors_per_vertex[vertex] - len(self.get_neighbors(vertex)))**2.0 for vertex in vertices]
 
             # Remove a random vertex
-            vertex = self._rng.choices(self.vertices, selection_weights)[0]
+            vertex = self._rng.choices(vertices, selection_weights)[0]
             neighbors = self.get_neighbors(vertex)
             self.remove_vertex(vertex)
 

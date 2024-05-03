@@ -199,7 +199,7 @@ class Maze (Graph, abc.ABC):
         assert isinstance(col, Integral) # Type check for col
 
         # Check if the cell exists
-        exists = 0 <= row < self.height and 0 <= col < self.width and self.rc_to_i(row, col) in self.vertices
+        exists = 0 <= row < self.height and 0 <= col < self.width and self.rc_to_i(row, col) in self.get_vertices()
         return exists
     
     #############################################################################################################################################
@@ -221,7 +221,7 @@ class Maze (Graph, abc.ABC):
         assert isinstance(index, Integral) # Type check for index
 
         # Check if the cell exists
-        exists = index in self.vertices
+        exists = index in self.get_vertices()
         return exists
     
     #############################################################################################################################################
@@ -336,7 +336,7 @@ class Maze (Graph, abc.ABC):
         
         # Create the adjacency matrix
         adjacency_matrix = numpy.zeros((self.width * self.height, self.width * self.height), dtype=int)
-        for vertex in self.vertices:
+        for vertex in self.get_vertices():
             for neighbor in self.get_neighbors(vertex):
                 adjacency_matrix[vertex, neighbor] = self.get_weight(vertex, neighbor)
         return adjacency_matrix
@@ -358,7 +358,7 @@ class Maze (Graph, abc.ABC):
         
         # Create the adjacency matrix
         adjacency_matrix = torch.zeros((self.width * self.height, self.width * self.height), dtype=torch.int)
-        for vertex in self.vertices:
+        for vertex in self.get_vertices():
             for neighbor in self.get_neighbors(vertex):
                 adjacency_matrix[vertex, neighbor] = self.get_weight(vertex, neighbor)
         return adjacency_matrix
@@ -444,7 +444,7 @@ class Maze (Graph, abc.ABC):
         string = "Maze object:\n"
         string += "|  Width: " + str(self.width) + "\n"
         string += "|  Height: " + str(self.height) + "\n"
-        string += "|  Vertices: " + str(self.vertices) + "\n"
+        string += "|  Vertices: " + str(self.get_vertices()) + "\n"
         string += "|  Adjacency matrix:\n"
         for vertex_1, vertex_2, weight, symmetric in self.get_edge_list():
             string += "|  |  {} {} ({}) --> {}\n".format(vertex_1, "<--" if symmetric else "---", weight, vertex_2)
