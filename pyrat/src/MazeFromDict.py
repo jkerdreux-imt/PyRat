@@ -19,17 +19,17 @@ from typing_extensions import *
 from numbers import *
 
 # PyRat imports
-from pyrat.src.Maze import Maze
+from pyrat.src.FixedMaze import FixedMaze
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class MazeFromDict (Maze):
+class MazeFromDict (FixedMaze):
 
     """
-        This class inherits from the Maze class.
-        Therefore, it has the attributes and methods defined in the Maze class in addition to the ones defined below.
+        This class inherits from the FixedMaze class.
+        Therefore, it has the attributes and methods defined in the FixedMaze class in addition to the ones defined below.
 
         This is a maze that is created from a fixed description as a dictionary, where keys are cell indices.
         Associated values are dictionaries, where keys are neighbors of the corresponding cell, and values are the weights of the corresponding edges.
@@ -76,16 +76,17 @@ class MazeFromDict (Maze):
         self.__description = description
 
         # Generate the maze
-        self.__create_maze()
+        self._create_maze()
 
     #############################################################################################################################################
     #                                                              PRIVATE METHODS                                                              #
     #############################################################################################################################################
 
-    def __create_maze ( self: Self,
-                      ) ->    None:
+    def _create_maze ( self: Self,
+                     ) ->    None:
 
         """
+            This method redefines the abstract method of the parent class.
             Creates a maze from the description provided at initialization.
             In:
                 * self: Reference to the current object.

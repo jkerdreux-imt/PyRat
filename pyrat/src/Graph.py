@@ -99,7 +99,7 @@ class Graph ():
 
         # Add vertex to the list of vertices and create an entry in the adjacency matrix
         self.__vertices.append(vertex)
-        self.__adjacency[len(self.vertices) - 1] = {}
+        self.__adjacency[self.nb_vertices() - 1] = {}
         
     #############################################################################################################################################
 
@@ -221,7 +221,7 @@ class Graph ():
         """
         
         # Create the adjacency matrix
-        adjacency_matrix = numpy.zeros((len(self.vertices), len(self.vertices)), dtype=int)
+        adjacency_matrix = numpy.zeros((self.nb_vertices(), self.nb_vertices()), dtype=int)
         for i, vertex1 in enumerate(self.vertices):
             for j, vertex2 in enumerate(self.vertices):
                 if vertex2 in self.get_neighbors(vertex1):
@@ -243,7 +243,7 @@ class Graph ():
         """
         
         # Create the adjacency matrix
-        adjacency_matrix = torch.zeros((len(self.vertices), len(self.vertices)), dtype=int)
+        adjacency_matrix = torch.zeros((self.nb_vertices(), self.nb_vertices()), dtype=int)
         for i, vertex1 in enumerate(self.vertices):
             for j, vertex2 in enumerate(self.vertices):
                 if vertex2 in self.get_neighbors(vertex1):
@@ -276,9 +276,9 @@ class Graph ():
         
         # Remove the vertex and reindex the adjacency matrix
         index = self.vertices.index(vertex)
-        for i in range(len(self.vertices) - 1):
+        for i in range(self.nb_vertices() - 1):
             self.__adjacency[i] = {key if key < index else key - 1 : value for key, value in self.__adjacency[i + 1 if i >= index else i].items()}
-        del self.__adjacency[len(self.vertices) - 1]
+        del self.__adjacency[self.nb_vertices() - 1]
         del self.__vertices[index]
         
     #############################################################################################################################################
@@ -313,6 +313,109 @@ class Graph ():
         # Remove symmetric edge
         if symmetric:
             del self.__adjacency[self.vertices.index(vertex_2)][self.vertices.index(vertex_1)]
+
+    #############################################################################################################################################
+
+    def is_connected ( self: Self,
+                     ) ->    bool:
+
+        """
+            Checks whether the graph is connected.
+            Uses a depth-first search.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * connected: Whether the graph is connected.
+        """
+        
+        # Create a list of visited vertices
+        visited = [True] + [False] * (self.nb_vertices() - 1)
+        stack = [0]
+        
+        # Depth-first search
+        while stack:
+            vertex = stack.pop()
+            for neighbor in self.get_neighbors(self.vertices[vertex]):
+                index = self.vertices.index(neighbor)
+                if not visited[index]:
+                    visited[index] = True
+                    stack.append(index)
+        
+        # Check if all vertices have been visited
+        connected = all(visited)
+        return connected
+
+    #############################################################################################################################################
+
+    def minimum_spanning_tree ( self: Self,
+                              ) ->    Self:
+
+        """
+            Returns the minimum spanning tree of the graph.
+            Uses Prim's algorithm.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * minimum_spanning_tree: Minimum spanning tree of the graph.
+        """
+        
+        # Create the minimum spanning tree
+        mst = Graph()
+        mst.add_vertex(self.vertices[0])
+        while mst.nb_vertices() < self.nb_vertices():
+            min_weight = float("inf")
+            min_edge = None
+            for vertex in mst.vertices:
+                for neighbor in self.get_neighbors(vertex):
+                    if neighbor not in mst.vertices:
+                        weight = self.get_weight(vertex, neighbor)
+                        if weight < min_weight:
+                            min_weight = weight
+                            min_edge = (vertex, neighbor)
+            mst.add_vertex(min_edge[1])
+            mst.add_edge(*min_edge)
+        return mst
+
+    #############################################################################################################################################
+
+    def nb_vertices ( self: Self,
+                    ) ->    Integral:
+
+        """
+            Returns the number of vertices in the graph.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * nb_vertices: Number of vertices in the graph.
+        """
+        
+        # Get the number of vertices
+        nb_vertices = len(self.vertices)
+        return nb_vertices
+
+    #############################################################################################################################################
+
+    def nb_edges ( self: Self,
+                 ) ->    Integral:
+    
+        """
+            Returns the number of edges in the graph.
+            Symmetric edges are counted once.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * nb_edges: Number of edges in the graph.
+        """
+        
+        # Get the number of edges
+        nb_edges = 0
+        for vertex in self.vertices:
+            for neighbor in self.get_neighbors(vertex):
+                if vertex in self.get_neighbors(neighbor):
+                    nb_edges += 0.5
+                else:
+                    nb_edges += 1
+        return int(nb_edges)
 
     #############################################################################################################################################
     #                                                              PRIVATE METHODS                                                              #

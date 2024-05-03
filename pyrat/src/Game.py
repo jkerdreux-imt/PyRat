@@ -32,7 +32,8 @@ import random
 
 # PyRat imports
 from pyrat.src.Maze import Maze
-from pyrat.src.RandomMaze import RandomMaze
+from pyrat.src.AdditiveRandomMaze import AdditiveRandomMaze
+from pyrat.src.SubtractiveRandomMaze import SubtractiveRandomMaze
 from pyrat.src.MazeFromDict import MazeFromDict
 from pyrat.src.MazeFromMatrix import MazeFromMatrix
 from pyrat.src.Player import Player
@@ -40,7 +41,7 @@ from pyrat.src.GameState import GameState
 from pyrat.src.RenderingEngine import RenderingEngine
 from pyrat.src.ShellRenderingEngine import ShellRenderingEngine
 from pyrat.src.PygameRenderingEngine import PygameRenderingEngine
-from pyrat.src.enums import RenderMode, GameMode, Action, StartingLocation, PlayerSkin
+from pyrat.src.enums import RenderMode, GameMode, Action, StartingLocation, PlayerSkin, RandomMazeAlgorithm
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
@@ -77,6 +78,7 @@ class Game ():
     DEFAULT_MUD_PERCENTAGE = 20.0
     DEFAULT_MUD_RANGE = (4, 9)
     DEFAULT_FIXED_MAZE = None
+    DEFAULT_RANDOM_MAZE_ALGORITHM = RandomMazeAlgorithm.SUBTRACTIVE
     DEFAULT_NB_CHEESE = 21
     DEFAULT_FIXED_CHEESE = None
     DEFAULT_RENDER_MODE = RenderMode.GUI
@@ -95,62 +97,64 @@ class Game ():
     #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
 
-    def __init__ ( self:                Self,
-                   random_seed:         Optional[Integral] = None,
-                   random_seed_maze:    Optional[Integral] = None,
-                   random_seed_cheese:  Optional[Integral] = None,
-                   random_seed_players: Optional[Integral] = None,
-                   maze_width:          Optional[Integral] = None,
-                   maze_height:         Optional[Integral] = None,
-                   cell_percentage:     Optional[Number] = None,
-                   wall_percentage:     Optional[Number] = None,
-                   mud_percentage:      Optional[Number] = None,
-                   mud_range:           Optional[Tuple[Integral, Integral]] = None,
-                   fixed_maze:          Optional[Union[Dict[Integral, Dict[Integral, Integral]], numpy.ndarray, torch.Tensor]] = None,
-                   nb_cheese:           Optional[Integral] = None,
-                   fixed_cheese:        Optional[List[Integral]] = None,
-                   render_mode:         Optional[RenderMode] = None,
-                   render_simplified:   Optional[bool] = None,
-                   gui_speed:           Optional[Number] = None,
-                   trace_length:        Optional[Integral] = None,
-                   fullscreen:          Optional[bool] = None,
-                   save_path:           Optional[str] = None,
-                   save_game:           Optional[bool] = None,
-                   preprocessing_time:  Optional[Number] = None,
-                   turn_time:           Optional[Number] = None,
-                   game_mode:           Optional[GameMode] = None,
-                   continue_on_error:   Optional[bool] = None
-                 ) ->                   Self:
+    def __init__ ( self:                  Self,
+                   random_seed:           Optional[Integral] = None,
+                   random_seed_maze:      Optional[Integral] = None,
+                   random_seed_cheese:    Optional[Integral] = None,
+                   random_seed_players:   Optional[Integral] = None,
+                   maze_width:            Optional[Integral] = None,
+                   maze_height:           Optional[Integral] = None,
+                   cell_percentage:       Optional[Number] = None,
+                   wall_percentage:       Optional[Number] = None,
+                   mud_percentage:        Optional[Number] = None,
+                   mud_range:             Optional[Tuple[Integral, Integral]] = None,
+                   fixed_maze:            Optional[Union[Dict[Integral, Dict[Integral, Integral]], numpy.ndarray, torch.Tensor]] = None,
+                   nb_cheese:             Optional[Integral] = None,
+                   fixed_cheese:          Optional[List[Integral]] = None,
+                   random_maze_algorithm: Optional[RandomMazeAlgorithm] = None,
+                   render_mode:           Optional[RenderMode] = None,
+                   render_simplified:     Optional[bool] = None,
+                   gui_speed:             Optional[Number] = None,
+                   trace_length:          Optional[Integral] = None,
+                   fullscreen:            Optional[bool] = None,
+                   save_path:             Optional[str] = None,
+                   save_game:             Optional[bool] = None,
+                   preprocessing_time:    Optional[Number] = None,
+                   turn_time:             Optional[Number] = None,
+                   game_mode:             Optional[GameMode] = None,
+                   continue_on_error:     Optional[bool] = None
+                 ) ->                     Self:
 
         """
             This function is the constructor of the class.
             Assertions checked in the objects manipulated by the game are not checked again.
             In:
-                * self:                Reference to the current object.
-                * random_seed:         Global random seed for all elements, set to None for a random value.
-                * random_seed_maze:    Random seed for the maze generation, set to None for a random value.
-                * random_seed_cheese:  Random seed for the pieces of cheese distribution, set to None for a random value.
-                * random_seed_players: Random seed for the initial location of players, set to None for a random value.
-                * maze_width:          Width of the maze in number of cells.
-                * maze_height:         Height of the maze in number of cells.
-                * cell_percentage:     Percentage of cells that can be accessed in the maze, 0%% being a useless maze, and 100%% being a full rectangular maze.
-                * wall_percentage:     Percentage of walls in the maze, 0%% being an empty maze, and 100%% being the maximum number of walls that keep the maze connected.
-                * mud_percentage:      Percentage of pairs of adjacent cells that are separated by mud in the maze.
-                * mud_range:           Interval of turns needed to cross mud.
-                * fixed_maze:          Fixed maze in any PyRat accepted representation.
-                * nb_cheese:           Number of pieces of cheese in the maze.
-                * fixed_cheese:        Fixed list of cheese.
-                * render_mode:         Method to display the game.
-                * render_simplified:   If the maze is rendered, hides some elements that are not essential.
-                * gui_speed:           When rendering as GUI, controls the speed of the game (GUI rendering only).
-                * trace_length:        Maximum length of the trace to display when players are moving (GUI rendering only).
-                * fullscreen:          Renders the game in fullscreen mode (GUI rendering only).
-                * save_path:           Path where games are saved.
-                * save_game:           Indicates if the game should be saved.
-                * preprocessing_time:  Time given to the players before the game starts.
-                * turn_time:           Time after which players will miss a turn.
-                * game_mode:           Indicates if players play concurrently, wait for each other, or if multiprocessing is disabled.
-                * continue_on_error:   If a player crashes, continues the game anyway.
+                * self:                  Reference to the current object.
+                * random_seed:           Global random seed for all elements, set to None for a random value.
+                * random_seed_maze:      Random seed for the maze generation, set to None for a random value.
+                * random_seed_cheese:    Random seed for the pieces of cheese distribution, set to None for a random value.
+                * random_seed_players:   Random seed for the initial location of players, set to None for a random value.
+                * maze_width:            Width of the maze in number of cells.
+                * maze_height:           Height of the maze in number of cells.
+                * cell_percentage:       Percentage of cells that can be accessed in the maze, 0%% being a useless maze, and 100%% being a full rectangular maze.
+                * wall_percentage:       Percentage of walls in the maze, 0%% being an empty maze, and 100%% being the maximum number of walls that keep the maze connected.
+                * mud_percentage:        Percentage of pairs of adjacent cells that are separated by mud in the maze.
+                * mud_range:             Interval of turns needed to cross mud.
+                * fixed_maze:            Fixed maze in any PyRat accepted representation.
+                * random_maze_algorithm: Algorithm to generate the maze.
+                * nb_cheese:             Number of pieces of cheese in the maze.
+                * fixed_cheese:          Fixed list of cheese.
+                * render_mode:           Method to display the game.
+                * render_simplified:     If the maze is rendered, hides some elements that are not essential.
+                * gui_speed:             When rendering as GUI, controls the speed of the game (GUI rendering only).
+                * trace_length:          Maximum length of the trace to display when players are moving (GUI rendering only).
+                * fullscreen:            Renders the game in fullscreen mode (GUI rendering only).
+                * save_path:             Path where games are saved.
+                * save_game:             Indicates if the game should be saved.
+                * preprocessing_time:    Time given to the players before the game starts.
+                * turn_time:             Time after which players will miss a turn.
+                * game_mode:             Indicates if players play concurrently, wait for each other, or if multiprocessing is disabled.
+                * continue_on_error:     If a player crashes, continues the game anyway.
             Out:
                 * A new instance of the class.
         """
@@ -173,10 +177,11 @@ class Game ():
         assert isinstance(game_mode, (GameMode, type(None))) # Type check for game_mode
         assert isinstance(continue_on_error, (bool, type(None))) # Type check for continue_on_error
         assert not(game_mode == GameMode.SEQUENTIAL and render_mode == RenderMode.GUI) # Sequential mode is not compatible with GUI rendering
-        assert fixed_maze is None or (fixed_maze is not None and all(param is None for param in [random_seed_maze, maze_width, maze_height, cell_percentage, wall_percentage, mud_percentage, mud_range])) # Fixed maze should be given if and only if no other maze description is given
+        assert fixed_maze is None or (fixed_maze is not None and all(param is None for param in [random_seed_maze, random_maze_algorithm, maze_width, maze_height, cell_percentage, wall_percentage, mud_percentage, mud_range])) # Fixed maze should be given if and only if no other maze description is given
         assert fixed_cheese is None or (fixed_cheese is not None and all(param is None for param in [random_seed_cheese, nb_cheese])) # Fixed cheese should be given if and only if no other cheese description is given
         assert game_mode is None or game_mode != GameMode.SIMULATION or (game_mode == GameMode.SIMULATION and all([param is None for param in [render_mode, preprocessing_time, turn_time]])) # Simulation mode will enforce some parameters
         assert render_mode is None or render_mode == RenderMode.GUI or (render_mode != RenderMode.GUI and all([param is None for param in [trace_length, gui_speed, fullscreen]])) # Some parameters can only be set when rendering as GUI
+        assert isinstance(random_maze_algorithm, (RandomMazeAlgorithm, type(None))) # Type check for random_maze_algorithm
 
         # Store given parameters or default values
         self.__random_seed = random_seed if random_seed is not None else Game.DEFAULT_RANDOM_SEED
@@ -190,6 +195,7 @@ class Game ():
         self.__mud_percentage = mud_percentage if mud_percentage is not None else Game.DEFAULT_MUD_PERCENTAGE
         self.__mud_range = mud_range if mud_range is not None else Game.DEFAULT_MUD_RANGE
         self.__fixed_maze = fixed_maze if fixed_maze is not None else Game.DEFAULT_FIXED_MAZE
+        self.__random_maze_algorithm = random_maze_algorithm if random_maze_algorithm is not None else Game.DEFAULT_RANDOM_MAZE_ALGORITHM
         self.__nb_cheese = nb_cheese if nb_cheese is not None else Game.DEFAULT_NB_CHEESE
         self.__fixed_cheese = fixed_cheese if fixed_cheese is not None else Game.DEFAULT_FIXED_CHEESE
         self.__render_mode = render_mode if render_mode is not None else Game.DEFAULT_RENDER_MODE
@@ -497,8 +503,10 @@ class Game ():
         self.__actions_history = {}
         
         # Initialize the maze
-        if self.__fixed_maze is None:
-            self.__maze = RandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
+        if self.__random_maze_algorithm == RandomMazeAlgorithm.SUBTRACTIVE:
+            self.__maze = SubtractiveRandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
+        elif self.__random_maze_algorithm == RandomMazeAlgorithm.ADDITIVE:
+            self.__maze = AdditiveRandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
         elif isinstance(self.__fixed_maze, dict):
             self.__maze = MazeFromDict(self.__fixed_maze)
         else:

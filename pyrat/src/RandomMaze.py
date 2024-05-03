@@ -17,11 +17,9 @@
 from typing import *
 from typing_extensions import *
 from numbers import *
-import scipy.sparse as sparse
-import scipy.sparse.csgraph as csgraph
 import sys
 import random
-import math
+import abc
 
 # PyRat imports
 from pyrat.src.Maze import Maze
@@ -30,11 +28,14 @@ from pyrat.src.Maze import Maze
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class RandomMaze (Maze):
+class RandomMaze (Maze, abc.ABC):
 
     """
         This class inherits from the Maze class.
         Therefore, it has the attributes and methods defined in the Maze class in addition to the ones defined below.
+
+        This class is abstract and cannot be instantiated.
+        You should use one of the subclasses to create a maze, or create your own subclass.
 
         A random maze is a maze that is created randomly.
         You can specify the size of the maze, the density of cells, walls, and mud, and the range of the mud values.
@@ -89,15 +90,13 @@ class RandomMaze (Maze):
         assert 0.0 <= mud_percentage <= 100.0 # mud_percentage is a percentage
         assert 1 < mud_range[0] <= mud_range[1] # mud_range is a valid interval with minimum value 1
 
-        # Private attributes
-        self.__cell_percentage = cell_percentage
-        self.__wall_percentage = wall_percentage
-        self.__mud_percentage = mud_percentage
-        self.__mud_range = mud_range
-        self.__random_seed = random_seed
-
-        # Generate the maze
-        self._create_maze()
+        # Protected attributes
+        self._cell_percentage = cell_percentage
+        self._wall_percentage = wall_percentage
+        self._mud_percentage = mud_percentage
+        self._mud_range = mud_range
+        self._random_seed = random_seed
+        self._rng = random.Random(self._random_seed)
 
     #############################################################################################################################################
     #                                                             PROTECTED METHODS                                                             #
@@ -115,55 +114,16 @@ class RandomMaze (Maze):
                 * None.
         """
 
-        # Initialize the random generator
-        rng = random.Random(self.__random_seed)
-
-        # Initialize an empty maze, and add cells until it reaches the asked density
-        maze_sparse = sparse.lil_matrix((self.width * self.height, self.width * self.height), dtype=int)
-        cells = [(self.height // 2, self.width // 2)]
-        while len(cells) / maze_sparse.shape[0] * 100 < self.__cell_percentage:
-            row, col = rng.choice(cells)
-            neighbor_row, neighbor_col = rng.choice([(row - 1, col), (row + 1, col), (row, col - 1), (row, col + 1)])
-            if 0 <= neighbor_row < self.height and 0 <= neighbor_col < self.width:
-                maze_sparse[self.rc_to_i(row, col), self.rc_to_i(neighbor_row, neighbor_col)] = 1
-                maze_sparse[self.rc_to_i(neighbor_row, neighbor_col), self.rc_to_i(row, col)] = 1
-                for next_neighbor_row, next_neighbor_col in [(neighbor_row - 1, neighbor_col), (neighbor_row + 1, neighbor_col), (neighbor_row, neighbor_col - 1), (neighbor_row, neighbor_col + 1)]:
-                    if (next_neighbor_row, next_neighbor_col) in cells:
-                        maze_sparse[self.rc_to_i(next_neighbor_row, next_neighbor_col), self.rc_to_i(neighbor_row, neighbor_col)] = 1
-                        maze_sparse[self.rc_to_i(neighbor_row, neighbor_col), self.rc_to_i(next_neighbor_row, next_neighbor_col)] = 1
-                if (neighbor_row, neighbor_col) not in cells:
-                    cells.append((neighbor_row, neighbor_col))
+        # Add cells
+        self._add_cells()
         
         # Add walls
-        maze_full = csgraph.minimum_spanning_tree(maze_sparse)
-        maze_full += maze_full.transpose()
-        walls = sparse.triu(maze_sparse - maze_full).nonzero()
-        walls = [(walls[0][i], walls[1][i]) for i in range(walls[0].shape[0])]
-        rng.shuffle(walls)
-        for i in range(math.ceil(self.__wall_percentage / 100.0 * len(walls))):
-            maze_sparse[walls[i][0], walls[i][1]] = 0
-            maze_sparse[walls[i][1], walls[i][0]] = 0
+        self._add_walls()
 
-        # Add mud
-        paths = sparse.triu(maze_sparse).nonzero()
-        paths = [(paths[0][i], paths[1][i]) for i in range(paths[0].shape[0])]
-        rng.shuffle(paths)
-        for i in range(math.ceil(self.__mud_percentage / 100.0 * len(paths))):
-            mud_weight = rng.choice(range(self.__mud_range[0], self.__mud_range[1] + 1))
-            maze_sparse[paths[i][0], paths[i][1]] = mud_weight
-            maze_sparse[paths[i][1], paths[i][0]] = mud_weight
-        
-        # Set vertices
-        for vertex in range(maze_sparse.shape[0]):
-            neighbors = maze_sparse[vertex].rows[0]
-            if len(neighbors) > 0:
-                self.add_vertex(vertex)
+        # Add mud
+        self._add_mud()
 
-        # Set edges
-        for vertex in range(maze_sparse.shape[0]):
-            neighbors = maze_sparse[vertex].rows[0]
-            for neighbor in neighbors:
-                self.add_edge(vertex, neighbor, maze_sparse[vertex, neighbor])
+        # TODO
 
 #####################################################################################################################################################
 #####################################################################################################################################################

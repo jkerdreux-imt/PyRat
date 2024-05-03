@@ -119,4 +119,18 @@ class PlayerSkin (enum.Enum):
     MARIO = "mario"
 
 #####################################################################################################################################################
+
+class RandomMazeAlgorithm (enum.Enum):
+
+    """
+        This enumeration defines all the possible algorithms to generate a random maze.
+        Values:
+            * ADDITIVE:    The maze is created by adding cells to an empty maze, and connecting them to the existing cells.
+            * SUBTRACTIVE: The maze is created by removing cells from a full maze, and making sure the maze remains connected.
+    """
+
+    ADDITIVE = "additive"
+    SUBTRACTIVE = "subtractive"
+
+#####################################################################################################################################################
 #####################################################################################################################################################

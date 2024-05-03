@@ -79,9 +79,9 @@ class Maze (Graph, abc.ABC):
         assert height is None or height > 0 # Height is positive
         assert (width is None and height is None) or width * height >= 2 # The maze has at least two vertices
 
-        # Private attributes
-        self.__width = width
-        self.__height = height
+        # Protected attributes
+        self._width = width
+        self._height = height
 
     #############################################################################################################################################
     #                                                                  GETTERS                                                                  #
@@ -92,18 +92,18 @@ class Maze (Graph, abc.ABC):
               ) ->    Integral:
         
         """
-            Getter for __width.
+            Getter for _width.
             In:
                 * self: Reference to the current object.
             Out:
-                * self.__width: The __width attribute.
+                * self._width: The _width attribute.
         """
 
         # Debug
-        assert isinstance(self.__width, Integral) # Width has been set or inferred previously
+        assert isinstance(self._width, Integral) # Width has been set or inferred previously
 
         # Return the attribute
-        return self.__width
+        return self._width
 
     #############################################################################################################################################
     
@@ -112,18 +112,18 @@ class Maze (Graph, abc.ABC):
                ) ->    Integral:
         
         """
-            Getter for __height.
+            Getter for _height.
             In:
                 * self: Reference to the current object.
             Out:
-                * self.__height: The __height attribute.
+                * self._height: The _height attribute.
         """
 
         # Debug
-        assert isinstance(self.__height, Integral) # Height has been set or inferred previously
+        assert isinstance(self._height, Integral) # Height has been set or inferred previously
 
         # Return the attribute
-        return self.__height
+        return self._height
 
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
@@ -403,31 +403,22 @@ class Maze (Graph, abc.ABC):
     #                                                             PROTECTED METHODS                                                             #
     #############################################################################################################################################
 
-    def _initialize_maze ( self:     Self,
-                           vertices: List[Integral],
-                           edges:    List[Tuple[Integral, Integral, Integral]]
-                         ) ->        None:
-
+    @abc.abstractmethod
+    def _create_maze ( self: Self,
+                     ) ->    None:
+        
         """
-            This function creates a maze from a list of vertices and a list of edges.
-            It is meant to be used in the subclasses to create the maze.
+            This method is abstract and must be implemented in the subclasses.
+            It should be in charge of creating the maze and, if needed, to set the width and height attributes.
             In:
-                * self:     Reference to the current object.
-                * vertices: List of vertices.
-                * edges:    List of edges.
+                * self: Reference to the current object.
             Out:
                 * None.
         """
 
-        # Determine the dimensions of the maze
-        self.__width = max([abs(edge[1] - edge[0]) for edge in edges])
-        self.__height = math.ceil((max(vertices) + 1) / self.width)
-
-        # Add vertices and edges
-        for vertex in vertices:
-            self.add_vertex(vertex)
-        for edge in edges:
-            self.add_edge(edge[0], edge[1], edge[2])
+        # This method must be implemented in the child classes
+        # By default we raise an error
+        raise NotImplementedError("This method must be implemented in the child classes.")
 
     #############################################################################################################################################
     #                                                              PRIVATE METHODS                                                              #
