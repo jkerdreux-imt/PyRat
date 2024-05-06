@@ -218,7 +218,7 @@ class Graph ():
         assert vertex_1 in self.__adjacency # Vertex 1 is in the graph
         assert vertex_2 in self.__adjacency # Vertex 2 is in the graph
         assert not self.has_edge(vertex_1, vertex_2) # Edge does not already exist
-        assert not (symmetric and self.edge_is_symmetric(vertex_1, vertex_2)) # Symmetric edge does not already exist if asked
+        assert not (symmetric and self.has_edge(vertex_2, vertex_1)) # Symmetric edge does not already exist if asked
 
         # Add edge to the adjacency dictionary
         self.__adjacency[vertex_1][vertex_2] = weight

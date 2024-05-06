@@ -232,6 +232,7 @@ class Game ():
         self.__actions_history = None
         self.__rendering_engine = None
         self.__maze = None
+        self.__reset_called = False
 
         # Initialize the game
         self.reset()
@@ -433,6 +434,9 @@ class Game ():
                 player_team = [team for team in previous_initial_state.teams if player.name in previous_initial_state.teams[team]][0]
                 self.add_player(player, player_team, player_asked_location)
 
+        # Indicate that the game was reset
+        self.__reset_called = True
+
     #############################################################################################################################################
 
     def start ( self: Self
@@ -448,11 +452,14 @@ class Game ():
         
         # Debug
         assert len(self.__players) > 0 # At least 1 player
-        assert self.__initial_game_state.turn is None # Game was reset
+        assert self.__reset_called # Game was reset
 
         # We catch exceptions that may happen during the game
         try:
         
+            # Mark the game as not reset
+            self.__reset_called = False
+
             # Initialize stats
             stats = {"players": {}, "turns": -1}
             for player in self.__players:

@@ -343,7 +343,7 @@ class Maze (Graph, abc.ABC):
         assert self.coords_difference(vertex_1, vertex_2) in [(0, 1), (0, -1), (1, 0), (-1, 0)] # Vertices are adjacent on the grid
 
         # If the symmetric edge already exists, we do not add it
-        if self.edge_is_symmetric(vertex_1, vertex_2):
+        if self.has_edge(vertex_2, vertex_1):
             return
 
         # Add edge to the graph using the parent's method

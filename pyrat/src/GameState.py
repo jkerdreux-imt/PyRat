@@ -20,7 +20,7 @@ from numbers import *
 import os
 
 # PyRat imports
-from pyrat.src.utils import caller_file
+from pyrat.src.utils import caller_file, pyrat_files
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
@@ -57,7 +57,7 @@ class GameState ():
         self.__muds = {}
         self.__teams = {}
         self.__cheese = []
-        self.__turn = None
+        self.__turn = 0
 
     #############################################################################################################################################
 
@@ -75,12 +75,12 @@ class GameState ():
 
         # Create the string
         string = "GameState object:\n"
-        string += "|  Players: {}\n".format(self.player_locations)
-        string += "|  Scores: {}\n".format(self.score_per_player)
-        string += "|  Muds: {}\n".format(self.muds)
-        string += "|  Teams: {}\n".format(self.teams)
-        string += "|  Cheese: {}\n".format(self.cheese)
-        string += "|  Turn: {}".format(self.turn)
+        string += "|  Players: {}\n".format(self.__player_locations)
+        string += "|  Scores: {}\n".format(self.__score_per_player)
+        string += "|  Muds: {}\n".format(self.__muds)
+        string += "|  Teams: {}\n".format(self.__teams)
+        string += "|  Cheese: {}\n".format(self.__cheese)
+        string += "|  Turn: {}".format(self.__turn)
         return string
 
     #############################################################################################################################################
@@ -100,7 +100,7 @@ class GameState ():
         """
 
         # Debug
-        assert self.__turn is not None or caller_file() == os.path.join(os.path.dirname(os.path.realpath(__file__)), "Game.py") # The object has been initialized by the game engine, or the method is called by the engine
+        assert self.__player_locations or caller_file() in pyrat_files() # The object has been initialized by the game engine, or the method is called by the engine
 
         # Return the attribute
         return self.__player_locations
@@ -120,7 +120,7 @@ class GameState ():
         """
 
         # Debug
-        assert self.__turn is not None or caller_file() == os.path.join(os.path.dirname(os.path.realpath(__file__)), "Game.py") # The object has been initialized by the game engine, or the method is called by the engine
+        assert self.__player_locations or caller_file() in pyrat_files() # The object has been initialized by the game engine, or the method is called by the engine
 
         # Return the attribute
         return self.__score_per_player
@@ -140,7 +140,7 @@ class GameState ():
         """
 
         # Debug
-        assert self.__turn is not None or caller_file() == os.path.join(os.path.dirname(os.path.realpath(__file__)), "Game.py") # The object has been initialized by the game engine, or the method is called by the engine
+        assert self.__player_locations or caller_file() in pyrat_files() # The object has been initialized by the game engine, or the method is called by the engine
 
         # Return the attribute
         return self.__muds
@@ -160,7 +160,7 @@ class GameState ():
         """
 
         # Debug
-        assert self.__turn is not None or caller_file() == os.path.join(os.path.dirname(os.path.realpath(__file__)), "Game.py") # The object has been initialized by the game engine, or the method is called by the engine
+        assert self.__player_locations or caller_file() in pyrat_files() # The object has been initialized by the game engine, or the method is called by the engine
 
         # Return the attribute
         return self.__teams
@@ -180,7 +180,7 @@ class GameState ():
         """
 
         # Debug
-        assert self.__turn is not None or caller_file() == os.path.join(os.path.dirname(os.path.realpath(__file__)), "Game.py") # The object has been initialized by the game engine, or the method is called by the engine
+        assert self.__player_locations or caller_file() in pyrat_files() # The object has been initialized by the game engine, or the method is called by the engine
 
         # Return the attribute
         return self.__cheese
@@ -200,7 +200,7 @@ class GameState ():
         """
 
         # Debug
-        assert self.__turn is not None or caller_file() == os.path.join(os.path.dirname(os.path.realpath(__file__)), "Game.py") # The object has been initialized by the game engine, or the method is called by the engine
+        assert self.__player_locations or caller_file() in pyrat_files() # The object has been initialized by the game engine, or the method is called by the engine
 
         # Return the attribute
         return self.__turn
@@ -222,7 +222,7 @@ class GameState ():
         """
 
         # Debug
-        assert caller_file() == os.path.join(os.path.dirname(os.path.realpath(__file__)), "Game.py") # The method is called by the engine
+        assert caller_file() in pyrat_files() # The method is called by the engine
 
         # Set the attribute
         self.__turn = value

@@ -96,6 +96,23 @@ def caller_file () -> str:
 
 #####################################################################################################################################################
 
+def pyrat_files () -> List[str]:
+
+    """
+        Returns the list of all the files in the PyRat library.
+        In:
+            * None.
+        Out:
+            * files: The list of all the files in the PyRat library.
+    """
+
+    # Get the list of all the files in the PyRat library
+    pyrat_path = os.path.dirname(os.path.realpath(__file__))
+    files = [os.path.join(pyrat_path, file) for file in os.listdir(pyrat_path) if file.endswith(".py")]
+    return files
+
+#####################################################################################################################################################
+
 def start_profiling () -> None:
 
     """
