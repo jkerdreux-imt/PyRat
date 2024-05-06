@@ -19,6 +19,7 @@ from typing_extensions import *
 from numbers import *
 import numpy
 import torch
+import math
 
 # PyRat imports
 from pyrat.src.Maze import Maze
