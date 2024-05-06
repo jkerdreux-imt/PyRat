@@ -99,6 +99,7 @@ class PygameRenderingEngine (RenderingEngine):
     #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
+    @override
     def render ( self:       Self,
                  players:    List[Player],
                  maze:       Maze,
@@ -140,6 +141,7 @@ class PygameRenderingEngine (RenderingEngine):
         
     #############################################################################################################################################
 
+    @override
     def end ( self: Self,
             ) ->    None:
         

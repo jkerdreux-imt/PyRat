@@ -68,6 +68,7 @@ class BigHolesRandomMaze (RandomMaze):
     #                                                             PROTECTED METHODS                                                             #
     #############################################################################################################################################
 
+    @override
     def _add_cells ( self: Self,
                    ) ->    None:
         

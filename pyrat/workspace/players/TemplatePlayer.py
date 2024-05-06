@@ -66,6 +66,7 @@ class TemplatePlayer (Player):
     #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
+    @override
     def preprocessing ( self:       Self,
                         maze:       Maze,
                         game_state: GameState,
@@ -87,6 +88,7 @@ class TemplatePlayer (Player):
 
     #############################################################################################################################################
 
+    @override
     def turn ( self:       Self,
                maze:       Maze,
                game_state: GameState,
@@ -111,6 +113,7 @@ class TemplatePlayer (Player):
 
 #############################################################################################################################################
 
+    @override
     def postprocessing ( self:       Self,
                          maze:       Maze,
                          game_state: GameState,

@@ -63,6 +63,7 @@ class Random1 (Player):
     #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
+    @override
     def turn ( self:       Self,
                maze:       Maze,
                game_state: GameState,

@@ -80,6 +80,7 @@ class ShellRenderingEngine (RenderingEngine):
     #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
+    @override
     def render ( self:       Self,
                  players:    List[Player],
                  maze:       Maze,
