@@ -43,7 +43,7 @@ class RandomMaze (Maze, abc.ABC):
     """
 
     #############################################################################################################################################
-    #                                                                CONSTRUCTOR                                                                #
+    #                                                               MAGIC METHODS                                                               #
     #############################################################################################################################################
 
     def __init__ ( self:            Self,
@@ -58,7 +58,10 @@ class RandomMaze (Maze, abc.ABC):
 
         """
             This function is the constructor of the class.
-            We do not duplicate asserts already made in the parent method.
+            When an object is instantiated, this method is called to initialize the object.
+            This is where you should define the attributes of the object and set their initial values.
+            Arguments *args and **kwargs are used to pass arguments to the parent constructor.
+            This is useful not to declare again all the parent's attributes in the child class.
             In:
                 * self:            Reference to the current object.
                 * cell_percentage: Percentage of cells to be reachable.
@@ -109,6 +112,7 @@ class RandomMaze (Maze, abc.ABC):
         """
             This method redefines the abstract method of the parent class.
             It creates a random maze using the parameters given at initialization.
+            It should be called by the constructor of the child classes.
             In:
                 * self: Reference to the current object.
             Out:
@@ -155,9 +159,9 @@ class RandomMaze (Maze, abc.ABC):
 
         # Determine the maximum number of walls by computing the minimum spanning tree
         mst = self.minimum_spanning_tree(self._rng.randint(0, sys.maxsize))
-        target_nb_walls = int((self.nb_edges() - mst.nb_edges()) * self._wall_percentage / 100)
+        target_nb_walls = int((self.nb_edges - mst.nb_edges) * self._wall_percentage / 100)
         walls = []
-        for vertex, neighbor in self.get_edge_list():
+        for vertex, neighbor in self.edges:
             if not mst.has_edge(vertex, neighbor):
                 self.remove_edge(vertex, neighbor, True)
                 walls.append((vertex, neighbor))
@@ -182,10 +186,10 @@ class RandomMaze (Maze, abc.ABC):
         """
 
         # Determine the number of mud edges
-        target_nb_mud = int(self.nb_edges() * self._mud_percentage / 100)
-        edges = self.get_edge_list()
+        target_nb_mud = int(self.nb_edges * self._mud_percentage / 100)
 
         # Add mud to some edges
+        edges = self.edges
         self._rng.shuffle(edges)
         for vertex, neighbor in edges[:target_nb_mud]:
             self.remove_edge(vertex, neighbor, True)

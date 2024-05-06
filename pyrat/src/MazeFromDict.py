@@ -17,19 +17,20 @@
 from typing import *
 from typing_extensions import *
 from numbers import *
+import math
 
 # PyRat imports
-from pyrat.src.FixedMaze import FixedMaze
+from pyrat.src.Maze import Maze
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class MazeFromDict (FixedMaze):
+class MazeFromDict (Maze):
 
     """
-        This class inherits from the FixedMaze class.
-        Therefore, it has the attributes and methods defined in the FixedMaze class in addition to the ones defined below.
+        This class inherits from the Maze class.
+        Therefore, it has the attributes and methods defined in the Maze class in addition to the ones defined below.
 
         This is a maze that is created from a fixed description as a dictionary, where keys are cell indices.
         Associated values are dictionaries, where keys are neighbors of the corresponding cell, and values are the weights of the corresponding edges.
@@ -38,7 +39,7 @@ class MazeFromDict (FixedMaze):
     """
 
     #############################################################################################################################################
-    #                                                                CONSTRUCTOR                                                                #
+    #                                                               MAGIC METHODS                                                               #
     #############################################################################################################################################
 
     def __init__ ( self:        Self,
@@ -49,6 +50,10 @@ class MazeFromDict (FixedMaze):
 
         """
             This function is the constructor of the class.
+            When an object is instantiated, this method is called to initialize the object.
+            This is where you should define the attributes of the object and set their initial values.
+            Arguments *args and **kwargs are used to pass arguments to the parent constructor.
+            This is useful not to declare again all the parent's attributes in the child class.
             In:
                 * self:        Reference to the current object.
                 * description: Fixed maze as a dictionary.
@@ -104,8 +109,15 @@ class MazeFromDict (FixedMaze):
             for neighbor in neighbors:
                 edges.append((vertex, neighbor, self.__description[vertex][neighbor]))
 
-        # Build the maze
-        self._initialize_maze(vertices, edges)
+        # Determine the dimensions of the maze
+        self._width = max([abs(edge[1] - edge[0]) for edge in edges])
+        self._height = math.ceil((max(vertices) + 1) / self.width)
+
+        # Add vertices and edges
+        for vertex in vertices:
+            self.add_vertex(vertex)
+        for edge in edges:
+            self.add_edge(edge[0], edge[1], edge[2])
 
 #####################################################################################################################################################
 #####################################################################################################################################################

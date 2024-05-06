@@ -46,7 +46,7 @@ class Maze (Graph, abc.ABC):
     """
 
     #############################################################################################################################################
-    #                                                                CONSTRUCTOR                                                                #
+    #                                                               MAGIC METHODS                                                               #
     #############################################################################################################################################
 
     def __init__ ( self:     Self,
@@ -58,6 +58,10 @@ class Maze (Graph, abc.ABC):
 
         """
             This function is the constructor of the class.
+            When an object is instantiated, this method is called to initialize the object.
+            This is where you should define the attributes of the object and set their initial values.
+            Arguments *args and **kwargs are used to pass arguments to the parent constructor.
+            This is useful not to declare again all the parent's attributes in the child class.
             In:
                 * self:   Reference to the current object.
                 * width:  Width of the maze, initialized to None in case it is determined afterward.
@@ -81,6 +85,32 @@ class Maze (Graph, abc.ABC):
         # Protected attributes
         self._width = width
         self._height = height
+
+    #############################################################################################################################################
+
+    def __str__ ( self: Self,
+                ) ->    str:
+
+        """
+            This method returns a string representation of the object.
+            This defines what will be shown when calling print on the object.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * string: String representation of the object.
+        """
+        
+        # Create the string
+        string = "Maze object:\n"
+        string += "|  Width: {}\n".format(self.width)
+        string += "|  Height: {}\n".format(self.height)
+        string += "|  Vertices: {}\n".format(self.vertices)
+        string += "|  Adjacency matrix:\n"
+        for vertex_1, vertex_2 in self.edges:
+            weight = self.get_weight(vertex_1, vertex_2)
+            symmetric = self.edge_is_symmetric(vertex_1, vertex_2)
+            string += "|  |  {} {} ({}) --> {}\n".format(vertex_1, "<--" if symmetric else "---", weight, vertex_2)
+        return string.strip()
 
     #############################################################################################################################################
     #                                                                  GETTERS                                                                  #
@@ -199,7 +229,7 @@ class Maze (Graph, abc.ABC):
         assert isinstance(col, Integral) # Type check for col
 
         # Check if the cell exists
-        exists = 0 <= row < self.height and 0 <= col < self.width and self.rc_to_i(row, col) in self.get_vertices()
+        exists = 0 <= row < self.height and 0 <= col < self.width and self.rc_to_i(row, col) in self.vertices
         return exists
     
     #############################################################################################################################################
@@ -221,7 +251,7 @@ class Maze (Graph, abc.ABC):
         assert isinstance(index, Integral) # Type check for index
 
         # Check if the cell exists
-        exists = index in self.get_vertices()
+        exists = index in self.vertices
         return exists
     
     #############################################################################################################################################
@@ -313,7 +343,7 @@ class Maze (Graph, abc.ABC):
         assert self.coords_difference(vertex_1, vertex_2) in [(0, 1), (0, -1), (1, 0), (-1, 0)] # Vertices are adjacent on the grid
 
         # If the symmetric edge already exists, we do not add it
-        if self.has_edge(vertex_2, vertex_1):
+        if self.edge_is_symmetric(vertex_1, vertex_2):
             return
 
         # Add edge to the graph using the parent's method
@@ -336,7 +366,7 @@ class Maze (Graph, abc.ABC):
         
         # Create the adjacency matrix
         adjacency_matrix = numpy.zeros((self.width * self.height, self.width * self.height), dtype=int)
-        for vertex in self.get_vertices():
+        for vertex in self.vertices:
             for neighbor in self.get_neighbors(vertex):
                 adjacency_matrix[vertex, neighbor] = self.get_weight(vertex, neighbor)
         return adjacency_matrix
@@ -358,7 +388,7 @@ class Maze (Graph, abc.ABC):
         
         # Create the adjacency matrix
         adjacency_matrix = torch.zeros((self.width * self.height, self.width * self.height), dtype=torch.int)
-        for vertex in self.get_vertices():
+        for vertex in self.vertices:
             for neighbor in self.get_neighbors(vertex):
                 adjacency_matrix[vertex, neighbor] = self.get_weight(vertex, neighbor)
         return adjacency_matrix
@@ -415,6 +445,7 @@ class Maze (Graph, abc.ABC):
         """
             This method is abstract and must be implemented in the subclasses.
             It should be in charge of creating the maze and, if needed, to set the width and height attributes.
+            It should be called at some point by the subclass.
             In:
                 * self: Reference to the current object.
             Out:
@@ -424,31 +455,6 @@ class Maze (Graph, abc.ABC):
         # This method must be implemented in the child classes
         # By default we raise an error
         raise NotImplementedError("This method must be implemented in the child classes.")
-
-    #############################################################################################################################################
-    #                                                              PRIVATE METHODS                                                              #
-    #############################################################################################################################################
-
-    def __str__ ( self: Self,
-                ) ->    str:
-
-        """
-            This method returns a string representation of the object.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * string: String representation of the object.
-        """
-        
-        # Create the string
-        string = "Maze object:\n"
-        string += "|  Width: " + str(self.width) + "\n"
-        string += "|  Height: " + str(self.height) + "\n"
-        string += "|  Vertices: " + str(self.get_vertices()) + "\n"
-        string += "|  Adjacency matrix:\n"
-        for vertex_1, vertex_2, weight, symmetric in self.get_edge_list():
-            string += "|  |  {} {} ({}) --> {}\n".format(vertex_1, "<--" if symmetric else "---", weight, vertex_2)
-        return string.strip()
 
 #####################################################################################################################################################
 #####################################################################################################################################################

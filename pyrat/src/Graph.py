@@ -40,7 +40,7 @@ class Graph ():
     """
 
     #############################################################################################################################################
-    #                                                                CONSTRUCTOR                                                                #
+    #                                                               MAGIC METHODS                                                               #
     #############################################################################################################################################
 
     def __init__ ( self: Self,
@@ -48,6 +48,8 @@ class Graph ():
 
         """
             This function is the constructor of the class.
+            When an object is instantiated, this method is called to initialize the object.
+            This is where you should define the attributes of the object and set their initial values.
             In:
                 * self: Reference to the current object.
             Out:
@@ -58,11 +60,36 @@ class Graph ():
         self.__adjacency = {}
 
     #############################################################################################################################################
-    #                                                               PUBLIC METHODS                                                              #
+
+    def __str__ ( self: Self,
+                ) ->    str:
+
+        """
+            This method returns a string representation of the object.
+            This defines what will be shown when calling print on the object.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * string: String representation of the object.
+        """
+        
+        # Create the string
+        string = "Graph object:\n"
+        string += "|  Vertices: {}\n".format(self.vertices)
+        string += "|  Adjacency matrix:\n"
+        for vertex_1, vertex_2 in self.edges:
+            weight = self.get_weight(vertex_1, vertex_2)
+            symmetric = self.edge_is_symmetric(vertex_1, vertex_2)
+            string += "|  |  {} {} ({}) --> {}\n".format(vertex_1, "<--" if symmetric else "---", weight, vertex_2)
+        return string.strip()
+
+    #############################################################################################################################################
+    #                                                            ATTRIBUTE ACCESSORS                                                            #
     #############################################################################################################################################
 
-    def get_vertices ( self: Self,
-                     ) ->    List[Hashable]:
+    @property
+    def vertices ( self: Self,
+                 ) ->    List[Hashable]:
         
         """
             Returns the list of vertices in the graph.
@@ -76,6 +103,68 @@ class Graph ():
         vertices = list(self.__adjacency.keys())
         return vertices
 
+    #############################################################################################################################################
+
+    @property
+    def nb_vertices ( self: Self,
+                    ) ->    Integral:
+
+        """
+            Returns the number of vertices in the graph.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * nb_vertices: Number of vertices in the graph.
+        """
+        
+        # Get the number of vertices
+        nb_vertices = len(self.__adjacency)
+        return nb_vertices
+
+    #############################################################################################################################################
+
+    @property
+    def edges ( self: Self,
+              ) ->    List[Tuple[Hashable, Hashable]]:
+
+        """
+            Returns the list of edges in the graph.
+            Symmetric edges are counted once.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * edge_list: List of edges in the graph, as tuples (vertex_1, vertex_2).
+        """
+        
+        # Get the list of edges
+        edge_list = []
+        for vertex_1 in self.vertices:
+            for vertex_2 in self.get_neighbors(vertex_1):
+                if (vertex_2, vertex_1) not in edge_list:
+                    edge_list.append((vertex_1, vertex_2))
+        return edge_list
+    
+    #############################################################################################################################################
+
+    @property
+    def nb_edges ( self: Self,
+                 ) ->    Integral:
+    
+        """
+            Returns the number of edges in the graph.
+            Symmetric edges are counted once.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * nb_edges: Number of edges in the graph.
+        """
+        
+        # Get the number of edges
+        nb_edges = len(self.edges)
+        return nb_edges
+
+    #############################################################################################################################################
+    #                                                               PUBLIC METHODS                                                              #
     #############################################################################################################################################
 
     def add_vertex ( self:   Self,
@@ -129,7 +218,7 @@ class Graph ():
         assert vertex_1 in self.__adjacency # Vertex 1 is in the graph
         assert vertex_2 in self.__adjacency # Vertex 2 is in the graph
         assert not self.has_edge(vertex_1, vertex_2) # Edge does not already exist
-        assert not (symmetric and self.has_edge(vertex_2, vertex_1)) # Symmetric edge does not already exist if asked
+        assert not (symmetric and self.edge_is_symmetric(vertex_1, vertex_2)) # Symmetric edge does not already exist if asked
 
         # Add edge to the adjacency dictionary
         self.__adjacency[vertex_1][vertex_2] = weight
@@ -219,7 +308,7 @@ class Graph ():
         """
         
         # Create the adjacency matrix
-        adjacency_matrix = numpy.zeros((self.nb_vertices(), self.nb_vertices()), dtype=int)
+        adjacency_matrix = numpy.zeros((self.nb_vertices, self.nb_vertices), dtype=int)
         for i, vertex1 in enumerate(self.__adjacency):
             for j, vertex2 in enumerate(self.__adjacency):
                 if self.has_edge(vertex1, vertex2):
@@ -241,7 +330,7 @@ class Graph ():
         """
         
         # Create the adjacency matrix
-        adjacency_matrix = torch.zeros((self.nb_vertices(), self.nb_vertices()), dtype=int)
+        adjacency_matrix = torch.zeros((self.nb_vertices, self.nb_vertices), dtype=int)
         for i, vertex1 in enumerate(self.__adjacency):
             for j, vertex2 in enumerate(self.__adjacency):
                 if self.has_edge(vertex1, vertex2):
@@ -299,7 +388,7 @@ class Graph ():
         assert vertex_1 in self.__adjacency # Vertex 1 is in the graph
         assert vertex_2 in self.__adjacency # Vertex 2 is in the graph
         assert self.has_edge(vertex_1, vertex_2) # Edge exists
-        assert (not symmetric) or (symmetric and self.has_edge(vertex_2, vertex_1)) # If symmetric, the edge exists
+        assert (not symmetric) or (symmetric and self.edge_is_symmetric(vertex_1, vertex_2)) # If symmetric, the edge exists
 
         # Remove edge and symmetric
         del self.__adjacency[vertex_1][vertex_2]
@@ -321,10 +410,10 @@ class Graph ():
         """
         
         # Debug
-        assert self.nb_vertices() > 0 # The graph has at least one vertex
+        assert self.nb_vertices > 0 # The graph has at least one vertex
 
         # Create a list of visited vertices
-        vertices = list(self.get_vertices())
+        vertices = list(self.vertices)
         visited = {vertex: False for vertex in self.__adjacency}
         visited[vertices[0]] = True
         stack = [vertices[0]]
@@ -364,7 +453,7 @@ class Graph ():
         rng = random.Random(random_seed)
 
         # Shuffle vertices
-        vertices_to_add = self.get_vertices()
+        vertices_to_add = self.vertices
         rng.shuffle(vertices_to_add)
 
         # Create the minimum spanning tree, initialized with a random vertex
@@ -377,10 +466,10 @@ class Graph ():
             vertex = vertices_to_add.pop(0)
             neighbors = self.get_neighbors(vertex)
             rng.shuffle(neighbors)
-            neighbors_in_mst = [neighbor for neighbor in neighbors if neighbor in mst.get_vertices()]
+            neighbors_in_mst = [neighbor for neighbor in neighbors if neighbor in mst.vertices]
             if neighbors_in_mst:
                 neighbor = neighbors_in_mst[0]
-                symmetric = self.has_edge(neighbor, vertex)
+                symmetric = self.edge_is_symmetric(vertex, neighbor)
                 weight = self.get_weight(neighbor, vertex)
                 mst.add_vertex(vertex)
                 mst.add_edge(vertex, neighbor, weight, symmetric)
@@ -389,64 +478,6 @@ class Graph ():
 
         # Return the minimum spanning tree
         return mst
-
-    #############################################################################################################################################
-
-    def nb_vertices ( self: Self,
-                    ) ->    Integral:
-
-        """
-            Returns the number of vertices in the graph.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * nb_vertices: Number of vertices in the graph.
-        """
-        
-        # Get the number of vertices
-        nb_vertices = len(self.__adjacency)
-        return nb_vertices
-
-    #############################################################################################################################################
-
-    def nb_edges ( self: Self,
-                 ) ->    Integral:
-    
-        """
-            Returns the number of edges in the graph.
-            Symmetric edges are counted once.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * nb_edges: Number of edges in the graph.
-        """
-        
-        # Get the number of edges
-        nb_edges = len(self.get_edge_list())
-        return nb_edges
-
-    #############################################################################################################################################
-
-    def get_edge_list ( self: Self,
-                      ) ->    List[Tuple[Hashable, Hashable]]:
-
-        """
-            Returns the list of edges in the graph.
-            Symmetric edges are counted once.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * edge_list: List of edges in the graph, as tuples (vertex_1, vertex_2).
-        """
-        
-        # Get the list of edges
-        vertices = self.get_vertices()
-        edge_list = []
-        for vertex_1 in vertices:
-            for vertex_2 in self.get_neighbors(vertex_1):
-                if (vertex_2, vertex_1) not in edge_list:
-                    edge_list.append((vertex_1, vertex_2))
-        return edge_list
 
     #############################################################################################################################################
 
@@ -466,6 +497,8 @@ class Graph ():
         """
 
         # Debug
+        assert isinstance(vertex_1, Hashable) # Type check for vertex_1
+        assert isinstance(vertex_2, Hashable) # Type check for vertex_2
         assert vertex_1 in self.__adjacency # Vertex 1 is in the graph
         assert vertex_2 in self.__adjacency # Vertex 2 is in the graph
 
@@ -474,27 +507,32 @@ class Graph ():
         return edge_exists
 
     #############################################################################################################################################
-    #                                                              PRIVATE METHODS                                                              #
-    #############################################################################################################################################
 
-    def __str__ ( self: Self,
-                ) ->    str:
-
-        """
-            This method returns a string representation of the object.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * string: String representation of the object.
-        """
+    def edge_is_symmetric ( self:     Self,
+                            vertex_1: Hashable,
+                            vertex_2: Hashable,
+                          ) ->        bool:
         
-        # Create the string
-        string = "Graph object:\n"
-        string += "|  Vertices: " + str(self.get_vertices()) + "\n"
-        string += "|  Adjacency matrix:\n"
-        for vertex_1, vertex_2, weight, symmetric in self.get_edge_list():
-            string += "|  |  {} {} ({}) --> {}\n".format(vertex_1, "<--" if symmetric else "---", weight, vertex_2)
-        return string.strip()
+        """
+            Checks whether an edge is symmetric.
+            In:
+                * self:     Reference to the current object.
+                * vertex_1: First vertex.
+                * vertex_2: Second vertex.
+            Out:
+                * symmetric: Whether the edge is symmetric.
+        """
+
+        # Debug
+        assert isinstance(vertex_1, Hashable) # Type check for vertex_1
+        assert isinstance(vertex_2, Hashable) # Type check for vertex_2
+        assert vertex_1 in self.__adjacency # Vertex 1 is in the graph
+        assert vertex_2 in self.__adjacency # Vertex 2 is in the graph
+        assert self.has_edge(vertex_1, vertex_2)
+
+        # Check whether the edge is symmetric
+        symmetric = self.has_edge(vertex_2, vertex_1)
+        return symmetric
 
 #####################################################################################################################################################
 #####################################################################################################################################################

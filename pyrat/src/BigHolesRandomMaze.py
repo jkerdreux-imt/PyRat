@@ -17,7 +17,6 @@
 from typing import *
 from typing_extensions import *
 from numbers import *
-import math
 
 # PyRat imports
 from pyrat.src.RandomMaze import RandomMaze
@@ -37,7 +36,7 @@ class BigHolesRandomMaze (RandomMaze):
     """
 
     #############################################################################################################################################
-    #                                                                CONSTRUCTOR                                                                #
+    #                                                               MAGIC METHODS                                                               #
     #############################################################################################################################################
 
     def __init__ ( self:     Self,
@@ -47,6 +46,10 @@ class BigHolesRandomMaze (RandomMaze):
 
         """
             This function is the constructor of the class.
+            When an object is instantiated, this method is called to initialize the object.
+            This is where you should define the attributes of the object and set their initial values.
+            Arguments *args and **kwargs are used to pass arguments to the parent constructor.
+            This is useful not to declare again all the parent's attributes in the child class.
             In:
                 * self:   Reference to the current object.
                 * args:   Arguments to pass to the parent constructor.
@@ -91,14 +94,14 @@ class BigHolesRandomMaze (RandomMaze):
                     self.add_edge(self.rc_to_i(row, col), self.rc_to_i(row, col - 1))
 
         # Remember the number of neighbors per vertex
-        neighbors_per_vertex = {vertex: len(self.get_neighbors(vertex)) for vertex in self.get_vertices()}
+        neighbors_per_vertex = {vertex: len(self.get_neighbors(vertex)) for vertex in self.vertices}
 
         # Remove some vertices until the desired density is reached
-        while self.nb_vertices() > self._target_nb_vertices:
+        while self.nb_vertices > self._target_nb_vertices:
 
             # The probability to be removed depends on the number of neighbors already removed
-            vertices = self.get_vertices()
-            selection_weights = [1 + (self.width * self.height - self.nb_vertices()) * (neighbors_per_vertex[vertex] - len(self.get_neighbors(vertex)))**2.0 for vertex in vertices]
+            vertices = self.vertices
+            selection_weights = [1 + (self.width * self.height - self.nb_vertices) * (neighbors_per_vertex[vertex] - len(self.get_neighbors(vertex)))**2.0 for vertex in vertices]
 
             # Remove a random vertex
             vertex = self._rng.choices(vertices, selection_weights)[0]

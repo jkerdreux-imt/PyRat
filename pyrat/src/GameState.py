@@ -35,7 +35,7 @@ class GameState ():
     """
 
     #############################################################################################################################################
-    #                                                                CONSTRUCTOR                                                                #
+    #                                                               MAGIC METHODS                                                               #
     #############################################################################################################################################
 
     def __init__ ( self: Self,
@@ -43,6 +43,8 @@ class GameState ():
 
         """
             This function is the constructor of the class.
+            When an object is instantiated, this method is called to initialize the object.
+            This is where you should define the attributes of the object and set their initial values.
             In:
                 * self: Reference to the current object.
             Out:
@@ -58,7 +60,31 @@ class GameState ():
         self.__turn = None
 
     #############################################################################################################################################
-    #                                                                  GETTERS                                                                  #
+
+    def __str__ ( self: Self,
+                ) ->    str:
+
+        """
+            This method returns a string representation of the object.
+            This defines what will be shown when calling print on the object.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * string: String representation of the object.
+        """
+
+        # Create the string
+        string = "GameState object:\n"
+        string += "|  Players: {}\n".format(self.player_locations)
+        string += "|  Scores: {}\n".format(self.score_per_player)
+        string += "|  Muds: {}\n".format(self.muds)
+        string += "|  Teams: {}\n".format(self.teams)
+        string += "|  Cheese: {}\n".format(self.cheese)
+        string += "|  Turn: {}".format(self.turn)
+        return string
+
+    #############################################################################################################################################
+    #                                                            ATTRIBUTE ACCESSORS                                                            #
     #############################################################################################################################################
 
     @property
@@ -180,13 +206,11 @@ class GameState ():
         return self.__turn
 
     #############################################################################################################################################
-    #                                                                  SETTERS                                                                  #
-    #############################################################################################################################################
-
+ 
     @turn.setter
     def turn ( self:  Self,
                value: Integral
-             ) ->     Integral:
+             ) ->     None:
         
         """
             Setter for __turn.
@@ -196,6 +220,9 @@ class GameState ():
             Out:
                 * None.
         """
+
+        # Debug
+        assert caller_file() == os.path.join(os.path.dirname(os.path.realpath(__file__)), "Game.py") # The method is called by the engine
 
         # Set the attribute
         self.__turn = value
@@ -275,31 +302,6 @@ class GameState ():
         # The game is not over
         is_over = False
         return is_over
-
-    #############################################################################################################################################
-    #                                                              PRIVATE METHODS                                                              #
-    #############################################################################################################################################
-
-    def __str__ ( self: Self,
-                ) ->    str:
-
-        """
-            This method returns a string representation of the object.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * string: String representation of the object.
-        """
-
-        # Create the string
-        string = "GameState object:\n"
-        string += "|  Players: {}\n".format(self.player_locations)
-        string += "|  Scores: {}\n".format(self.score_per_player)
-        string += "|  Muds: {}\n".format(self.muds)
-        string += "|  Teams: {}\n".format(self.teams)
-        string += "|  Cheese: {}\n".format(self.cheese)
-        string += "|  Turn: {}".format(self.turn)
-        return string
 
 #####################################################################################################################################################
 #####################################################################################################################################################

@@ -95,7 +95,7 @@ class Game ():
     DEFAULT_CONTINUE_ON_ERROR = False
     
     #############################################################################################################################################
-    #                                                                CONSTRUCTOR                                                                #
+    #                                                               MAGIC METHODS                                                               #
     #############################################################################################################################################
 
     def __init__ ( self:                  Self,
@@ -128,6 +128,8 @@ class Game ():
 
         """
             This function is the constructor of the class.
+            When an object is instantiated, this method is called to initialize the object.
+            This is where you should define the attributes of the object and set their initial values.
             Assertions checked in the objects manipulated by the game are not checked again.
             In:
                 * self:                  Reference to the current object.
@@ -232,8 +234,72 @@ class Game ():
         self.__maze = None
 
         # Initialize the game
-        self.__reset()
+        self.reset()
 
+    #############################################################################################################################################
+
+    def __str__ ( self: Self,
+                ) ->    str:
+
+        """
+            This method returns a string representation of the object.
+            This defines what will be shown when calling print on the object.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * string: String representation of the object.
+        """
+        
+        # Create the string
+        string = "Game object:\n"
+        string += "|  Random seed: {}\n".format(self.__random_seed)
+        string += "|  Random seed for maze: {}\n".format(self.__random_seed_maze)
+        string += "|  Random seed for cheese: {}\n".format(self.__random_seed_cheese)
+        string += "|  Random seed for players: {}\n".format(self.__random_seed_players)
+        string += "|  Maze width: {}\n".format(self.__maze_width)
+        string += "|  Maze height: {}\n".format(self.__maze_height)
+        string += "|  Cell percentage: {}\n".format(self.__cell_percentage)
+        string += "|  Wall percentage: {}\n".format(self.__wall_percentage)
+        string += "|  Mud percentage: {}\n".format(self.__mud_percentage)
+        string += "|  Mud range: {}\n".format(self.__mud_range)
+        string += "|  Fixed maze: {}\n".format(self.__fixed_maze)
+        string += "|  Random maze algorithm: {}\n".format(self.__random_maze_algorithm)
+        string += "|  Number of cheese: {}\n".format(self.__nb_cheese)
+        string += "|  Fixed cheese: {}\n".format(self.__fixed_cheese)
+        string += "|  Render mode: {}\n".format(self.__render_mode)
+        string += "|  Render simplified: {}\n".format(self.__render_simplified)
+        string += "|  GUI speed: {}\n".format(self.__gui_speed)
+        string += "|  Trace length: {}\n".format(self.__trace_length)
+        string += "|  Fullscreen: {}\n".format(self.__fullscreen)
+        string += "|  Save path: {}\n".format(self.__save_path)
+        string += "|  Save game: {}\n".format(self.__save_game)
+        string += "|  Preprocessing time: {}\n".format(self.__preprocessing_time)
+        string += "|  Turn time: {}\n".format(self.__turn_time)
+        string += "|  Game mode: {}\n".format(self.__game_mode)
+        string += "|  Continue on error: {}\n".format(self.__continue_on_error)
+        return string
+
+    #############################################################################################################################################
+    #                                                            ATTRIBUTE ACCESSORS                                                            #
+    #############################################################################################################################################
+
+    @property
+    def maze ( self: Self
+             ) ->    Maze:
+        
+        """
+            Getter for __maze.
+            It returns a copy of the maze attribute.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * maze_copy: Copy of the __maze attribute.
+        """
+
+        # Return the attribute
+        maze_copy = copy.deepcopy(self.__maze)
+        return maze_copy
+    
     #############################################################################################################################################
     #                                                              PUBLIC METHODS                                                              #
     #############################################################################################################################################
@@ -267,7 +333,7 @@ class Game ():
         self.__players_asked_location.append(location)
         corrected_location = location
         if location == StartingLocation.RANDOM:
-            corrected_location = self.__players_rng.choice(self.__maze.get_vertices())
+            corrected_location = self.__players_rng.choice(self.__maze.vertices)
         elif location == StartingLocation.SAME:
             corrected_location = list(self.__initial_game_state.player_locations.values())[-1]
         elif location == StartingLocation.CENTER:
@@ -286,7 +352,7 @@ class Game ():
             self.__initial_game_state.player_locations[player.name] = corrected_location
         else:
             print("Warning: Player '%s' cannot start at unreachable location %d, starting at closest cell (using Euclidean distance)" % (player.name, corrected_location), file=sys.stderr)
-            valid_cells = self.__maze.get_vertices()
+            valid_cells = self.__maze.vertices
             distances = [math.dist(self.__maze.i_to_rc(corrected_location), self.__maze.i_to_rc(cell)) for cell in valid_cells]
             _, argmin_distance = min((val, idx) for (idx, val) in enumerate(distances))
             self.__initial_game_state.player_locations[player.name] = valid_cells[argmin_distance]
@@ -306,6 +372,68 @@ class Game ():
         self.__actions_history[player.name] = []
         
     #############################################################################################################################################
+    
+    def reset ( self:         Self,
+                keep_players: bool = True
+              ) ->            None:
+        
+        """
+            Resets the game to its initial state.
+            If random seeds were set, they will be kept, otherwise they will be randomly generated using the configuration provided when the game was created.
+            If asked, it will keep players and will insert them as they were added.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * None.
+        """
+        
+        # Debug
+        assert isinstance(keep_players, bool) # Type check for keep_players
+
+        # Set random seeds for the game
+        self.__game_random_seed_maze = self.__random_seed if self.__random_seed is not None else self.__random_seed_maze if self.__random_seed_maze is not None else random.randint(0, sys.maxsize - 1)
+        self.__game_random_seed_cheese = self.__random_seed if self.__random_seed is not None else self.__random_seed_cheese if self.__random_seed_cheese is not None else random.randint(0, sys.maxsize - 1)
+        self.__game_random_seed_players = self.__random_seed if self.__random_seed is not None else self.__random_seed_players if self.__random_seed_players is not None else random.randint(0, sys.maxsize - 1)
+        self.__players_rng = random.Random(self.__game_random_seed_players)
+        
+        # Reset game analysis elements
+        self.__player_traces = {}
+        self.__actions_history = {}
+        
+        # Initialize the maze
+        if self.__random_maze_algorithm == RandomMazeAlgorithm.UNIFORM_HOLES:
+            self.__maze = UniformHolesRandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
+        elif self.__random_maze_algorithm == RandomMazeAlgorithm.HOLES_ON_SIDE:
+            self.__maze = HolesOnSideRandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
+        elif self.__random_maze_algorithm == RandomMazeAlgorithm.BIG_HOLES:
+            self.__maze = BigHolesRandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
+        elif isinstance(self.__fixed_maze, dict):
+            self.__maze = MazeFromDict(self.__fixed_maze)
+        else:
+            self.__maze = MazeFromMatrix(self.__fixed_maze)
+
+        # Initialize the rendering engine
+        if self.__render_mode in [RenderMode.ASCII, RenderMode.ANSI]:
+            use_colors = self.__render_mode == RenderMode.ANSI
+            self.__rendering_engine = ShellRenderingEngine(use_colors, self.__render_simplified)
+        elif self.__render_mode == RenderMode.GUI:
+            self.__rendering_engine = PygameRenderingEngine(self.__fullscreen, self.__trace_length, self.__gui_speed, self.__render_simplified)
+        elif self.__render_mode == RenderMode.NO_RENDERING:
+            self.__rendering_engine = RenderingEngine(self.__render_simplified)
+        
+        # Initialize the game state
+        previous_initial_state = copy.deepcopy(self.__initial_game_state)
+        self.__initial_game_state = GameState()
+
+        # Add players as they were added
+        for i in range(len(self.__players)):
+            player = self.__players.pop(0)
+            player_asked_location = self.__players_asked_location.pop(0)
+            if keep_players:
+                player_team = [team for team in previous_initial_state.teams if player.name in previous_initial_state.teams[team]][0]
+                self.add_player(player, player_team, player_asked_location)
+
+    #############################################################################################################################################
 
     def start ( self: Self
               ) ->    Dict[str, Any]:
@@ -320,19 +448,11 @@ class Game ():
         
         # Debug
         assert len(self.__players) > 0 # At least 1 player
+        assert self.__initial_game_state.turn is None # Game was reset
 
         # We catch exceptions that may happen during the game
         try:
         
-            # Reset the game
-            if self.__initial_game_state.turn is not None:
-                self.__reset()
-            self.__initial_game_state.turn = 0
-
-            # Add cheese
-            available_cells = [i for i in self.__maze.get_vertices() if i not in self.__initial_game_state.player_locations.values()]
-            self.__initial_game_state.cheese.extend(self.__distribute_cheese(available_cells))
-            
             # Initialize stats
             stats = {"players": {}, "turns": -1}
             for player in self.__players:
@@ -370,11 +490,15 @@ class Game ():
                         waiter_processes[player.name]["process"] = multiprocessing.Process(target=_waiter_process_function, args=(waiter_processes[player.name]["input_queue"], turn_start_synchronizer,))
                         waiter_processes[player.name]["process"].start()
 
+            # Add cheese
+            game_state = copy.deepcopy(self.__initial_game_state)
+            available_cells = [i for i in self.__maze.vertices if i not in self.__initial_game_state.player_locations.values()]
+            game_state.cheese.extend(self.__distribute_cheese(available_cells))
+            
             # Initial rendering of the maze
-            self.__rendering_engine.render(self.__players, self.__maze, self.__initial_game_state)
+            self.__rendering_engine.render(self.__players, self.__maze, game_state)
             
             # We play until the game is over
-            game_state = copy.deepcopy(self.__initial_game_state)
             players_ready = [player for player in self.__players]
             players_running = {player.name: True for player in self.__players}
             all_action_names = [action.value for action in Action]
@@ -481,62 +605,6 @@ class Game ():
     #                                                              PRIVATE METHODS                                                              #
     #############################################################################################################################################
 
-    def __reset ( self: Self
-                ) ->    None:
-        
-        """
-            Resets the game to its initial state.
-            It will keep players and will insert them as they were added.
-            In:
-                * self: Reference to the current object.
-            Out:
-                * None.
-        """
-        
-        # Set random seeds for the game
-        self.__game_random_seed_maze = self.__random_seed if self.__random_seed is not None else self.__random_seed_maze if self.__random_seed_maze is not None else random.randint(0, sys.maxsize - 1)
-        self.__game_random_seed_cheese = self.__random_seed if self.__random_seed is not None else self.__random_seed_cheese if self.__random_seed_cheese is not None else random.randint(0, sys.maxsize - 1)
-        self.__game_random_seed_players = self.__random_seed if self.__random_seed is not None else self.__random_seed_players if self.__random_seed_players is not None else random.randint(0, sys.maxsize - 1)
-        self.__players_rng = random.Random(self.__game_random_seed_players)
-        
-        # Reset game analysis elements
-        self.__player_traces = {}
-        self.__actions_history = {}
-        
-        # Initialize the maze
-        if self.__random_maze_algorithm == RandomMazeAlgorithm.UNIFORM_HOLES:
-            self.__maze = UniformHolesRandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
-        elif self.__random_maze_algorithm == RandomMazeAlgorithm.HOLES_ON_SIDE:
-            self.__maze = HolesOnSideRandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
-        elif self.__random_maze_algorithm == RandomMazeAlgorithm.BIG_HOLES:
-            self.__maze = BigHolesRandomMaze(self.__cell_percentage, self.__wall_percentage, self.__mud_percentage, self.__mud_range, self.__game_random_seed_maze, self.__maze_width, self.__maze_height)
-        elif isinstance(self.__fixed_maze, dict):
-            self.__maze = MazeFromDict(self.__fixed_maze)
-        else:
-            self.__maze = MazeFromMatrix(self.__fixed_maze)
-
-        # Initialize the rendering engine
-        if self.__render_mode in [RenderMode.ASCII, RenderMode.ANSI]:
-            use_colors = self.__render_mode == RenderMode.ANSI
-            self.__rendering_engine = ShellRenderingEngine(use_colors, self.__render_simplified)
-        elif self.__render_mode == RenderMode.GUI:
-            self.__rendering_engine = PygameRenderingEngine(self.__fullscreen, self.__trace_length, self.__gui_speed, self.__render_simplified)
-        elif self.__render_mode == RenderMode.NO_RENDERING:
-            self.__rendering_engine = RenderingEngine(self.__render_simplified)
-        
-        # Initialize the game state
-        previous_initial_state = copy.deepcopy(self.__initial_game_state)
-        self.__initial_game_state = GameState()
-
-        # Add players as they were added
-        for i in range(len(self.__players)):
-            player = self.__players.pop(0)
-            player_asked_location = self.__players_asked_location.pop(0)
-            player_team = [team for team in previous_initial_state.teams if player.name in previous_initial_state.teams[team]][0]
-            self.add_player(player, player_team, player_asked_location)
-
-    #############################################################################################################################################
-    
     def __end ( self:         Self,
                 game_crashed: bool,
               ) ->            None:

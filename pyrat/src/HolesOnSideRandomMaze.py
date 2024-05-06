@@ -36,7 +36,7 @@ class HolesOnSideRandomMaze (RandomMaze):
     """
 
     #############################################################################################################################################
-    #                                                                CONSTRUCTOR                                                                #
+    #                                                               MAGIC METHODS                                                               #
     #############################################################################################################################################
 
     def __init__ ( self:     Self,
@@ -46,6 +46,10 @@ class HolesOnSideRandomMaze (RandomMaze):
 
         """
             This function is the constructor of the class.
+            When an object is instantiated, this method is called to initialize the object.
+            This is where you should define the attributes of the object and set their initial values.
+            Arguments *args and **kwargs are used to pass arguments to the parent constructor.
+            This is useful not to declare again all the parent's attributes in the child class.
             In:
                 * self:   Reference to the current object.
                 * args:   Arguments to pass to the parent constructor.
@@ -80,7 +84,7 @@ class HolesOnSideRandomMaze (RandomMaze):
         vertices_to_add = [self.rc_to_i(self.height // 2, self.width // 2)]
 
         # Make some sort of breadth-first search to add cells
-        while self.nb_vertices() < self._target_nb_vertices:
+        while self.nb_vertices < self._target_nb_vertices:
 
             # Get a random vertex
             vertex = vertices_to_add.pop(self._rng.randint(0, len(vertices_to_add) - 1))

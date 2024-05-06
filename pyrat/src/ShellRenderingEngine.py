@@ -43,7 +43,7 @@ class ShellRenderingEngine (RenderingEngine):
     """
 
     #############################################################################################################################################
-    #                                                                CONSTRUCTOR                                                                #
+    #                                                               MAGIC METHODS                                                               #
     #############################################################################################################################################
 
     def __init__ ( self:       Self,
@@ -54,7 +54,10 @@ class ShellRenderingEngine (RenderingEngine):
 
         """
             This function is the constructor of the class.
-            We do not duplicate asserts already made in the parent method.
+            When an object is instantiated, this method is called to initialize the object.
+            This is where you should define the attributes of the object and set their initial values.
+            Arguments *args and **kwargs are used to pass arguments to the parent constructor.
+            This is useful not to declare again all the parent's attributes in the child class.
             In:
                 * self:       Reference to the current object.
                 * use_colors: Boolean indicating whether the rendering engine should use colors or not.
@@ -103,7 +106,7 @@ class ShellRenderingEngine (RenderingEngine):
         assert isinstance(game_state, GameState) # Type check for the game state
 
         # Dimensions
-        max_weight = max([edge[2] for edge in maze.get_edge_list()])
+        max_weight = max([maze.get_weight(*edge) for edge in maze.edges])
         max_weight_len = len(str(max_weight))
         max_player_name_len = max([len(player.name) for player in players]) + (max_weight_len + 5 if max_weight > 1 else 0)
         max_cell_number_len = len(str(maze.width * maze.height - 1))

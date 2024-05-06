@@ -21,17 +21,17 @@ import numpy
 import torch
 
 # PyRat imports
-from pyrat.src.FixedMaze import FixedMaze
+from pyrat.src.Maze import Maze
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
 #####################################################################################################################################################
 
-class MazeFromMatrix (FixedMaze):
+class MazeFromMatrix (Maze):
 
     """
-        This class inherits from the FixedMaze class.
-        Therefore, it has the attributes and methods defined in the FixedMaze class in addition to the ones defined below.
+        This class inherits from the Maze class.
+        Therefore, it has the attributes and methods defined in the Maze class in addition to the ones defined below.
 
         This is a maze that is created from a fixed description as a numpy ndarray or a torch tensor.
         Indices of rows and columns are the indices of the corresponding cells.
@@ -41,7 +41,7 @@ class MazeFromMatrix (FixedMaze):
     """
 
     #############################################################################################################################################
-    #                                                                CONSTRUCTOR                                                                #
+    #                                                               MAGIC METHODS                                                               #
     #############################################################################################################################################
 
     def __init__ ( self:        Self,
@@ -52,6 +52,10 @@ class MazeFromMatrix (FixedMaze):
 
         """
             This function is the constructor of the class.
+            When an object is instantiated, this method is called to initialize the object.
+            This is where you should define the attributes of the object and set their initial values.
+            Arguments *args and **kwargs are used to pass arguments to the parent constructor.
+            This is useful not to declare again all the parent's attributes in the child class.
             In:
                 * self:        Reference to the current object.
                 * description: Fixed maze as a matrix.
@@ -110,8 +114,15 @@ class MazeFromMatrix (FixedMaze):
                 if self.__description[vertex, neighbor] > 0:
                     edges.append((vertex, neighbor, self.__description[vertex, neighbor].item()))
 
-        # Build the maze
-        self._initialize_maze(vertices, edges)
+        # Determine the dimensions of the maze
+        self._width = max([abs(edge[1] - edge[0]) for edge in edges])
+        self._height = math.ceil((max(vertices) + 1) / self.width)
+
+        # Add vertices and edges
+        for vertex in vertices:
+            self.add_vertex(vertex)
+        for edge in edges:
+            self.add_edge(edge[0], edge[1], edge[2])
 
 #####################################################################################################################################################
 #####################################################################################################################################################

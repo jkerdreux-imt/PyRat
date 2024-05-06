@@ -36,7 +36,7 @@ class RenderingEngine ():
     """
 
     #############################################################################################################################################
-    #                                                                CONSTRUCTOR                                                                #
+    #                                                               MAGIC METHODS                                                               #
     #############################################################################################################################################
 
     def __init__ ( self:              Self,
@@ -45,6 +45,8 @@ class RenderingEngine ():
 
         """
             This function is the constructor of the class.
+            When an object is instantiated, this method is called to initialize the object.
+            This is where you should define the attributes of the object and set their initial values.
             In:
                 * self:              Reference to the current object.
                 * render_simplified: Whether to render the simplified version of the game.

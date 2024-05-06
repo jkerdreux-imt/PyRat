@@ -44,7 +44,7 @@ class Player (abc.ABC):
     """
 
     #############################################################################################################################################
-    #                                                                CONSTRUCTOR                                                                #
+    #                                                               MAGIC METHODS                                                               #
     #############################################################################################################################################
 
     def __init__ ( self: Self,
@@ -54,6 +54,8 @@ class Player (abc.ABC):
 
         """
             This function is the constructor of the class.
+            When an object is instantiated, this method is called to initialize the object.
+            This is where you should define the attributes of the object and set their initial values.
             In:
                 * self: Reference to the current object.
                 * name: Name of the player (if None, we take the name of the class).
@@ -66,9 +68,45 @@ class Player (abc.ABC):
         assert isinstance(name, (str, type(None))) # Type check for the name
         assert isinstance(skin, PlayerSkin) # Type check for the skin
 
-        # Public attributes
-        self.name = name if name is not None else self.__class__.__name__
-        self.skin = skin
+        # Private attributes
+        self.__name = name if name is not None else self.__class__.__name__
+        self.__skin = skin
+
+    #############################################################################################################################################
+    #                                                            ATTRIBUTE ACCESSORS                                                            #
+    #############################################################################################################################################
+
+    @property
+    def name ( self: Self,
+             ) ->    str:
+        
+        """
+            Getter for __name.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * self.__name: The __name attribute.
+        """
+
+        # Get the attribute
+        return self.__name
+
+    #############################################################################################################################################
+
+    @property
+    def skin ( self: Self,
+                ) ->    PlayerSkin:
+        
+        """
+            Getter for __skin.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * self.__skin: The __skin attribute.
+        """
+
+        # Get the attribute
+        return self.__skin
 
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
