@@ -309,10 +309,10 @@ class Graph ():
         
         # Create the adjacency matrix
         adjacency_matrix = numpy.zeros((self.nb_vertices, self.nb_vertices), dtype=int)
-        for i, vertex1 in enumerate(self.__adjacency):
-            for j, vertex2 in enumerate(self.__adjacency):
-                if self.has_edge(vertex1, vertex2):
-                    adjacency_matrix[i, j] = self.get_weight(vertex1, vertex2)
+        for i, vertex_1 in enumerate(self.__adjacency):
+            for j, vertex_2 in enumerate(self.__adjacency):
+                if self.has_edge(vertex_1, vertex_2):
+                    adjacency_matrix[i, j] = self.get_weight(vertex_1, vertex_2)
         return adjacency_matrix
 
     #############################################################################################################################################
@@ -331,10 +331,10 @@ class Graph ():
         
         # Create the adjacency matrix
         adjacency_matrix = torch.zeros((self.nb_vertices, self.nb_vertices), dtype=int)
-        for i, vertex1 in enumerate(self.__adjacency):
-            for j, vertex2 in enumerate(self.__adjacency):
-                if self.has_edge(vertex1, vertex2):
-                    adjacency_matrix[i, j] = self.get_weight(vertex1, vertex2)
+        for i, vertex_1 in enumerate(self.__adjacency):
+            for j, vertex_2 in enumerate(self.__adjacency):
+                if self.has_edge(vertex_1, vertex_2):
+                    adjacency_matrix[i, j] = self.get_weight(vertex_1, vertex_2)
         return adjacency_matrix
 
     #############################################################################################################################################

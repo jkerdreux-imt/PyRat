@@ -292,10 +292,10 @@ class GameState ():
         score_per_team = self.get_score_per_team()
         if len(score_per_team) > 1:
             is_over = True
-            for team1 in score_per_team:
-                for team2 in score_per_team:
-                    if team1 != team2:
-                        if score_per_team[team1] == score_per_team[team2] or (score_per_team[team1] < score_per_team[team2] and score_per_team[team1] + len(self.cheese) >= score_per_team[team2]):
+            for team_1 in score_per_team:
+                for team_2 in score_per_team:
+                    if team_1 != team_2:
+                        if score_per_team[team_1] == score_per_team[team_2] or (score_per_team[team_1] < score_per_team[team_2] and score_per_team[team_1] + len(self.cheese) >= score_per_team[team_2]):
                             is_over = False
             return is_over
 
