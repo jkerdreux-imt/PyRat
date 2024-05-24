@@ -21,7 +21,9 @@ The course contents is available at this address:<br />https://info.gitlab-pages
 
 # Install
 
-Installation of the PyRat software can be done directly using `pip`. Do not clone or download the repository. Instead please follow the following instructions:
+Installation of the PyRat software can be done directly using `pip`.
+Do not clone or download the repository.
+Instead please follow the following instructions:
 
 1) Open a terminal and navigate (using the `cd` command if on Linux/OSX or `dir` command if on Windows) to the directory where you want to create your PyRat workspace.
 
@@ -30,8 +32,6 @@ Installation of the PyRat software can be done directly using `pip`. Do not clon
 3) Then, run the following command to create a PyRat workspace in the current directory:<br />`python -c "import pyrat; pyrat.create_workspace('.')"`
 
 4) Finally, run the following command to generate the PyRat documentation:<br />`python -c "import pyrat; pyrat.generate_documentation('pyrat_workspace')"`
-
-5) Check your installation by running the following command:<br />`python pyrat_workspace/games/example.py`
 
 <!-- ##################################################################################################################################################### -->
 <!-- ##################################################################################################################################################### -->
