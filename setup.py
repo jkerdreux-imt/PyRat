@@ -33,7 +33,17 @@ setuptools.setup \
     license =                       "MIT",
     packages =                      setuptools.find_packages(),
     include_package_data =          True,
-    install_requires =              ["pygame", "colored", "distinctipy", "numpy", "scipy", "tqdm", "typing_extensions", "matplotlib", "torch"],
+    install_requires =              ["pygame",
+                                     "colored",
+                                     "distinctipy",
+                                     "numpy",
+                                     "scipy",
+                                     "tqdm",
+                                     "typing_extensions",
+                                     "matplotlib",
+                                     "torch",
+                                     "pyprof2calltree",
+                                     "pdoc"],
 )
 
 #####################################################################################################################################################
