@@ -388,9 +388,10 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
                 main_color = surface.unmap_rgb(max_occurrences[1])
             return main_color
 
-        # Set window icon
+        # Set window icon and title
         icon = ___surface_from_image(os.path.join("..", "gui", "icon", "pyrat.png"), icon_size)
         pygame.display.set_icon(icon)
+        pygame.display.set_caption("PyRat")
         
         # Set background color
         pygame.draw.rect(gui_screen, background_color, pygame.Rect(0, 0, window_width, window_height))
