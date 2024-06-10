@@ -19,18 +19,6 @@ from typing_extensions import *
 from numbers import *
 import math
 
-# Numpy is an optional dependency
-try:
-    import numpy
-except ImportError:
-    pass
-
-# Torch is an optional dependency
-try:
-    import torch
-except ImportError:
-    pass
-
 # PyRat imports
 from pyrat.src.Maze import Maze
 
@@ -80,7 +68,7 @@ class MazeFromMatrix (Maze):
         super().__init__(*args, **kwargs)
 
         # Debug
-        assert (str(type(description)) == "<class 'numpy.ndarray'>" and "numpy" in globals()) or (str(type(description)) == "<class 'torch.Tensor'>" and "torch" in globals()) # Check that the description is a numpy ndarray or a torch tensor
+        assert str(type(description)) in ["<class 'numpy.ndarray'>", "<class 'torch.Tensor'>"] # Check that the description is a numpy ndarray or a torch tensor
         assert len(description.shape) == 2 # Check that the description is a matrix
         assert description.shape[0] == description.shape[1] # Check that the matrix is square
         assert description.shape[0] > 1 # The maze has at least two vertices
