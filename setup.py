@@ -42,7 +42,6 @@ setuptools.setup \
                                      "typing_extensions",
                                      "matplotlib",
                                      "torch",
-                                     "pyprof2calltree",
                                      "pdoc"],
 )
 

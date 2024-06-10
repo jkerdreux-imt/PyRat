@@ -20,8 +20,6 @@ from numbers import *
 import os
 import shutil
 import inspect
-import cProfile
-import pyprof2calltree
 import pdoc
 import pathlib
 import sys
@@ -110,44 +108,6 @@ def pyrat_files () -> List[str]:
     pyrat_path = os.path.dirname(os.path.realpath(__file__))
     files = [os.path.join(pyrat_path, file) for file in os.listdir(pyrat_path) if file.endswith(".py")]
     return files
-
-#####################################################################################################################################################
-
-def start_profiling () -> None:
-
-    """
-        Function to start profiling the code.
-        In:
-            * None.
-        Out:
-            * None.
-    """
-    
-    # Create global object
-    global profiler
-    profiler = cProfile.Profile()
-    profiler.enable()
-
-#####################################################################################################################################################
-
-def stop_profiling () -> None:
-
-    """
-        Function to call after the code blocks to profile.
-        It will open a window with the profiling results.
-        In:
-            * None.
-        Out:
-            * None.
-    """
-    
-    # Debug
-    assert "profiler" in globals() # Profiling must have been started
-
-    # Get stats and visualize
-    global profiler
-    profiler.create_stats()
-    pyprof2calltree.visualize(profiler.getstats())
 
 #####################################################################################################################################################
 #####################################################################################################################################################
