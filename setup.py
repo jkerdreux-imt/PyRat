@@ -22,7 +22,7 @@ import setuptools
 setuptools.setup \
 (
     name =                          "PyRat",
-    version =                       "5.4.0",
+    version =                       "5.5.0",
     author =                        "Bastien Pasdeloup",
     author_email =                  "bastien.pasdeloup@imt-atlantique.fr",
     description =                   "PyRat softare used in the computer science at IMT Atlantique",
@@ -36,13 +36,13 @@ setuptools.setup \
     install_requires =              ["pygame",
                                      "colored",
                                      "distinctipy",
-                                     "numpy",
                                      "scipy",
                                      "tqdm",
                                      "typing_extensions",
                                      "matplotlib",
-                                     "torch",
                                      "pdoc"],
+    extras_require =                {"numpy": ["numpy"],
+                                     "torch": ["torch"]}
 )
 
 #####################################################################################################################################################

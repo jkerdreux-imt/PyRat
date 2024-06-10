@@ -18,8 +18,18 @@ from typing import *
 from typing_extensions import *
 from numbers import *
 import abc
-import numpy
-import torch
+
+# Numpy is an optional dependency
+try:
+    import numpy
+except ImportError:
+    pass
+
+# Torch is an optional dependency
+try:
+    import torch
+except ImportError:
+    pass
 
 # PyRat imports
 from pyrat.src.Graph import Graph
@@ -352,7 +362,7 @@ class Maze (Graph, abc.ABC):
     #############################################################################################################################################
 
     def as_numpy_ndarray ( self: Self,
-                         ) ->    numpy.ndarray:
+                         ) ->    Any:
 
         """
             This redefines a method of the parent class.
@@ -364,6 +374,9 @@ class Maze (Graph, abc.ABC):
                 * adjacency_matrix: Numpy ndarray representing the adjacency matrix.
         """
         
+        # Debug
+        assert "numpy" in globals() # Numpy is available
+
         # Create the adjacency matrix
         adjacency_matrix = numpy.zeros((self.width * self.height, self.width * self.height), dtype=int)
         for vertex in self.vertices:
@@ -374,7 +387,7 @@ class Maze (Graph, abc.ABC):
     #############################################################################################################################################
 
     def as_torch_tensor ( self: Self,
-                        ) ->    torch.Tensor:
+                        ) ->    Any:
 
         """
             This redefines a method of the parent class.
@@ -386,6 +399,9 @@ class Maze (Graph, abc.ABC):
                 * adjacency_matrix: Torch tensor representing the adjacency matrix.
         """
         
+        # Debug
+        assert "torch" in globals() # Torch is available
+
         # Create the adjacency matrix
         adjacency_matrix = torch.zeros((self.width * self.height, self.width * self.height), dtype=torch.int)
         for vertex in self.vertices:

@@ -17,7 +17,6 @@
 from typing import *
 from typing_extensions import *
 from numbers import *
-import os
 
 # PyRat imports
 from pyrat.src.utils import caller_file, pyrat_files

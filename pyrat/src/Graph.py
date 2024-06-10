@@ -17,10 +17,20 @@
 from typing import *
 from typing_extensions import *
 from numbers import *
-import numpy
-import torch
 import random
 import sys
+
+# Numpy is an optional dependency
+try:
+    import numpy
+except ImportError:
+    pass
+
+# Torch is an optional dependency
+try:
+    import torch
+except ImportError:
+    pass
 
 #####################################################################################################################################################
 ###################################################################### CLASSES ######################################################################
@@ -296,7 +306,7 @@ class Graph ():
     #############################################################################################################################################
 
     def as_numpy_ndarray ( self: Self,
-                         ) ->    numpy.ndarray:
+                         ) ->    Any:
 
         """
             Returns a numpy ndarray representing the graph.
@@ -307,6 +317,9 @@ class Graph ():
                 * adjacency_matrix: Numpy ndarray representing the adjacency matrix.
         """
         
+        # Debug
+        assert "numpy" in globals() # Numpy is available
+
         # Create the adjacency matrix
         adjacency_matrix = numpy.zeros((self.nb_vertices, self.nb_vertices), dtype=int)
         for i, vertex_1 in enumerate(self.__adjacency):
@@ -318,7 +331,7 @@ class Graph ():
     #############################################################################################################################################
 
     def as_torch_tensor ( self: Self,
-                        ) ->    torch.Tensor:
+                        ) ->    Any:
 
         """
             Returns a torch tensor representing the maze.
@@ -329,6 +342,9 @@ class Graph ():
                 * adjacency_matrix: Torch tensor representing the adjacency matrix.
         """
         
+        # Debug
+        assert "torch" in globals() # Torch is available
+
         # Create the adjacency matrix
         adjacency_matrix = torch.zeros((self.nb_vertices, self.nb_vertices), dtype=int)
         for i, vertex_1 in enumerate(self.__adjacency):

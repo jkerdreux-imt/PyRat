@@ -19,8 +19,6 @@ from typing_extensions import *
 from numbers import *
 import copy
 import math
-import torch
-import numpy
 import multiprocessing
 import multiprocessing.managers as mpmanagers
 import time
@@ -109,7 +107,7 @@ class Game ():
                    wall_percentage:       Optional[Number] = None,
                    mud_percentage:        Optional[Number] = None,
                    mud_range:             Optional[Tuple[Integral, Integral]] = None,
-                   fixed_maze:            Optional[Union[Dict[Integral, Dict[Integral, Integral]], numpy.ndarray, torch.Tensor]] = None,
+                   fixed_maze:            Optional[Union[Dict[Integral, Dict[Integral, Integral]], Any]] = None,
                    nb_cheese:             Optional[Integral] = None,
                    fixed_cheese:          Optional[List[Integral]] = None,
                    random_maze_algorithm: Optional[RandomMazeAlgorithm] = None,
@@ -143,7 +141,7 @@ class Game ():
                 * wall_percentage:       Percentage of walls in the maze, 0%% being an empty maze, and 100%% being the maximum number of walls that keep the maze connected.
                 * mud_percentage:        Percentage of pairs of adjacent cells that are separated by mud in the maze.
                 * mud_range:             Interval of turns needed to cross mud.
-                * fixed_maze:            Fixed maze in any PyRat accepted representation.
+                * fixed_maze:            Fixed maze in any PyRat accepted representation (dictionary, numpy.ndarray or torch.tensor).
                 * random_maze_algorithm: Algorithm to generate the maze.
                 * nb_cheese:             Number of pieces of cheese in the maze.
                 * fixed_cheese:          Fixed list of cheese.

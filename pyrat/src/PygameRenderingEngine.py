@@ -18,7 +18,6 @@ from typing import *
 from typing_extensions import *
 from numbers import *
 import copy
-import numpy
 import multiprocessing
 import os
 import glob
@@ -380,9 +379,10 @@ def _gui_process_function ( gui_initialized_synchronizer: multiprocessing.Barrie
         # Function to get the main color of a surface
         def ___get_main_color (surface):
             colors = pygame.surfarray.array2d(surface)
-            values, counts = numpy.unique(colors, return_counts=True)
-            argmaxes = numpy.argpartition(-counts, kth=2)[:2]
-            max_occurrences = values[argmaxes]
+            counts = {color: 0 for color in set(colors.flatten())}
+            for color in colors.flatten():
+                counts[color] += 1
+            max_occurrences = sorted(counts, key=lambda x: counts[x], reverse=True)[:2]
             main_color = surface.unmap_rgb(max_occurrences[0])
             if main_color == (0, 0, 0, 0):
                 main_color = surface.unmap_rgb(max_occurrences[1])
