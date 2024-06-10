@@ -80,7 +80,7 @@ class MazeFromMatrix (Maze):
         super().__init__(*args, **kwargs)
 
         # Debug
-        assert str(type(description)) == "<class 'numpy.ndarray'>" and "numpy" in globals() or str(type(description)) == "<class 'torch.Tensor'>" and "torch" in globals() # Check that the description is a numpy ndarray or a torch tensor
+        assert (str(type(description)) == "<class 'numpy.ndarray'>" and "numpy" in globals()) or (str(type(description)) == "<class 'torch.Tensor'>" and "torch" in globals()) # Check that the description is a numpy ndarray or a torch tensor
         assert len(description.shape) == 2 # Check that the description is a matrix
         assert description.shape[0] == description.shape[1] # Check that the matrix is square
         assert description.shape[0] > 1 # The maze has at least two vertices
