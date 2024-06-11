@@ -27,8 +27,8 @@ from .src.RandomMaze import RandomMaze
 from .src.RenderingEngine import RenderingEngine
 from .src.ShellRenderingEngine import ShellRenderingEngine
 from .src.UniformHolesRandomMaze import UniformHolesRandomMaze
-from .src.utils import *
-from .src.enums import *
+from .src.utils import create_workspace, generate_documentation
+from .src.enums import Action, RenderMode, GameMode, StartingLocation, PlayerSkin, RandomMazeAlgorithm
 
 #####################################################################################################################################################
 #####################################################################################################################################################
