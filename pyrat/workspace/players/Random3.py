@@ -36,7 +36,7 @@ class Random3 (Player):
     """
 
     #############################################################################################################################################
-    #                                                               MAGIC METHODS                                                               #
+    #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
 
     def __init__ ( self:     Self,
@@ -62,11 +62,10 @@ class Random3 (Player):
         super().__init__(*args, **kwargs)
 
         # We create an attribute to keep track of visited cells
-        # By convention, in Python, attributes that are not supposed to be called from outside the class should start with two underscores
-        self.__visited_cells = []
+        self.visited_cells = []
        
     #############################################################################################################################################
-    #                                                               PUBLIC METHODS                                                              #
+    #                                                               PYRAT METHODS                                                               #
     #############################################################################################################################################
 
     @override
@@ -89,12 +88,12 @@ class Random3 (Player):
         """
 
         # Mark current cell as visited
-        if game_state.player_locations[self.name] not in self.__visited_cells:
-            self.__visited_cells.append(game_state.player_locations[self.name])
+        if game_state.player_locations[self.name] not in self.visited_cells:
+            self.visited_cells.append(game_state.player_locations[self.name])
 
         # Go to an unvisited neighbor in priority
         neighbors = maze.get_neighbors(game_state.player_locations[self.name])
-        unvisited_neighbors = [neighbor for neighbor in neighbors if neighbor not in self.__visited_cells]
+        unvisited_neighbors = [neighbor for neighbor in neighbors if neighbor not in self.visited_cells]
         if len(unvisited_neighbors) > 0:
             neighbor = random.choice(unvisited_neighbors)
             
