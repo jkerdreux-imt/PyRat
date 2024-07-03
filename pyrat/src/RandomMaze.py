@@ -85,7 +85,7 @@ class RandomMaze (Maze, abc.ABC):
         assert isinstance(mud_range, (type(None), tuple, list)) # Type check for mud_range
         assert isinstance(random_seed, (Integral, type(None))) # Type check for random_seed
         assert random_seed is None or 0 <= random_seed < sys.maxsize # random_seed is a valid seed
-        assert (mud_percentage > 0.0 and len(mud_range) == 2) or (mud_percentage == 0.0 and mud_range is None) # Mud range is an interval of 2 elements
+        assert (mud_percentage > 0.0 and len(mud_range) == 2) or mud_percentage == 0.0 # Mud range is an interval of 2 elements
         assert mud_range is None or isinstance(mud_range[0], Integral) # Type check for mud_range[0]
         assert mud_range is None or isinstance(mud_range[1], Integral) # Type check for mud_range[1]
         assert 0.0 <= cell_percentage <= 100.0 # cell_percentage is a percentage
