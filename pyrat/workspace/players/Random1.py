@@ -81,6 +81,26 @@ class Random1 (Player):
                 * action: One of the possible actions.
         """
 
+        # Return an action
+        action = self.find_next_action()
+        return action
+
+    #############################################################################################################################################
+    #                                                               OTHER METHODS                                                               #
+    #############################################################################################################################################
+
+    def find_next_action ( self: Self
+                         ) ->    Action:
+
+        """
+            This method returns an action to perform among the possible actions, defined in the Action enumeration.
+            Here, the action is chosen randomly.
+            In:
+                * self: Reference to the current object.
+            Out:
+                * action: One of the possible actions.
+        """
+
         # Choose a random action to perform
         action = random.choice(list(Action))
         return action

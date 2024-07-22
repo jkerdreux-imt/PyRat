@@ -72,7 +72,31 @@ class Random2 (Player):
         """
             This method redefines the abstract method of the parent class.
             It is called at each turn of the game.
-            It returns a random action that does not lead to a wall.
+            It returns an action to perform among the possible actions, defined in the Action enumeration.
+            In:
+                * self:       Reference to the current object.
+                * maze:       An object representing the maze in which the player plays.
+                * game_state: An object representing the state of the game.
+            Out:
+                * action: One of the possible actions.
+        """
+
+        # Return an action
+        action = self.find_next_action(maze, game_state)
+        return action
+
+    #############################################################################################################################################
+    #                                                               OTHER METHODS                                                               #
+    #############################################################################################################################################
+
+    def find_next_action ( self:       Self,
+                           maze:       Maze,
+                           game_state: GameState,
+                         ) ->          Action:
+
+        """
+            This method returns an action to perform among the possible actions, defined in the Action enumeration.
+            Here, the action is chosen randomly among those that don't hit a wall.
             In:
                 * self:       Reference to the current object.
                 * maze:       An object representing the maze in which the player plays.

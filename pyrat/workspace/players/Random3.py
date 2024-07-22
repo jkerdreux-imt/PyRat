@@ -32,7 +32,7 @@ class Random3 (Player):
         Here, we add elements that help us explore better the maze.
         More precisely, we keep a list (in a global variable to be updated at each turn) of cells that have already been visited in the game.
         Then, at each turn, we choose in priority a random move among those that lead us to an unvisited cell.
-        If no such move exists, we move randomly using the method in "random_2".
+        If no such move exists, we move randomly.
     """
 
     #############################################################################################################################################
@@ -77,8 +77,7 @@ class Random3 (Player):
         """
             This method redefines the abstract method of the parent class.
             It is called at each turn of the game.
-            It returns an action that explores a random unvisited cell if possible.
-            If no such action exists, it returns a random action that does not lead to a wall.
+            It returns an action to perform among the possible actions, defined in the Action enumeration.
             In:
                 * self:       Reference to the current object.
                 * maze:       An object representing the maze in which the player plays.
@@ -90,6 +89,31 @@ class Random3 (Player):
         # Mark current cell as visited
         if game_state.player_locations[self.name] not in self.visited_cells:
             self.visited_cells.append(game_state.player_locations[self.name])
+
+        # Return an action
+        action = self.find_next_action(maze, game_state)
+        return action
+
+    #############################################################################################################################################
+    #                                                               OTHER METHODS                                                               #
+    #############################################################################################################################################
+
+    def find_next_action ( self:       Self,
+                           maze:       Maze,
+                           game_state: GameState,
+                         ) ->          Action:
+
+        """
+            This method returns an action to perform among the possible actions, defined in the Action enumeration.
+            Here, the action is chosen randomly among those that don't hit a wall, and that lead to an unvisited cell if possible.
+            If no such action exists, we choose randomly among all possible actions that don't hit a wall.
+            In:
+                * self:       Reference to the current object.
+                * maze:       An object representing the maze in which the player plays.
+                * game_state: An object representing the state of the game.
+            Out:
+                * action: One of the possible actions.
+        """
 
         # Go to an unvisited neighbor in priority
         neighbors = maze.get_neighbors(game_state.player_locations[self.name])
@@ -104,6 +128,6 @@ class Random3 (Player):
         # Retrieve the corresponding action
         action = maze.locations_to_action(game_state.player_locations[self.name], neighbor)
         return action
-
+    
 #####################################################################################################################################################
 #####################################################################################################################################################

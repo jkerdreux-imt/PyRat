@@ -97,6 +97,7 @@ class TemplatePlayer (Player):
         """
             This method redefines the abstract method of the parent class.
             It is called at each turn of the game.
+            It returns an action to perform among the possible actions, defined in the Action enumeration.
             In:
                 * self:       Reference to the current object.
                 * maze:       An object representing the maze in which the player plays.
