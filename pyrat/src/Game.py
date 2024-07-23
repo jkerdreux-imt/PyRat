@@ -579,7 +579,7 @@ class Game ():
                         if game_phases[player.name] == "none":
                             stats["players"][player.name]["actions"]["miss"] += 1
                         elif game_phases[player.name] != "preprocessing":
-                            if turn_actions[player.name] in all_action_names and turn_actions[player.name] != Action.NOTHING.value and game_state.player_locations[player.name] == new_game_state.player_locations[player.name] and not game_state.is_in_mud(player.name):
+                            if turn_actions[player.name] in all_action_names and turn_actions[player.name] != Action.NOTHING.value and game_state.player_locations[player.name] == new_game_state.player_locations[player.name] and not new_game_state.is_in_mud(player.name):
                                 stats["players"][player.name]["actions"]["wall"] += 1
                             else:
                                 stats["players"][player.name]["actions"][turn_actions[player.name]] += 1
