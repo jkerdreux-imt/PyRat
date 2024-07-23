@@ -451,6 +451,31 @@ class Maze (Graph, abc.ABC):
         return action
 
     #############################################################################################################################################
+
+    def locations_to_actions ( self:      Self,
+                               locations: List[Integral]
+                             ) ->         List[Optional[Action]]:
+
+        """
+            Function to transform a series locations into actions.
+            In:
+                * self:      Reference to the current object.
+                * locations: List of vertices to go through.
+            Out:
+                * actions: List of actions to go from one location to the next.
+        """
+
+        # Debug
+        assert isinstance(locations, list) # Type check for locations
+        assert all(isinstance(location, Integral) for location in locations) # Type check for each location
+        assert all(self.i_exists(location) for location in locations) # All locations are in the maze
+        assert None not in [self.locations_to_action(locations[i], locations[i+1]) for i in range(len(locations) - 1)] # All moves are possible
+
+        # Get the actions
+        actions = [self.locations_to_action(locations[i], locations[i+1]) for i in range(len(locations) - 1)]
+        return actions
+
+    #############################################################################################################################################
     #                                                             PROTECTED METHODS                                                             #
     #############################################################################################################################################
 
