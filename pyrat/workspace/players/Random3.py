@@ -62,7 +62,7 @@ class Random3 (Player):
         super().__init__(*args, **kwargs)
 
         # We create an attribute to keep track of visited cells
-        self.visited_cells = []
+        self.visited_cells = set()
        
     #############################################################################################################################################
     #                                                               PYRAT METHODS                                                               #
@@ -88,7 +88,7 @@ class Random3 (Player):
 
         # Mark current cell as visited
         if game_state.player_locations[self.name] not in self.visited_cells:
-            self.visited_cells.append(game_state.player_locations[self.name])
+            self.visited_cells.add(game_state.player_locations[self.name])
 
         # Return an action
         action = self.find_next_action(maze, game_state)
