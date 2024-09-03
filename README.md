@@ -17,7 +17,7 @@
 
 This repository contains the software used in the computer science course at IMT Atlantique.
 
-The course contents is available at this address:<br />https://info.gitlab-pages.imt-atlantique.fr/.
+The course contents is available at this address:<br />https://hub.imt-atlantique.fr/ueinfo-fise1a/.
 
 # Install
 
@@ -32,6 +32,10 @@ Instead please follow the following instructions:
 3) Then, run the following command to create a PyRat workspace in the current directory:<br />`python -c "import pyrat; pyrat.create_workspace('.')"`
 
 4) Finally, run the following command to generate the PyRat documentation:<br />`python -c "import pyrat; pyrat.generate_documentation('pyrat_workspace')"`
+
+# Check installation
+
+Once installed, please head to the course website, and [follow instructions to start your first PyRat game](http://localhost:1313/ueinfo-fise1a/s5/project/session1/practical/#12-----the-pyrat-workspace).
 
 <!-- ##################################################################################################################################################### -->
 <!-- ##################################################################################################################################################### -->
