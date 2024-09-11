@@ -95,7 +95,7 @@ class Player (abc.ABC):
 
     @property
     def skin ( self: Self,
-                ) ->    PlayerSkin:
+             ) ->    PlayerSkin:
         
         """
             Getter for __skin.
@@ -107,6 +107,25 @@ class Player (abc.ABC):
 
         # Get the attribute
         return self.__skin
+
+    #############################################################################################################################################
+ 
+    @skin.setter
+    def skin ( self:  Self,
+               value: str
+             ) ->     None:
+        
+        """
+            Setter for __skin.
+            In:
+                * self:  Reference to the current object.
+                * value: New value for the __skin attribute.
+            Out:
+                * None.
+        """
+
+        # Set the attribute
+        self.__skin = value
 
     #############################################################################################################################################
     #                                                               PUBLIC METHODS                                                              #
