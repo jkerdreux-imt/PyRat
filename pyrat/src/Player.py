@@ -112,7 +112,7 @@ class Player (abc.ABC):
  
     @skin.setter
     def skin ( self:  Self,
-               value: str
+               value: PlayerSkin
              ) ->     None:
         
         """
