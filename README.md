@@ -29,8 +29,8 @@ Instead please follow the following instructions:
 
 2) Install the PyRat software using the following commands:<br />
 ```bash
- python -m pip install --user git+https://github.com/BastienPasdeloup/PyRat.git
- pip install --editable .
+python -m pip install --user git+https://github.com/BastienPasdeloup/PyRat.git
+pip install --editable .
 ```
 
 3) Then, run the following command to create a PyRat workspace in the current directory:<br />`python -c "import pyrat; pyrat.create_workspace('.')"`
