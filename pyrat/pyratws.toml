@@ -1,7 +1,7 @@
 [project]
-name = "pyratws"
-version = "0.1"
-description = "Pyrat workspace"
+name = "PyRatws"
+version = "0.2"
+description = "PyRat workspace"
 license = { text = "MIT" }
 classifiers = ["Programming Language :: Python"]
 dependencies = ["pyrat"]
