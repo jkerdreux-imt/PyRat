@@ -27,7 +27,10 @@ Instead please follow the following instructions:
 
 1) Open a terminal and navigate (using the `cd` command if on Linux/OSX or `dir` command if on Windows) to the directory where you want to create your PyRat workspace.
 
-2) Install the PyRat software using the following command:<br />`python -m pip install --user git+https://github.com/BastienPasdeloup/PyRat.git`
+2) Install the PyRat software using the following commands:<br />
+`python -m pip install --user git+https://github.com/BastienPasdeloup/PyRat.git
+ pip install --editable .
+`
 
 3) Then, run the following command to create a PyRat workspace in the current directory:<br />`python -c "import pyrat; pyrat.create_workspace('.')"`
 
