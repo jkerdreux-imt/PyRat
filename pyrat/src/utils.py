@@ -44,9 +44,13 @@ def create_workspace ( target_directory: str
     assert isinstance(target_directory, str) # Type check for target_directory
 
     # Copy the template workspace into the current directory if not already existing
-    source_workspace = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "workspace")
-    target_workspace = os.path.join(target_directory, "pyrat_workspace")
+    root = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
+    source_workspace = os.path.join(root, "pyratws")
+    source_wstoml = os.path.join(root, "pyratws.toml")
+    target_workspace = os.path.join(target_directory, "pyratws")
+    target_wstoml = os.path.join(target_directory, "pyproject.toml")
     shutil.copytree(source_workspace, target_workspace, ignore=shutil.ignore_patterns('__pycache__'))
+    shutil.copy(source_wstoml, target_wstoml)
 
 #####################################################################################################################################################
 
