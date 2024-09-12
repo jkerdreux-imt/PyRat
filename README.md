@@ -31,7 +31,7 @@ Instead please follow the following instructions:
 
 3) Then, run the following command to create a PyRat workspace in the current directory:<br />`python -c "import pyrat; pyrat.create_workspace('.')"`
 
-4) Finally, run the following command to generate the PyRat documentation:<br />`python -c "import pyrat; pyrat.generate_documentation('pyrat_workspace')"`
+4) Finally, run the following command to generate the PyRat documentation:<br />`python -c "import pyrat; pyrat.generate_documentation('pyratws')"`
 
 # Check installation
 

@@ -45,7 +45,7 @@ def create_workspace ( target_directory: str
 
     # Copy the template workspace into the current directory if not already existing
     root = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
-    source_workspace = os.path.join(root, "pyratws")
+    source_workspace = os.path.join(root, "workspace")
     source_wstoml = os.path.join(root, "pyratws.toml")
     target_workspace = os.path.join(target_directory, "pyratws")
     target_wstoml = os.path.join(target_directory, "pyproject.toml")
